@@ -1,0 +1,50 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Song {
+  id          Int      @id @default(autoincrement())
+  title       String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // One-to-many relationship with KeySets (ordered)
+  keySets     KeySet[]
+}
+
+model KeySet {
+  id          Int      @id @default(autoincrement())
+  name        String?  // Optional name for the key set
+  position    Int      // Position in the ordered list
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationships
+  song        Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  songId      Int
+  keyPresses  KeyPress[]
+  
+  // Ensure each song has unique positions for key sets
+  @@unique([songId, position])
+}
+
+model KeyPress {
+  id          Int      @id @default(autoincrement())
+  midiNote    Int      // MIDI note number (0-127)
+  createdAt   DateTime @default(now())
+  
+  // Relationship
+  keySet      KeySet   @relation(fields: [keySetId], references: [id], onDelete: Cascade)
+  keySetId    Int
+}

@@ -1,0 +1,47 @@
+/*
+  Warnings:
+
+  - You are about to drop the `Chord` table. If the table is not empty, all the data it contains will be lost.
+  - You are about to drop the `ChordProgression` table. If the table is not empty, all the data it contains will be lost.
+
+*/
+-- DropTable
+PRAGMA foreign_keys=off;
+DROP TABLE "Chord";
+PRAGMA foreign_keys=on;
+
+-- DropTable
+PRAGMA foreign_keys=off;
+DROP TABLE "ChordProgression";
+PRAGMA foreign_keys=on;
+
+-- CreateTable
+CREATE TABLE "Song" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "title" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "KeySet" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "name" TEXT,
+    "position" INTEGER NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    "songId" INTEGER NOT NULL,
+    CONSTRAINT "KeySet_songId_fkey" FOREIGN KEY ("songId") REFERENCES "Song" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "KeyPress" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "midiNote" INTEGER NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "keySetId" INTEGER NOT NULL,
+    CONSTRAINT "KeyPress_keySetId_fkey" FOREIGN KEY ("keySetId") REFERENCES "KeySet" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "KeySet_songId_position_key" ON "KeySet"("songId", "position");
