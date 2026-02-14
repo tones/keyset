@@ -24,7 +24,7 @@ export default async function Home() {
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold">Songs</h1>
+          <h1 className="text-3xl font-bold">Key Sets</h1>
         </div>
         
         {songs.length === 0 ? (

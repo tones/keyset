@@ -4,6 +4,12 @@ import { notFound } from 'next/navigation'
 import EditableTitle from '@/components/EditableTitle'
 import SortableKeySetList from '@/components/SortableKeySetList'
 
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const song = await prisma.song.findUnique({ where: { id: parseInt(id) } })
+  return { title: song?.title ?? 'Song' }
+}
+
 export default async function SongPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const song = await prisma.song.findUnique({
@@ -29,7 +35,7 @@ export default async function SongPage({ params }: { params: Promise<{ id: strin
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <Link href="/" className="text-blue-500 hover:text-blue-700 mb-4">
-            ← Back to Songs
+            ← Back to Key Sets
           </Link>
           <EditableTitle initialTitle={song.title} onSave={async (title) => { 'use server'; const { updateSongTitle } = await import('./actions'); await updateSongTitle(song.id, title); }} />
         </div>

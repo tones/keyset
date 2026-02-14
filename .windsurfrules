@@ -1,0 +1,4 @@
+Before starting any task in this workspace, read all files in the .windsurf/ directory and its subdirectories to load project context, conventions, and workflows. Key files:
+
+- .windsurf/project-context.md — Architecture, data model, components, gotchas
+- .windsurf/workflows/testing.md — Testing conventions and how to run tests

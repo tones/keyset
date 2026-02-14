@@ -4,6 +4,12 @@ import { notFound } from 'next/navigation'
 import EditableKeySet from '@/components/EditableKeySet'
 import EditableTitle from '@/components/EditableTitle'
 
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const keySet = await prisma.keySet.findUnique({ where: { id: parseInt(id) } })
+  return { title: keySet?.name ?? 'Key Set' }
+}
+
 export default async function KeySetPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const keySet = await prisma.keySet.findUnique({

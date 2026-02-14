@@ -80,7 +80,7 @@ export default function PianoKeyboard({ highlightedNotes, startNote = 48, endNot
   }
 
   return (
-    <div className="relative w-full overflow-hidden rounded-lg border border-gray-200 bg-gray-100" style={{ height: '110px' }}>
+    <div data-testid="piano-keyboard" className="relative w-full overflow-hidden rounded-lg border border-gray-200 bg-gray-100" style={{ height: '110px' }}>
       {/* White keys */}
       {whiteKeys.map((note, i) => {
         const isHighlighted = highlightSet.has(note)
