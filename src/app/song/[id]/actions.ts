@@ -77,6 +77,29 @@ export async function toggleKeyPress(keySetId: number, midiNote: number, songId:
   revalidatePath(`/song/${songId}`)
 }
 
+export async function shiftOctave(keySetId: number, songId: number, direction: 'up' | 'down') {
+  const keyPresses = await prisma.keyPress.findMany({ where: { keySetId } })
+  const delta = direction === 'up' ? 12 : -12
+
+  // Check all notes stay in valid MIDI range (0–127)
+  const allValid = keyPresses.every((kp) => {
+    const newNote = kp.midiNote + delta
+    return newNote >= 0 && newNote <= 127
+  })
+  if (!allValid) return
+
+  await prisma.$transaction(
+    keyPresses.map((kp) =>
+      prisma.keyPress.update({
+        where: { id: kp.id },
+        data: { midiNote: kp.midiNote + delta },
+      })
+    )
+  )
+
+  revalidatePath(`/song/${songId}`)
+}
+
 export async function deleteKeySet(keySetId: number, songId: number) {
   await prisma.keySet.delete({
     where: { id: keySetId },

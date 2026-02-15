@@ -53,7 +53,7 @@ Uses **singular nouns** (`/song/`), not plurals.
 - **`PianoKeyboard`** (`src/components/PianoKeyboard.tsx`) — Renders a piano keyboard with highlighted notes in per-key colors. Accepts `noteColors` map (midiNote → color name) for multi-color support. Optional `height` prop (default 110px). Supports an optional `onToggle` callback for interactive mode. Uses absolute positioning with a boundary-based algorithm for black key placement. Has `data-testid="piano-keyboard"` for test selection and `data-note` attributes on each key.
 - **`EditableTitle`** (`src/components/EditableTitle.tsx`) — Generic inline-editable title. Click to edit, Enter to save, Escape to cancel. Accepts an `onSave` callback prop.
 - **`SongList`** (`src/components/SongList.tsx`) — Client component rendering song cards as clickable links on the home page. Includes duplicate button and trash icon with confirmation dialog.
-- **`SortableKeySetList`** (`src/components/SortableKeySetList.tsx`) — Drag-and-drop sortable list of key set cards using @dnd-kit. Includes add (plus icon), delete (trash icon with confirmation). Piano keys are toggled inline with optimistic UI updates and immediate server persistence. Each card's heading shows the auto-detected chord label (via `chordId`) that updates live as notes are toggled. Color palette bar above each keyboard lets users pick a brush color; clicking an active key with a different color recolors it.
+- **`SortableKeySetList`** (`src/components/SortableKeySetList.tsx`) — Drag-and-drop sortable list of key set cards using @dnd-kit. Includes add (plus icon), delete (trash icon with confirmation), octave up/down buttons. All action icons (play, octave down, octave up, trash) grouped in upper-right control panel. Piano keys are toggled inline with optimistic UI updates and immediate server persistence. Each card's heading shows the auto-detected chord label (via `chordId`) that updates live as notes are toggled. Color palette bar above each keyboard lets users pick a brush color; clicking an active key with a different color recolors it.
 - **`playChord`** (`src/lib/playChord.ts`) — Plays a chord from MIDI notes using Tone.js `Sampler` with Salamander grand piano samples (~1MB from CDN). Exports `preloadPiano()` which is called on `SortableKeySetList` mount to load samples in the background. Falls back to `Tone.loaded()` await if samples aren't ready when user clicks play.
 - **`colors`** (`src/lib/colors.ts`) — Defines the 6 available key press colors (red, blue, green, purple, orange, yellow) with hex values for white/black keys. Exports `KEY_COLORS`, `COLOR_NAMES`, `DEFAULT_COLOR`.
 - **`midi`** (`src/lib/midi.ts`) — Shared `midiToNoteName(midi)` utility for converting MIDI note numbers to note names (e.g. 60 → "C4"). Used by `analyze.ts` and the song page.
@@ -69,7 +69,7 @@ Uses **singular nouns** (`/song/`), not plurals.
 ## Server Actions
 
 - `src/app/actions.ts` — `createSong` (creates "Untitled Song", redirects to it), `deleteSong` (deletes song with cascade, revalidates home), `duplicateSong` (copies song with all keysets/keypresses, appends "(copy)" to title, stays on home page)
-- `src/app/song/[id]/actions.ts` — `updateSongTitle`, `reorderKeySets`, `createKeySet`, `deleteKeySet`, `toggleKeyPress`
+- `src/app/song/[id]/actions.ts` — `updateSongTitle`, `reorderKeySets`, `createKeySet`, `deleteKeySet`, `toggleKeyPress`, `shiftOctave` (moves all notes ±12 semitones, clamped to 0–127)
 - `src/app/song/[id]/analyze.ts` — `analyzeSong` (calls OpenAI or Anthropic based on `LLM_PROVIDER` env var, sends chord IDs + notes, caches result in Song.analysis), `clearAnalysis` (removes cached analysis from Song)
 
 ## Deployment (Fly.io)
@@ -85,9 +85,11 @@ Uses **singular nouns** (`/song/`), not plurals.
 - **Sync prod → local:** `npm run db:pull` (overwrites `dev.db` at project root with production DB, then restart dev server). Requires `fly ssh issue --agent` if SSH cert has expired (certs last 24h).
 - **Backups:** Fly volume snapshots are enabled (5-day retention, automatic daily).
 
-## Keeping This File Up to Date
+## Keeping Context and Tests Up to Date
 
-When making changes to the codebase, **always** update the relevant `.windsurf/` files before committing:
+After every feature, refactor, or bug fix — **before committing** — always do the following without waiting for the user to ask:
 
-- **`project-context.md`** — Update when adding/removing/renaming components, server actions, routes, data model fields, or gotchas.
-- **`workflows/testing.md`** — Update when changing how tests are run, adding new test files, or changing test conventions.
+1. **Update `project-context.md`** — Add/remove/rename components, server actions, routes, data model fields, gotchas, or any other relevant details that changed.
+2. **Update `workflows/testing.md`** — If how tests are run, structured, or conventioned has changed.
+3. **Add or update Playwright tests** — Every new feature or behavior change should have a corresponding E2E test. Update existing tests if UI text, element structure, or behavior changed. Run `npm run test:e2e` to verify all tests pass before committing.
+4. **Never skip these steps** — Treat context updates and test coverage as part of the implementation, not as a follow-up task.

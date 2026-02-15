@@ -22,7 +22,7 @@ import { CSS } from '@dnd-kit/utilities'
 import PianoKeyboard from '@/components/PianoKeyboard'
 import { identifyChord } from '@/lib/chordId'
 import { playChord, preloadPiano } from '@/lib/playChord'
-import { reorderKeySets, deleteKeySet, createKeySet, toggleKeyPress } from '@/app/song/[id]/actions'
+import { reorderKeySets, deleteKeySet, createKeySet, toggleKeyPress, shiftOctave } from '@/app/song/[id]/actions'
 
 interface KeyPress {
   id: number
@@ -41,7 +41,7 @@ interface SortableKeySetListProps {
   keySets: KeySet[]
 }
 
-function SortableKeySetCard({ keySet, songId, onDelete, onToggleNote }: { keySet: KeySet; songId: number; onDelete: (id: number) => void; onToggleNote: (keySetId: number, midiNote: number, color: string) => void }) {
+function SortableKeySetCard({ keySet, songId, onDelete, onToggleNote, onShiftOctave }: { keySet: KeySet; songId: number; onDelete: (id: number) => void; onToggleNote: (keySetId: number, midiNote: number, color: string) => void; onShiftOctave: (keySetId: number, direction: 'up' | 'down') => void }) {
   const [activeColor, setActiveColor] = useState(DEFAULT_COLOR)
   const {
     attributes,
@@ -80,19 +80,41 @@ function SortableKeySetCard({ keySet, songId, onDelete, onToggleNote }: { keySet
           <h2 className="text-xl font-semibold text-gray-900" data-testid="chord-label">
             {keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map((kp) => kp.midiNote)) : `Key Set ${keySet.position}`}
           </h2>
-          {keySet.keyPresses.length > 0 && (
-            <button
-              onClick={() => playChord(keySet.keyPresses.map((kp) => kp.midiNote))}
-              className="text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
-              title="Play Chord"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-            </button>
-          )}
         </div>
         <div className="flex items-center gap-2">
+          {keySet.keyPresses.length > 0 && (
+            <>
+              <button
+                onClick={() => playChord(keySet.keyPresses.map((kp) => kp.midiNote))}
+                className="text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
+                title="Play Chord"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => onShiftOctave(keySet.id, 'down')}
+                className="text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
+                title="Octave Down"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 5v14" />
+                  <path d="M19 12l-7 7-7-7" />
+                </svg>
+              </button>
+              <button
+                onClick={() => onShiftOctave(keySet.id, 'up')}
+                className="text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
+                title="Octave Up"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 19V5" />
+                  <path d="M5 12l7-7 7 7" />
+                </svg>
+              </button>
+            </>
+          )}
           <button
             onClick={() => onDelete(keySet.id)}
             className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
@@ -173,6 +195,22 @@ export default function SortableKeySetList({ songId, keySets: initialKeySets }: 
     await toggleKeyPress(keySetId, midiNote, songId, color)
   }
 
+  async function handleShiftOctave(keySetId: number, direction: 'up' | 'down') {
+    const delta = direction === 'up' ? 12 : -12
+    setKeySets((prev) =>
+      prev.map((ks) => {
+        if (ks.id !== keySetId) return ks
+        const allValid = ks.keyPresses.every((kp) => {
+          const newNote = kp.midiNote + delta
+          return newNote >= 0 && newNote <= 127
+        })
+        if (!allValid) return ks
+        return { ...ks, keyPresses: ks.keyPresses.map((kp) => ({ ...kp, midiNote: kp.midiNote + delta })) }
+      })
+    )
+    await shiftOctave(keySetId, songId, direction)
+  }
+
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
     if (!over || active.id === over.id) return
@@ -191,7 +229,7 @@ export default function SortableKeySetList({ songId, keySets: initialKeySets }: 
       <SortableContext items={keySets.map((ks) => ks.id)} strategy={verticalListSortingStrategy}>
         <div className="space-y-6">
           {keySets.map((keySet) => (
-            <SortableKeySetCard key={keySet.id} keySet={keySet} songId={songId} onDelete={handleDelete} onToggleNote={handleToggleNote} />
+            <SortableKeySetCard key={keySet.id} keySet={keySet} songId={songId} onDelete={handleDelete} onToggleNote={handleToggleNote} onShiftOctave={handleShiftOctave} />
           ))}
         </div>
       </SortableContext>
@@ -199,7 +237,7 @@ export default function SortableKeySetList({ songId, keySets: initialKeySets }: 
 
     <button
       onClick={handleAdd}
-      className="w-full mt-6 border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center text-gray-400 hover:text-blue-500 hover:border-blue-400 transition-colors"
+      className="w-full mt-6 border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center text-gray-400 hover:text-blue-500 hover:border-blue-400 transition-colors cursor-pointer"
       title="Add Key Set"
     >
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

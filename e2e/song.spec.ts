@@ -202,6 +202,40 @@ test.describe('Song Page', () => {
     await reloadedKey.click()
   })
 
+  test('octave up and down shifts notes and persists', async ({ page }) => {
+    // Use song 1 (Autumn Leaves) — not modified by prior tests
+    // Key set 1 has notes [57, 60, 64, 69] (Am)
+    await page.goto('/song/1')
+    const firstCard = page.getByTestId('keyset-card').first()
+    const piano = firstCard.getByTestId('piano-keyboard')
+
+    // Verify initial note is present
+    const noteBefore = await piano.locator('[data-note="57"]').evaluate(
+      (el) => getComputedStyle(el).backgroundColor
+    )
+    expect(noteBefore).not.toBe('rgb(255, 255, 255)')
+
+    // Click octave up — notes should shift from [57,60,64,69] to [69,72,76,81]
+    await firstCard.locator('button[title="Octave Up"]').click()
+
+    // Original note 57 should no longer be highlighted (white key = white bg)
+    await expect(piano.locator('[data-note="57"]')).toHaveCSS('background-color', 'rgb(255, 255, 255)')
+
+    // Reload and verify persistence
+    await page.reload()
+    const reloadedPiano = page.getByTestId('keyset-card').first().getByTestId('piano-keyboard')
+    await expect(reloadedPiano.locator('[data-note="57"]')).toHaveCSS('background-color', 'rgb(255, 255, 255)')
+
+    // Shift back down to restore original state
+    await page.getByTestId('keyset-card').first().locator('button[title="Octave Down"]').click()
+
+    // Note 57 should be highlighted again
+    const noteAfter = await reloadedPiano.locator('[data-note="57"]').evaluate(
+      (el) => getComputedStyle(el).backgroundColor
+    )
+    expect(noteAfter).not.toBe('rgb(255, 255, 255)')
+  })
+
   test('Analyze Song button is visible', async ({ page }) => {
     // Song 2 has no cached analysis, so button says "Analyze with ..."
     await page.goto('/song/2')
