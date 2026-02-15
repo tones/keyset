@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import SortableKeySetList from '@/components/SortableKeySetList'
 import EditableTitle from '@/components/EditableTitle'
 import YouTubeLink from '@/components/YouTubeLink'
+import Link from 'next/link'
 import { saveKeySets } from '@/app/song/[id]/actions'
 
 interface KeyPress {
@@ -33,6 +34,7 @@ let nextTempId = -1
 
 export default function SongView({ songId, keySets: serverKeySets, initialTitle, imageUrl, initialYoutubeUrl, onSaveTitle, onSaveYoutubeUrl }: SongViewProps) {
   const [mode, setMode] = useState<'full' | 'compact'>('full')
+  const [showCommonTones, setShowCommonTones] = useState(true)
   const [keySets, setKeySets] = useState(serverKeySets)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -173,6 +175,34 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
 
   return (
     <>
+      <div className="flex items-center justify-between mb-2 h-8">
+        <Link href="/" className="text-blue-500 hover:text-blue-700 text-sm">
+          ← Back to Keysets
+        </Link>
+        <div className={`flex items-center gap-3 ${isDirty ? '' : 'invisible'}`} data-testid="save-bar">
+          <span className="text-sm text-amber-600 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
+            Unsaved changes
+          </span>
+          {saveError && <span className="text-sm text-red-600" data-testid="save-error">{saveError}</span>}
+          <button
+            onClick={handleReset}
+            className="px-3 py-1 text-sm font-medium rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 cursor-pointer transition-colors"
+            data-testid="reset-button"
+          >
+            Reset
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="px-3 py-1 text-sm font-medium rounded-md bg-gray-900 text-white hover:bg-gray-800 cursor-pointer transition-colors disabled:opacity-50"
+            data-testid="save-button"
+          >
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      </div>
+
       <div className="bg-white rounded-lg shadow mb-6 overflow-hidden">
         <div className="flex">
           {imageUrl ? (
@@ -187,63 +217,40 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
             </div>
           )}
           <div className="flex-1 p-4 min-w-0 flex flex-col justify-between">
-            <div>
+            <div className="flex items-start justify-between gap-3">
               <EditableTitle initialTitle={initialTitle} onSave={onSaveTitle} />
-              <div className="mt-1">
+              <div className="flex flex-col items-end gap-2 shrink-0">
                 <YouTubeLink initialUrl={initialYoutubeUrl} onSave={onSaveYoutubeUrl} />
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                    <span className="text-xs font-medium text-gray-500">Compact</span>
+                    <button
+                      onClick={() => handleModeSwitch(mode === 'compact' ? 'full' : 'compact')}
+                      className={`relative w-9 h-5 rounded-full transition-colors ${mode === 'compact' ? 'bg-gray-900' : 'bg-gray-300'}`}
+                    >
+                      <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${mode === 'compact' ? 'translate-x-4' : ''}`} />
+                    </button>
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                    <span className="text-xs font-medium text-gray-500">Common Tones</span>
+                    <button
+                      onClick={() => setShowCommonTones(!showCommonTones)}
+                      className={`relative w-9 h-5 rounded-full transition-colors ${showCommonTones ? 'bg-yellow-500' : 'bg-gray-300'}`}
+                    >
+                      <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${showCommonTones ? 'translate-x-4' : ''}`} />
+                    </button>
+                  </label>
+                </div>
               </div>
-            </div>
-            <div className="flex gap-1.5 mt-2">
-              <button
-                onClick={() => handleModeSwitch('full')}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${mode === 'full' ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
-              >
-                Full
-              </button>
-              <button
-                onClick={() => handleModeSwitch('compact')}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${mode === 'compact' ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
-              >
-                Compact
-              </button>
             </div>
           </div>
-        </div>
-        <div className="h-10 border-t border-gray-100 px-4 flex items-center justify-between">
-          {isDirty ? (
-            <div className="flex items-center justify-between w-full" data-testid="save-bar">
-              <span className="text-sm text-amber-600 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
-                Unsaved changes
-              </span>
-              <div className="flex items-center gap-2">
-                {saveError && <span className="text-sm text-red-600" data-testid="save-error">{saveError}</span>}
-                <button
-                  onClick={handleReset}
-                  className="px-3 py-1 text-sm font-medium rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 cursor-pointer transition-colors"
-                  data-testid="reset-button"
-                >
-                  Reset
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="px-3 py-1 text-sm font-medium rounded-md bg-gray-900 text-white hover:bg-gray-800 cursor-pointer transition-colors disabled:opacity-50"
-                  data-testid="save-button"
-                >
-                  {saving ? 'Saving…' : 'Save'}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <span />
-          )}
         </div>
       </div>
 
       <SortableKeySetList
         keySets={keySets}
         compact={mode === 'compact'}
+        showCommonTones={showCommonTones}
         onAdd={handleAdd}
         onDelete={handleDelete}
         onDuplicate={handleDuplicate}

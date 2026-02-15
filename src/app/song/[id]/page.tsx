@@ -1,7 +1,6 @@
 export const dynamic = 'force-dynamic'
 
 import { prisma } from '@/lib/prisma'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import SongView from '@/components/SongView'
 import SongAnalysis from '@/components/SongAnalysis'
@@ -37,10 +36,6 @@ export default async function SongPage({ params }: { params: Promise<{ id: strin
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
-        <Link href="/" className="text-blue-500 hover:text-blue-700 text-sm">
-          ← Back to Keysets
-        </Link>
-
         <SongView
           songId={song.id}
           keySets={song.keySets}

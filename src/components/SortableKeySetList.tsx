@@ -40,6 +40,7 @@ interface KeySet {
 interface SortableKeySetListProps {
   keySets: KeySet[]
   compact?: boolean
+  showCommonTones?: boolean
   onAdd: () => void
   onDelete: (id: number) => void
   onDuplicate: (id: number) => void
@@ -50,31 +51,32 @@ interface SortableKeySetListProps {
 }
 
 
-function CommonToneLines({ above, below, padX = 24, compact = false }: { above: KeySet; below: KeySet; padX?: number; compact?: boolean }) {
+function CommonToneLines({ above, below, padX = 24, compact = false, visible = true }: { above: KeySet; below: KeySet; padX?: number; compact?: boolean; visible?: boolean }) {
   const aboveNotes = new Set(above.keyPresses.map(kp => kp.midiNote))
   const common = below.keyPresses.filter(kp => aboveNotes.has(kp.midiNote)).map(kp => kp.midiNote)
-  if (common.length === 0) return null
 
   const h = compact ? 45 : 110
   const overlap = compact ? 12 : 28
   const bottomOverlap = compact ? 14 : 55
   return (
     <div className="relative w-full pointer-events-none" style={{ height: h - overlap - bottomOverlap, paddingLeft: padX, paddingRight: padX, marginTop: -overlap, marginBottom: -bottomOverlap, zIndex: 3 }}>
-      <svg className="w-full" style={{ height: h, marginTop: -overlap }} viewBox={`0 0 1000 ${h}`} preserveAspectRatio="none">
-        {common.map(note => {
-          const x = keyCenterPct(note) * 10
-          return (
-            <line
-              key={note}
-              x1={x} y1={0} x2={x} y2={h}
-              stroke="#eab308"
-              strokeWidth="3"
-              strokeDasharray="5 3"
-              opacity="0.8"
-            />
-          )
-        })}
-      </svg>
+      {visible && common.length > 0 && (
+        <svg className="w-full" style={{ height: h, marginTop: -overlap }} viewBox={`0 0 1000 ${h}`} preserveAspectRatio="none">
+          {common.map(note => {
+            const x = keyCenterPct(note) * 10
+            return (
+              <line
+                key={note}
+                x1={x} y1={0} x2={x} y2={h}
+                stroke="#eab308"
+                strokeWidth="3"
+                strokeDasharray="5 3"
+                opacity="0.8"
+              />
+            )
+          })}
+        </svg>
+      )}
     </div>
   )
 }
@@ -281,7 +283,7 @@ function SortableKeySetCard({ keySet, onDelete, onDuplicate, onToggleNote, onShi
   )
 }
 
-export default function SortableKeySetList({ keySets, compact, onAdd, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType, onReorder }: SortableKeySetListProps) {
+export default function SortableKeySetList({ keySets, compact, showCommonTones = true, onAdd, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType, onReorder }: SortableKeySetListProps) {
   useEffect(() => {
     preloadPiano()
   }, [])
@@ -308,7 +310,7 @@ export default function SortableKeySetList({ keySets, compact, onAdd, onDelete, 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         {keySets.map((keySet, i) => (
           <div key={keySet.id}>
-            {i > 0 && <CommonToneLines above={keySets[i - 1]} below={keySet} padX={12} compact />}
+            {i > 0 && <CommonToneLines above={keySets[i - 1]} below={keySet} padX={12} compact visible={showCommonTones} />}
             <CompactKeySetCard keySet={keySet} />
           </div>
         ))}
@@ -323,7 +325,7 @@ export default function SortableKeySetList({ keySets, compact, onAdd, onDelete, 
         <div>
           {keySets.map((keySet, i) => (
             <div key={keySet.id}>
-              {i > 0 && <div className="py-3"><CommonToneLines above={keySets[i - 1]} below={keySet} /></div>}
+              {i > 0 && <div className="py-3"><CommonToneLines above={keySets[i - 1]} below={keySet} visible={showCommonTones} /></div>}
               <SortableKeySetCard keySet={keySet} onDelete={onDelete} onDuplicate={onDuplicate} onToggleNote={onToggleNote} onShiftNotes={onShiftNotes} onToggleType={onToggleType} />
             </div>
           ))}

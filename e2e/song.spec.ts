@@ -419,4 +419,65 @@ test.describe('Song Page', () => {
     await page.getByRole('link', { name: '← Back to Keysets' }).click()
     await expect(page).toHaveURL('/')
   })
+
+  test('common tone lines appear between keysets sharing notes', async ({ page }) => {
+    await page.goto('/song/4')
+    // Song 4 keysets: [60,64,67,72], [65,69,72,77], [67,71,74,79], [60,62,64,65,67]
+    // Keysets 1↔2 share 72, keysets 3↔4 share 67
+    const svgs = page.locator('svg line[stroke="#eab308"]')
+    await expect(svgs).toHaveCount(2) // one line between 1↔2, one between 3↔4
+  })
+
+  test('no common tone lines between keysets with no shared notes', async ({ page }) => {
+    await page.goto('/song/4')
+    // Keysets 2↔3 share nothing — only 2 SVG lines total (1↔2 and 3↔4)
+    const svgs = page.locator('svg line[stroke="#eab308"]')
+    await expect(svgs).toHaveCount(2)
+  })
+
+  test('common tones toggle hides and shows lines', async ({ page }) => {
+    await page.goto('/song/4')
+    const lines = page.locator('svg line[stroke="#eab308"]')
+    await expect(lines).toHaveCount(2)
+
+    // Toggle off
+    await page.getByText('Common Tones').click()
+    await expect(lines).toHaveCount(0)
+
+    // Toggle back on
+    await page.getByText('Common Tones').click()
+    await expect(lines).toHaveCount(2)
+  })
+
+  test('toggling common tones does not shift keyset card positions', async ({ page }) => {
+    await page.goto('/song/4')
+    const firstCard = page.getByTestId('keyset-card').first()
+    const boxBefore = await firstCard.boundingBox()
+
+    // Toggle off
+    await page.getByText('Common Tones').click()
+    const boxAfter = await firstCard.boundingBox()
+
+    expect(boxBefore!.y).toBe(boxAfter!.y)
+    expect(boxBefore!.height).toBe(boxAfter!.height)
+  })
+
+  test('save bar appearing does not shift header card position', async ({ page }) => {
+    await page.goto('/song/4')
+    // Get the header card position (the white card with album art / title)
+    const headerCard = page.locator('.bg-white.rounded-lg.shadow.mb-6').first()
+    const boxBefore = await headerCard.boundingBox()
+
+    // Make a change to trigger the save bar
+    const firstPiano = page.getByTestId('piano-keyboard').first()
+    const pianoBox = await firstPiano.boundingBox()!
+    await firstPiano.click({ position: { x: 10, y: pianoBox!.height * 0.8 } })
+
+    // Verify save bar is now visible
+    await expect(page.getByTestId('save-bar')).toBeVisible()
+
+    const boxAfter = await headerCard.boundingBox()
+    expect(boxBefore!.y).toBe(boxAfter!.y)
+    expect(boxBefore!.height).toBe(boxAfter!.height)
+  })
 })
