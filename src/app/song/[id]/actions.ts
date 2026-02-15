@@ -3,6 +3,32 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 
+export async function saveKeySets(songId: number, keySets: { type: string; keyPresses: { midiNote: number; color: string }[] }[]) {
+  await prisma.$transaction(async (tx) => {
+    // Delete all existing key sets (cascade deletes key presses)
+    await tx.keySet.deleteMany({ where: { songId } })
+
+    // Recreate all key sets with their key presses
+    for (let i = 0; i < keySets.length; i++) {
+      await tx.keySet.create({
+        data: {
+          songId,
+          position: i + 1,
+          type: keySets[i].type,
+          keyPresses: {
+            create: keySets[i].keyPresses.map((kp) => ({
+              midiNote: kp.midiNote,
+              color: kp.color,
+            })),
+          },
+        },
+      })
+    }
+  })
+
+  revalidatePath('/')
+}
+
 export async function updateYoutubeUrl(songId: number, url: string | null) {
   await prisma.song.update({
     where: { id: songId },
@@ -25,144 +51,3 @@ export async function updateSongTitle(songId: number, title: string) {
   revalidatePath('/')
 }
 
-export async function reorderKeySets(songId: number, orderedKeySetIds: number[]) {
-  // Two-phase update to avoid @@unique([songId, position]) constraint violations:
-  // Phase 1: set all positions to negative temp values
-  // Phase 2: set final positions
-  await prisma.$transaction([
-    ...orderedKeySetIds.map((id, index) =>
-      prisma.keySet.update({
-        where: { id },
-        data: { position: -(index + 1) },
-      })
-    ),
-    ...orderedKeySetIds.map((id, index) =>
-      prisma.keySet.update({
-        where: { id },
-        data: { position: index + 1 },
-      })
-    ),
-  ])
-
-  revalidatePath(`/song/${songId}`)
-}
-
-export async function duplicateKeySet(keySetId: number, songId: number) {
-  const original = await prisma.keySet.findUnique({
-    where: { id: keySetId },
-    include: { keyPresses: true },
-  })
-  if (!original) throw new Error('Key set not found')
-
-  // Shift all key sets after the original up by 1 to make room
-  const later = await prisma.keySet.findMany({
-    where: { songId, position: { gt: original.position } },
-    orderBy: { position: 'desc' },
-  })
-  for (const ks of later) {
-    await prisma.keySet.update({
-      where: { id: ks.id },
-      data: { position: ks.position + 1 },
-    })
-  }
-
-  const copy = await prisma.keySet.create({
-    data: {
-      songId,
-      position: original.position + 1,
-      type: original.type,
-      keyPresses: {
-        create: original.keyPresses.map((kp) => ({
-          midiNote: kp.midiNote,
-          color: kp.color,
-        })),
-      },
-    },
-    include: { keyPresses: true },
-  })
-
-  revalidatePath(`/song/${songId}`)
-  revalidatePath('/')
-  return copy
-}
-
-export async function createKeySet(songId: number) {
-  const lastKeySet = await prisma.keySet.findFirst({
-    where: { songId },
-    orderBy: { position: 'desc' },
-  })
-  const nextPosition = (lastKeySet?.position ?? 0) + 1
-
-  const keySet = await prisma.keySet.create({
-    data: {
-      songId,
-      position: nextPosition,
-    },
-  })
-
-  revalidatePath(`/song/${songId}`)
-  revalidatePath('/')
-  return keySet
-}
-
-export async function toggleKeyPress(keySetId: number, midiNote: number, songId: number, color: string = 'red') {
-  const existing = await prisma.keyPress.findFirst({
-    where: { keySetId, midiNote },
-  })
-
-  if (existing && existing.color === color) {
-    // Same color: toggle off
-    await prisma.keyPress.delete({ where: { id: existing.id } })
-  } else if (existing) {
-    // Different color: update
-    await prisma.keyPress.update({ where: { id: existing.id }, data: { color } })
-  } else {
-    // New note
-    await prisma.keyPress.create({ data: { keySetId, midiNote, color } })
-  }
-
-  revalidatePath(`/song/${songId}`)
-}
-
-export async function shiftNotes(keySetId: number, songId: number, delta: number) {
-  const keyPresses = await prisma.keyPress.findMany({ where: { keySetId } })
-
-  // Check all notes stay in valid MIDI range (0–127)
-  const allValid = keyPresses.every((kp) => {
-    const newNote = kp.midiNote + delta
-    return newNote >= 0 && newNote <= 127
-  })
-  if (!allValid) return
-
-  await prisma.$transaction(
-    keyPresses.map((kp) =>
-      prisma.keyPress.update({
-        where: { id: kp.id },
-        data: { midiNote: kp.midiNote + delta },
-      })
-    )
-  )
-
-  revalidatePath(`/song/${songId}`)
-}
-
-export async function shiftOctave(keySetId: number, songId: number, direction: 'up' | 'down') {
-  await shiftNotes(keySetId, songId, direction === 'up' ? 12 : -12)
-}
-
-export async function updateKeySetType(keySetId: number, songId: number, type: 'chord' | 'flourish') {
-  await prisma.keySet.update({
-    where: { id: keySetId },
-    data: { type },
-  })
-  revalidatePath(`/song/${songId}`)
-}
-
-export async function deleteKeySet(keySetId: number, songId: number) {
-  await prisma.keySet.delete({
-    where: { id: keySetId },
-  })
-
-  revalidatePath(`/song/${songId}`)
-  revalidatePath('/')
-}

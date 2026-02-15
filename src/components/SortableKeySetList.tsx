@@ -22,7 +22,6 @@ import { CSS } from '@dnd-kit/utilities'
 import PianoKeyboard from '@/components/PianoKeyboard'
 import { identifyChord } from '@/lib/chordId'
 import { playChord, preloadPiano } from '@/lib/playChord'
-import { reorderKeySets, deleteKeySet, createKeySet, duplicateKeySet, toggleKeyPress, shiftNotes, updateKeySetType } from '@/app/song/[id]/actions'
 
 interface KeyPress {
   id: number
@@ -38,11 +37,17 @@ interface KeySet {
 }
 
 interface SortableKeySetListProps {
-  songId: number
   keySets: KeySet[]
+  onAdd: () => void
+  onDelete: (id: number) => void
+  onDuplicate: (id: number) => void
+  onToggleNote: (keySetId: number, midiNote: number, color: string) => void
+  onShiftNotes: (keySetId: number, delta: number) => void
+  onToggleType: (keySetId: number) => void
+  onReorder: (keySets: KeySet[]) => void
 }
 
-function SortableKeySetCard({ keySet, songId, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType }: { keySet: KeySet; songId: number; onDelete: (id: number) => void; onDuplicate: (id: number) => void; onToggleNote: (keySetId: number, midiNote: number, color: string) => void; onShiftNotes: (keySetId: number, delta: number) => void; onToggleType: (keySetId: number) => void }) {
+function SortableKeySetCard({ keySet, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType }: { keySet: KeySet; onDelete: (id: number) => void; onDuplicate: (id: number) => void; onToggleNote: (keySetId: number, midiNote: number, color: string) => void; onShiftNotes: (keySetId: number, delta: number) => void; onToggleType: (keySetId: number) => void }) {
   const [activeColor, setActiveColor] = useState(DEFAULT_COLOR)
   const [showTranspose, setShowTranspose] = useState(false)
   const [showColorPicker, setShowColorPicker] = useState(false)
@@ -214,8 +219,7 @@ function SortableKeySetCard({ keySet, songId, onDelete, onDuplicate, onToggleNot
   )
 }
 
-export default function SortableKeySetList({ songId, keySets: initialKeySets }: SortableKeySetListProps) {
-  const [keySets, setKeySets] = useState(initialKeySets)
+export default function SortableKeySetList({ keySets, onAdd, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType, onReorder }: SortableKeySetListProps) {
   useEffect(() => {
     preloadPiano()
   }, [])
@@ -227,84 +231,14 @@ export default function SortableKeySetList({ songId, keySets: initialKeySets }: 
     })
   )
 
-  async function handleAdd() {
-    const newKeySet = await createKeySet(songId)
-    setKeySets((prev) => [...prev, { ...newKeySet, type: 'chord', keyPresses: [] }])
-  }
-
-  async function handleDuplicate(keySetId: number) {
-    const copy = await duplicateKeySet(keySetId, songId)
-    setKeySets((prev) => {
-      const idx = prev.findIndex((ks) => ks.id === keySetId)
-      const updated = [...prev]
-      updated.splice(idx + 1, 0, copy)
-      return updated
-    })
-  }
-
-  async function handleDelete(keySetId: number) {
-    if (!confirm('Are you sure you want to delete this key set?')) return
-    setKeySets((prev) => prev.filter((ks) => ks.id !== keySetId))
-    await deleteKeySet(keySetId, songId)
-  }
-
-  async function handleToggleNote(keySetId: number, midiNote: number, color: string) {
-    setKeySets((prev) =>
-      prev.map((ks) => {
-        if (ks.id !== keySetId) return ks
-        const existing = ks.keyPresses.find((kp) => kp.midiNote === midiNote)
-        if (existing && existing.color === color) {
-          // Same color: toggle off
-          return { ...ks, keyPresses: ks.keyPresses.filter((kp) => kp.midiNote !== midiNote) }
-        } else if (existing) {
-          // Different color: update color
-          return { ...ks, keyPresses: ks.keyPresses.map((kp) => kp.midiNote === midiNote ? { ...kp, color } : kp) }
-        } else {
-          // New note: add with color
-          return { ...ks, keyPresses: [...ks.keyPresses, { id: -Date.now(), midiNote, color }] }
-        }
-      })
-    )
-    await toggleKeyPress(keySetId, midiNote, songId, color)
-  }
-
-  async function handleShiftNotes(keySetId: number, delta: number) {
-    setKeySets((prev) =>
-      prev.map((ks) => {
-        if (ks.id !== keySetId) return ks
-        const allValid = ks.keyPresses.every((kp) => {
-          const newNote = kp.midiNote + delta
-          return newNote >= 0 && newNote <= 127
-        })
-        if (!allValid) return ks
-        return { ...ks, keyPresses: ks.keyPresses.map((kp) => ({ ...kp, midiNote: kp.midiNote + delta })) }
-      })
-    )
-    await shiftNotes(keySetId, songId, delta)
-  }
-
-  async function handleToggleType(keySetId: number) {
-    setKeySets((prev) =>
-      prev.map((ks) => {
-        if (ks.id !== keySetId) return ks
-        return { ...ks, type: ks.type === 'flourish' ? 'chord' : 'flourish' }
-      })
-    )
-    const ks = keySets.find((ks) => ks.id === keySetId)
-    const newType = ks?.type === 'flourish' ? 'chord' : 'flourish'
-    await updateKeySetType(keySetId, songId, newType)
-  }
-
-  async function handleDragEnd(event: DragEndEvent) {
+  function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
     if (!over || active.id === over.id) return
 
     const oldIndex = keySets.findIndex((ks) => ks.id === active.id)
     const newIndex = keySets.findIndex((ks) => ks.id === over.id)
     const newOrder = arrayMove(keySets, oldIndex, newIndex)
-
-    setKeySets(newOrder)
-    await reorderKeySets(songId, newOrder.map((ks) => ks.id))
+    onReorder(newOrder)
   }
 
   return (
@@ -313,14 +247,14 @@ export default function SortableKeySetList({ songId, keySets: initialKeySets }: 
       <SortableContext items={keySets.map((ks) => ks.id)} strategy={verticalListSortingStrategy}>
         <div className="space-y-6">
           {keySets.map((keySet) => (
-            <SortableKeySetCard key={keySet.id} keySet={keySet} songId={songId} onDelete={handleDelete} onDuplicate={handleDuplicate} onToggleNote={handleToggleNote} onShiftNotes={handleShiftNotes} onToggleType={handleToggleType} />
+            <SortableKeySetCard key={keySet.id} keySet={keySet} onDelete={onDelete} onDuplicate={onDuplicate} onToggleNote={onToggleNote} onShiftNotes={onShiftNotes} onToggleType={onToggleType} />
           ))}
         </div>
       </SortableContext>
     </DndContext>
 
     <button
-      onClick={handleAdd}
+      onClick={onAdd}
       className="w-full mt-6 border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center text-gray-400 hover:text-blue-500 hover:border-blue-400 transition-colors cursor-pointer"
       title="Add Key Set"
     >

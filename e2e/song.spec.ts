@@ -1,5 +1,21 @@
 import { test, expect } from '@playwright/test'
 
+// Helper: click Save if dirty, wait for save to complete
+async function clickSave(page: import('@playwright/test').Page) {
+  const saveBar = page.getByTestId('save-bar')
+  if (!(await saveBar.isVisible())) return
+  await page.getByTestId('save-button').click()
+  await expect(saveBar).not.toBeVisible({ timeout: 10000 })
+}
+
+// Helper: save via Cmd+S keyboard shortcut (works after DnD when button clicks are blocked)
+async function keyboardSave(page: import('@playwright/test').Page) {
+  const saveBar = page.getByTestId('save-bar')
+  if (!(await saveBar.isVisible())) return
+  await page.keyboard.press('Meta+s')
+  await expect(saveBar).not.toBeVisible({ timeout: 10000 })
+}
+
 test.describe('Song Page', () => {
   test.describe.configure({ mode: 'serial' })
 
@@ -20,6 +36,44 @@ test.describe('Song Page', () => {
     await expect(playButtons).toHaveCount(4)
   })
 
+  test('save bar appears on change and disappears after save', async ({ page }) => {
+    await page.goto('/song/4')
+    // No save bar initially
+    await expect(page.getByTestId('save-bar')).not.toBeVisible()
+
+    // Make a change — toggle type
+    await page.getByTestId('keyset-card').first().getByTestId('type-toggle').click()
+
+    // Save bar should appear
+    await expect(page.getByTestId('save-bar')).toBeVisible()
+
+    // Click Save
+    await clickSave(page)
+
+    // Restore: toggle back
+    await page.getByTestId('keyset-card').first().getByTestId('type-toggle').click()
+    await clickSave(page)
+  })
+
+  test('reset discards unsaved changes', async ({ page }) => {
+    await page.goto('/song/4')
+    const firstCard = page.getByTestId('keyset-card').first()
+    await expect(firstCard.locator('h2')).toHaveText('CM')
+
+    // Toggle to flourish (unsaved)
+    await firstCard.getByTestId('type-toggle').click()
+    await expect(firstCard.locator('h2')).toHaveText('Flourish')
+    await expect(page.getByTestId('save-bar')).toBeVisible()
+
+    // Click Reset (accept confirmation)
+    page.on('dialog', dialog => dialog.accept())
+    await page.getByTestId('reset-button').click()
+
+    // Should revert to CM
+    await expect(page.getByTestId('keyset-card').first().locator('h2')).toHaveText('CM')
+    await expect(page.getByTestId('save-bar')).not.toBeVisible()
+  })
+
   test('flourish toggle switches type and persists', async ({ page }) => {
     await page.goto('/song/4')
     const firstCard = page.getByTestId('keyset-card').first()
@@ -27,17 +81,19 @@ test.describe('Song Page', () => {
     // First card should be a chord (CM)
     await expect(firstCard.locator('h2')).toHaveText('CM')
 
-    // Toggle to flourish
+    // Toggle to flourish and save
     await firstCard.getByTestId('type-toggle').click()
     await expect(firstCard.locator('h2')).toHaveText('Flourish')
+    await clickSave(page)
 
     // Reload and verify persistence
     await page.reload()
     await expect(page.getByTestId('keyset-card').first().locator('h2')).toHaveText('Flourish')
 
-    // Toggle back to chord to restore state
+    // Toggle back to chord and save to restore state
     await page.getByTestId('keyset-card').first().getByTestId('type-toggle').click()
     await expect(page.getByTestId('keyset-card').first().locator('h2')).toHaveText('CM')
+    await clickSave(page)
   })
 
   test('page title is the song name', async ({ page }) => {
@@ -59,7 +115,7 @@ test.describe('Song Page', () => {
     // Title should update
     await expect(heading).toHaveText('Renamed Song')
 
-    // Reload and verify persistence
+    // Reload and verify persistence (title saves immediately, not deferred)
     await page.reload()
     await expect(heading).toHaveText('Renamed Song')
 
@@ -108,6 +164,9 @@ test.describe('Song Page', () => {
     await expect(cards.nth(0).locator('h2')).toHaveText(secondCardText!)
     await expect(cards.nth(1).locator('h2')).toHaveText(firstCardText!)
 
+    // Save via keyboard shortcut (button clicks don't fire after DnD pointer capture)
+    await keyboardSave(page)
+
     // Reload and verify persistence
     await page.reload()
     await expect(cards.nth(0).locator('h2')).toHaveText(secondCardText!)
@@ -123,6 +182,7 @@ test.describe('Song Page', () => {
     await page.mouse.move(rToBox.x + rToBox.width / 2, rToBox.y + rToBox.height / 2, { steps: 10 })
     await page.mouse.move(rToBox.x + rToBox.width / 2, rToBox.y + rToBox.height + 20, { steps: 5 })
     await page.mouse.up()
+    await keyboardSave(page)
   })
 
   test('delete key set with confirmation', async ({ page }) => {
@@ -130,7 +190,6 @@ test.describe('Song Page', () => {
 
     // First add a key set we can safely delete
     await page.locator('button[title="Add Key Set"]').click()
-    await page.waitForTimeout(500)
 
     const cards = page.locator('[data-testid="keyset-card"]')
     const countBefore = await cards.count()
@@ -142,7 +201,8 @@ test.describe('Song Page', () => {
     // Card should be removed
     await expect(cards).toHaveCount(countBefore - 1)
 
-    // Reload and verify persistence
+    // Save and reload to verify persistence
+    await clickSave(page)
     await page.reload()
     await expect(cards).toHaveCount(countBefore - 1)
   })
@@ -168,7 +228,7 @@ test.describe('Song Page', () => {
     await page.locator('button[title="Add Key Set"]').click()
     await expect(cards).toHaveCount(countBefore + 1)
 
-    // Clean up: delete the key set we just added
+    // Clean up: delete the key set we just added (accept confirm)
     page.on('dialog', dialog => dialog.accept())
     await cards.last().locator('button[title="Delete Key Set"]').click()
     await expect(cards).toHaveCount(countBefore)
@@ -187,7 +247,7 @@ test.describe('Song Page', () => {
     // The copy should appear right after the original with the same chord label
     await expect(cards.nth(1).locator('h2')).toHaveText(firstLabel!)
 
-    // Clean up: delete the duplicate
+    // Clean up: delete the duplicate (accept confirm)
     page.on('dialog', dialog => dialog.accept())
     await cards.nth(1).locator('button[title="Delete Key Set"]').click()
     await expect(cards).toHaveCount(countBefore)
@@ -212,15 +272,17 @@ test.describe('Song Page', () => {
     const colorAfter = await firstKey.evaluate((el) => getComputedStyle(el).backgroundColor)
     expect(colorAfter).not.toBe(colorBefore)
 
-    // Reload and verify persistence
+    // Save and reload to verify persistence
+    await clickSave(page)
     await page.reload()
     const reloadedPiano = page.getByTestId('piano-keyboard').first()
     const reloadedKey = reloadedPiano.locator(`[data-note="${noteBefore}"]`)
     const colorReloaded = await reloadedKey.evaluate((el) => getComputedStyle(el).backgroundColor)
     expect(colorReloaded).toBe(colorAfter)
 
-    // Toggle back to restore original state
+    // Toggle back to restore original state and save
     await reloadedKey.click()
+    await clickSave(page)
   })
 
   test('color picker selects blue and persists', async ({ page }) => {
@@ -240,16 +302,18 @@ test.describe('Song Page', () => {
     const color = await testKey.evaluate((el) => getComputedStyle(el).backgroundColor)
     expect(color).toBe('rgb(59, 130, 246)')
 
-    // Reload and verify persistence
+    // Save and reload to verify persistence
+    await clickSave(page)
     await page.reload()
     const reloadedKey = page.getByTestId('keyset-card').first().getByTestId('piano-keyboard').locator('[data-note="62"]')
     const reloadedColor = await reloadedKey.evaluate((el) => getComputedStyle(el).backgroundColor)
     expect(reloadedColor).toBe('rgb(59, 130, 246)')
 
-    // Clean up: open popover, select blue, click to remove
+    // Clean up: open popover, select blue, click to remove, save
     await page.getByTestId('keyset-card').first().getByTestId('color-toggle').click()
     await page.getByTestId('keyset-card').first().locator('button[title="Blue"]').click()
     await reloadedKey.click()
+    await clickSave(page)
   })
 
   test('transpose popover shifts notes and persists', async ({ page }) => {
@@ -272,12 +336,13 @@ test.describe('Song Page', () => {
     // Original note 57 should no longer be highlighted (white key = white bg)
     await expect(piano.locator('[data-note="57"]')).toHaveCSS('background-color', 'rgb(255, 255, 255)')
 
-    // Reload and verify persistence
+    // Save and reload to verify persistence
+    await clickSave(page)
     await page.reload()
     const reloadedPiano = page.getByTestId('keyset-card').first().getByTestId('piano-keyboard')
     await expect(reloadedPiano.locator('[data-note="57"]')).toHaveCSS('background-color', 'rgb(255, 255, 255)')
 
-    // Shift back down to restore original state
+    // Shift back down to restore original state and save
     await page.getByTestId('keyset-card').first().getByTestId('transpose-button').click()
     await page.getByTestId('keyset-card').first().locator('button[title="Octave Down"]').click()
 
@@ -286,6 +351,7 @@ test.describe('Song Page', () => {
       (el) => getComputedStyle(el).backgroundColor
     )
     expect(noteAfter).not.toBe('rgb(255, 255, 255)')
+    await clickSave(page)
   })
 
   test('Analyze Song button is visible', async ({ page }) => {
