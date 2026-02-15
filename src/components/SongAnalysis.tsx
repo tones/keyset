@@ -21,6 +21,7 @@ function formatTimestamp(iso: string): string {
     day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
+    timeZoneName: 'short',
   })
 }
 
@@ -49,7 +50,10 @@ export default function SongAnalysis({ songId, songTitle, chordDetail, llmProvid
       <button
         onClick={handleAnalyze}
         disabled={loading}
-        className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="px-5 py-2.5 rounded-xl font-sans text-base disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+        style={{ backgroundColor: '#1a1a18', color: '#F5F5F0' }}
+        onMouseEnter={(e) => { if (!loading) { e.currentTarget.style.backgroundColor = '#393937' } }}
+        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#1a1a18' }}
       >
         {loading ? 'Analyzing...' : `${analysis ? 'Re-analyze' : 'Analyze'} with ${llmProvider === 'anthropic' ? 'Claude' : 'ChatGPT'}`}
       </button>
@@ -61,23 +65,16 @@ export default function SongAnalysis({ songId, songTitle, chordDetail, llmProvid
       )}
 
       {analysis && (
-        <div className="mt-4 p-6 bg-white rounded-lg shadow border border-purple-100">
-          <div className="flex justify-between items-start mb-3">
-            <div>
-              {analysisUpdatedAt && (
-                <p className="text-sm text-gray-400">
-                  Analysis generated on {formatTimestamp(analysisUpdatedAt)}
-                </p>
-              )}
-              <h3 className="text-lg font-semibold text-purple-900">Music Theory Analysis</h3>
-            </div>
-            <div className="flex items-center gap-2">
+        <div className="mt-4 p-6 rounded-lg shadow border font-serif" style={{ backgroundColor: '#F5F5F0', borderColor: '#DDD9CE' }}>
+          <div className="float-right flex items-center gap-2 ml-4">
               <button
                 onClick={() => {
                   const prompt = `I'm studying the song "${songTitle}". Here is the chord progression with individual notes:\n\n${chordDetail}\n\nHere is a music theory analysis that was previously generated:\n\n${analysis}\n\nI'd like to discuss the music theory of this song with you. Please help me understand the chord progressions, harmonic relationships, inversions, and any interesting patterns.`
                   window.open(`https://claude.ai/new?q=${encodeURIComponent(prompt)}`, '_blank')
                 }}
-                className="text-gray-400 hover:text-purple-500 transition-colors cursor-pointer"
+                className="transition-colors cursor-pointer" style={{ color: '#9a9893' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#ae5630'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#9a9893'}
                 title="Discuss in Claude"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -100,11 +97,15 @@ export default function SongAnalysis({ songId, songTitle, chordDetail, llmProvid
                   <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
                 </svg>
               </button>
-            </div>
           </div>
-          <div className="prose prose-sm prose-purple max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-li:text-gray-700 prose-strong:text-gray-900">
+          <div className="prose prose-sm max-w-none" style={{ '--tw-prose-headings': '#2b2a27', '--tw-prose-body': '#393937', '--tw-prose-bold': '#1f1e1b', '--tw-prose-bullets': '#6b6a68' } as React.CSSProperties}>
             <ReactMarkdown>{analysis}</ReactMarkdown>
           </div>
+          {analysisUpdatedAt && (
+            <p className="text-sm mt-4" style={{ color: '#9a9893' }}>
+              Analysis generated on {formatTimestamp(analysisUpdatedAt)}
+            </p>
+          )}
         </div>
       )}
     </div>
