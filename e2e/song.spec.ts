@@ -14,6 +14,9 @@ test.describe('Song Page', () => {
     await expect(chordLabels.nth(0)).toHaveText('CM')
     await expect(chordLabels.nth(1)).toHaveText('FM')
     await expect(chordLabels.nth(2)).toHaveText('GM')
+    // Each key set with notes should have a play button
+    const playButtons = page.locator('button[title="Play Chord"]')
+    await expect(playButtons).toHaveCount(3)
   })
 
   test('page title is the song name', async ({ page }) => {

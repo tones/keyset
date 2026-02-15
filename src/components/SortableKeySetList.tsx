@@ -21,6 +21,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import PianoKeyboard from '@/components/PianoKeyboard'
 import { identifyChord } from '@/lib/chordId'
+import { playChord } from '@/lib/playChord'
 import { reorderKeySets, deleteKeySet, createKeySet, toggleKeyPress } from '@/app/song/[id]/actions'
 
 interface KeyPress {
@@ -79,6 +80,17 @@ function SortableKeySetCard({ keySet, songId, onDelete, onToggleNote }: { keySet
           <h2 className="text-xl font-semibold text-gray-900" data-testid="chord-label">
             {keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map((kp) => kp.midiNote)) : `Key Set ${keySet.position}`}
           </h2>
+          {keySet.keyPresses.length > 0 && (
+            <button
+              onClick={() => playChord(keySet.keyPresses.map((kp) => kp.midiNote))}
+              className="text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
+              title="Play Chord"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </button>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <button
