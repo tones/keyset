@@ -13,6 +13,7 @@ interface KeyPress {
 interface KeySet {
   id: number
   position: number
+  type: string
   keyPresses: KeyPress[]
 }
 
