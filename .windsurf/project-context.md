@@ -4,6 +4,17 @@
 
 A web app for managing "key sets" — collections of piano key selections organized by song. Each song contains ordered key sets, and each key set contains a set of MIDI note selections visualized on a piano keyboard.
 
+## Setup (Fresh Clone)
+
+```bash
+npm install
+cp .env.example .env
+npx prisma generate
+npx prisma migrate deploy
+npx tsx prisma/seed.ts
+npm run dev
+```
+
 ## Tech Stack
 
 - **Framework:** Next.js 16 (App Router, Server Components, Server Actions)

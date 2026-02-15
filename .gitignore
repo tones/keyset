@@ -15,6 +15,9 @@
 
 # database
 *.db
+
+# generated prisma client
+/generated/
 *.db-journal
 
 # next.js

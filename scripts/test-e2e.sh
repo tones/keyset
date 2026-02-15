@@ -9,7 +9,8 @@ export DATABASE_URL="file:./test.db"
 # Remove stale test database
 rm -f prisma/test.db prisma/test.db-journal prisma/test.db-wal
 
-# Migrate and seed the test database
+# Generate client and migrate the test database, then seed
+npx prisma generate
 npx prisma migrate deploy
 npx tsx prisma/seed.ts
 
