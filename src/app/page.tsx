@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
 import { createSong } from './actions'
 import SongList from '@/components/SongList'
+import { fetchAlbumArt } from '@/lib/albumArt'
 
 export default async function Home() {
   // Get all songs with their key sets from database
@@ -21,6 +22,22 @@ export default async function Home() {
       title: 'asc'
     }
   })
+
+  // Fetch album art for songs that don't have it yet
+  const songsNeedingArt = songs.filter(s => !s.imageUrl && s.title !== 'Untitled Song')
+  if (songsNeedingArt.length > 0) {
+    await Promise.allSettled(
+      songsNeedingArt.map(async (song) => {
+        try {
+          const url = await fetchAlbumArt(song.title)
+          if (url) {
+            await prisma.song.update({ where: { id: song.id }, data: { imageUrl: url } })
+            song.imageUrl = url
+          }
+        } catch {}
+      })
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">

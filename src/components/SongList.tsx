@@ -19,6 +19,7 @@ interface KeySet {
 interface Song {
   id: number
   title: string
+  imageUrl: string | null
   keySets: KeySet[]
 }
 
@@ -45,9 +46,21 @@ export default function SongList({ songs }: { songs: Song[] }) {
   return (
     <div className="grid gap-6">
       {songs.map((song) => (
-        <Link key={song.id} href={`/song/${song.id}`} className="block bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
-          <div className="flex justify-between items-start mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">{song.title}</h2>
+        <Link key={song.id} href={`/song/${song.id}`} className="flex bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer overflow-hidden">
+          {song.imageUrl ? (
+            <img src={song.imageUrl} alt="" className="w-24 h-24 object-cover shrink-0" />
+          ) : (
+            <div className="w-24 h-24 bg-gray-100 shrink-0 flex items-center justify-center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300">
+                <path d="M9 18V5l12-2v13" />
+                <circle cx="6" cy="18" r="3" />
+                <circle cx="18" cy="16" r="3" />
+              </svg>
+            </div>
+          )}
+          <div className="flex-1 p-4 min-w-0">
+          <div className="flex justify-between items-start mb-2">
+            <h2 className="text-lg font-semibold text-gray-900 truncate">{song.title}</h2>
             <div className="flex items-center gap-2">
               <button
                 onClick={(e) => handleDuplicate(e, song.id)}
@@ -76,9 +89,9 @@ export default function SongList({ songs }: { songs: Song[] }) {
           {song.keySets.length === 0 ? (
             <p className="text-sm text-gray-400">No key sets yet</p>
           ) : (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {song.keySets.map((keySet) => (
-                <span key={keySet.id} className={`inline-block text-sm font-medium px-3 py-1 rounded-full ${keySet.type === 'flourish' ? 'bg-amber-50 text-amber-600 italic' : 'bg-blue-50 text-blue-700'}`}>
+                <span key={keySet.id} className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${keySet.type === 'flourish' ? 'bg-amber-50 text-amber-600 italic' : 'bg-blue-50 text-blue-700'}`}>
                   {keySet.type === 'flourish'
                     ? '♪'
                     : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map(kp => kp.midiNote)) : '—'}
@@ -86,6 +99,7 @@ export default function SongList({ songs }: { songs: Song[] }) {
               ))}
             </div>
           )}
+          </div>
         </Link>
       ))}
     </div>

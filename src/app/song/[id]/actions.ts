@@ -44,7 +44,7 @@ export async function updateSongTitle(songId: number, title: string) {
 
   await prisma.song.update({
     where: { id: songId },
-    data: { title: title.trim() },
+    data: { title: title.trim(), imageUrl: null },
   })
 
   revalidatePath(`/song/${songId}`)
