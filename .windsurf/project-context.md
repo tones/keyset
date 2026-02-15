@@ -36,6 +36,7 @@ Uses **singular nouns** (`/song/`, `/keyset/`), not plurals.
 
 - **`PianoKeyboard`** (`src/components/PianoKeyboard.tsx`) — Renders a piano keyboard with highlighted notes. Supports an optional `onToggle` callback for interactive mode. Uses absolute positioning with a boundary-based algorithm for black key placement. Has `data-testid="piano-keyboard"` for test selection.
 - **`EditableTitle`** (`src/components/EditableTitle.tsx`) — Generic inline-editable title. Click to edit, Enter to save, Escape to cancel. Accepts an `onSave` callback prop.
+- **`SongList`** (`src/components/SongList.tsx`) — Client component rendering song cards as clickable links on the home page. Includes trash icon with confirmation dialog for deleting songs.
 - **`SortableKeySetList`** (`src/components/SortableKeySetList.tsx`) — Drag-and-drop sortable list of key set cards using @dnd-kit. Includes add (plus icon), delete (trash icon with confirmation), and edit (pencil icon link) actions.
 - **`EditableKeySet`** (`src/components/EditableKeySet.tsx`) — Interactive key set editor. Toggles keys on/off via PianoKeyboard, shows unsaved changes indicator, Save button persists to database.
 
@@ -47,6 +48,13 @@ Uses **singular nouns** (`/song/`, `/keyset/`), not plurals.
 
 ## Server Actions
 
-- `src/app/actions.ts` — `createSong` (creates "Untitled Song", redirects to it)
+- `src/app/actions.ts` — `createSong` (creates "Untitled Song", redirects to it), `deleteSong` (deletes song with cascade, revalidates home)
 - `src/app/song/[id]/actions.ts` — `updateSongTitle`, `reorderKeySets`, `createKeySet`, `deleteKeySet`
 - `src/app/keyset/[id]/actions.ts` — `saveKeyPresses`, `updateKeySetName`
+
+## Keeping This File Up to Date
+
+When making changes to the codebase, **always** update the relevant `.windsurf/` files before committing:
+
+- **`project-context.md`** — Update when adding/removing/renaming components, server actions, routes, data model fields, or gotchas.
+- **`workflows/testing.md`** — Update when changing how tests are run, adding new test files, or changing test conventions.

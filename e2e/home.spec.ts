@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('Home Page', () => {
+  test.describe.configure({ mode: 'serial' })
+
   test('page title is "Key Sets"', async ({ page }) => {
     await page.goto('/')
     await expect(page).toHaveTitle('Key Sets')
@@ -9,8 +11,8 @@ test.describe('Home Page', () => {
   test('displays "Key Sets" heading and lists songs', async ({ page }) => {
     await page.goto('/')
     await expect(page.locator('h1')).toHaveText('Key Sets')
-    const viewLinks = page.getByRole('link', { name: 'View →' })
-    await expect(viewLinks.first()).toBeVisible()
+    const songLinks = page.locator('a[href^="/song/"]')
+    await expect(songLinks.first()).toBeVisible()
   })
 
   test('song cards show key set names', async ({ page }) => {
@@ -30,5 +32,31 @@ test.describe('Home Page', () => {
     await expect(page).toHaveURL(/\/song\/\d+/)
     await expect(page.locator('h1')).toHaveText('Untitled Song')
     await expect(page).toHaveTitle('Untitled Song')
+  })
+
+  test('delete song with confirmation', async ({ page }) => {
+    await page.goto('/')
+    const songCards = page.locator('a[href^="/song/"]')
+    const countBefore = await songCards.count()
+
+    // Accept the confirmation dialog
+    page.on('dialog', dialog => dialog.accept())
+    await songCards.last().locator('button[title="Delete Song"]').click()
+
+    // Song should be removed
+    await expect(songCards).toHaveCount(countBefore - 1)
+  })
+
+  test('delete song — cancel keeps song', async ({ page }) => {
+    await page.goto('/')
+    const songCards = page.locator('a[href^="/song/"]')
+    const countBefore = await songCards.count()
+
+    // Dismiss the confirmation dialog
+    page.on('dialog', dialog => dialog.dismiss())
+    await songCards.first().locator('button[title="Delete Song"]').click()
+
+    // Song count should remain the same
+    await expect(songCards).toHaveCount(countBefore)
   })
 })

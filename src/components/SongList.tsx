@@ -1,0 +1,78 @@
+'use client'
+
+import Link from 'next/link'
+import { deleteSong } from '@/app/actions'
+
+interface KeyPress {
+  id: number
+  midiNote: number
+}
+
+interface KeySet {
+  id: number
+  name: string | null
+  position: number
+  keyPresses: KeyPress[]
+}
+
+interface Song {
+  id: number
+  title: string
+  keySets: KeySet[]
+}
+
+export default function SongList({ songs }: { songs: Song[] }) {
+  async function handleDelete(e: React.MouseEvent, songId: number) {
+    e.preventDefault()
+    if (!confirm('Are you sure you want to delete this song?')) return
+    await deleteSong(songId)
+  }
+
+  if (songs.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow p-8 text-center">
+        <p className="text-gray-600">No songs yet. Create your first song!</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="grid gap-6">
+      {songs.map((song) => (
+        <Link key={song.id} href={`/song/${song.id}`} className="block bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
+          <div className="flex justify-between items-start mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">{song.title}</h2>
+            <button
+              onClick={(e) => handleDelete(e, song.id)}
+              className="text-gray-400 hover:text-red-500 transition-colors"
+              title="Delete Song"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 6h18" />
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+              </svg>
+            </button>
+          </div>
+          
+          <div className="space-y-2">
+            {song.keySets.length === 0 ? (
+              <p className="text-sm text-gray-400">No key sets yet</p>
+            ) : (
+              song.keySets.map((keySet) => (
+                <div key={keySet.id} className="border-l-4 border-blue-500 pl-4">
+                  <h3 className="font-medium text-gray-700">
+                    {keySet.name || `Key Set ${keySet.position}`}
+                  </h3>
+                  <div className="text-sm text-gray-500 font-mono">
+                    {keySet.keyPresses.map(kp => kp.midiNote).join(', ')}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </Link>
+      ))}
+    </div>
+  )
+}
