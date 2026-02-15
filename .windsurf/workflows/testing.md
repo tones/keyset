@@ -25,7 +25,7 @@ Whenever a new behavior or feature is added to the app, **always** add a corresp
 ## Test Structure
 
 - `e2e/home.spec.ts` — Home page tests (listing songs, creating new songs, deleting songs)
-- `e2e/song.spec.ts` — Song page tests (rename, reorder key sets, add/delete key sets, LLM analysis display/delete, navigation)
+- `e2e/song.spec.ts` — Song page tests (rename, reorder key sets, add/delete key sets, chord identification labels, LLM analysis display/delete, navigation)
 
 ## Writing New Tests
 

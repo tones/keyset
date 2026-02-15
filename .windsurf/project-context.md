@@ -23,6 +23,7 @@ npm run dev
 - **Drag-and-drop:** @dnd-kit (core, sortable, utilities)
 - **Styling:** Tailwind CSS 4 with @tailwindcss/typography (prose classes)
 - **Markdown:** react-markdown for rendering LLM analysis output
+- **Music theory:** tonal (chord detection from MIDI notes)
 - **Language:** TypeScript
 - **Testing:** Playwright E2E tests
 
