@@ -44,7 +44,7 @@ export default function SongList({ songs }: { songs: Song[] }) {
             <h2 className="text-xl font-semibold text-gray-900">{song.title}</h2>
             <button
               onClick={(e) => handleDelete(e, song.id)}
-              className="text-gray-400 hover:text-red-500 transition-colors"
+              className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
               title="Delete Song"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

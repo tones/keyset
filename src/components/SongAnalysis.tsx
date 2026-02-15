@@ -75,7 +75,7 @@ export default function SongAnalysis({ songId, cachedAnalysis, cachedAnalysisUpd
                 setAnalysisUpdatedAt(null)
                 await clearAnalysis(songId)
               }}
-              className="text-gray-400 hover:text-red-500 transition-colors"
+              className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
               title="Delete Analysis"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

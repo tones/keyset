@@ -85,7 +85,7 @@ function SortableKeySetCard({ keySet, songId, onDelete, onToggleNote, onRename }
         <div className="flex items-center gap-2">
           <button
             onClick={() => onDelete(keySet.id)}
-            className="text-gray-400 hover:text-red-500 transition-colors"
+            className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
             title="Delete Key Set"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
