@@ -79,6 +79,8 @@ Uses **singular nouns** (`/song/`), not plurals.
 - **Build:** Multi-stage Dockerfile with `output: "standalone"` in `next.config.ts`. Pages use `force-dynamic` to avoid DB access at build time.
 - **Startup:** `scripts/start.sh` runs `prisma migrate deploy` then `node server.js`.
 - **Redeploy:** `fly deploy --app keyset-app` from the project root.
+- **Sync prod → local:** `npm run db:pull` (overwrites `dev.db` at project root with production DB, then restart dev server). Requires `fly ssh issue --agent` if SSH cert has expired (certs last 24h).
+- **Backups:** Fly volume snapshots are enabled (5-day retention, automatic daily).
 
 ## Keeping This File Up to Date
 
