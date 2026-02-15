@@ -49,7 +49,12 @@ export default async function SongPage({ params }: { params: Promise<{ id: strin
         <SongAnalysis
           songId={song.id}
           songTitle={song.title}
-          chordSummary={song.keySets.map((ks) => ks.keyPresses.length > 0 ? identifyChord(ks.keyPresses.map((kp) => kp.midiNote)) : '(empty)').join(' → ')}
+          chordDetail={song.keySets.map((ks, i) => {
+            const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+            const notes = ks.keyPresses.map((kp) => `${NOTE_NAMES[kp.midiNote % 12]}${Math.floor(kp.midiNote / 12) - 1}`).join(', ')
+            const chordName = ks.keyPresses.length > 0 ? identifyChord(ks.keyPresses.map((kp) => kp.midiNote)) : '(empty)'
+            return `${i + 1}. ${chordName} — notes: ${notes || 'none'}`
+          }).join('\n')}
           llmProvider={process.env.LLM_PROVIDER ?? 'openai'}
           cachedAnalysis={song.analysis}
           cachedAnalysisUpdatedAt={song.analysisUpdatedAt?.toISOString()}

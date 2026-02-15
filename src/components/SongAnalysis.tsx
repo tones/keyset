@@ -7,7 +7,7 @@ import { analyzeSong, clearAnalysis } from '@/app/song/[id]/analyze'
 interface SongAnalysisProps {
   songId: number
   songTitle: string
-  chordSummary: string
+  chordDetail: string
   llmProvider: string
   cachedAnalysis?: string | null
   cachedAnalysisUpdatedAt?: string | null
@@ -24,7 +24,7 @@ function formatTimestamp(iso: string): string {
   })
 }
 
-export default function SongAnalysis({ songId, songTitle, chordSummary, llmProvider, cachedAnalysis, cachedAnalysisUpdatedAt }: SongAnalysisProps) {
+export default function SongAnalysis({ songId, songTitle, chordDetail, llmProvider, cachedAnalysis, cachedAnalysisUpdatedAt }: SongAnalysisProps) {
   const [analysis, setAnalysis] = useState<string | null>(cachedAnalysis ?? null)
   const [analysisUpdatedAt, setAnalysisUpdatedAt] = useState<string | null>(cachedAnalysisUpdatedAt ?? null)
   const [loading, setLoading] = useState(false)
@@ -74,7 +74,7 @@ export default function SongAnalysis({ songId, songTitle, chordSummary, llmProvi
             <div className="flex items-center gap-2">
               <button
                 onClick={() => {
-                  const prompt = `I'm studying the song "${songTitle}". Here are the chords: ${chordSummary}\n\nHere is a music theory analysis that was previously generated:\n\n${analysis}\n\nI'd like to discuss the music theory of this song with you. Please help me understand the chord progressions, harmonic relationships, and any interesting patterns.`
+                  const prompt = `I'm studying the song "${songTitle}". Here is the chord progression with individual notes:\n\n${chordDetail}\n\nHere is a music theory analysis that was previously generated:\n\n${analysis}\n\nI'd like to discuss the music theory of this song with you. Please help me understand the chord progressions, harmonic relationships, inversions, and any interesting patterns.`
                   window.open(`https://claude.ai/new?q=${encodeURIComponent(prompt)}`, '_blank')
                 }}
                 className="text-gray-400 hover:text-purple-500 transition-colors cursor-pointer"
