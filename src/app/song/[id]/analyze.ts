@@ -84,7 +84,6 @@ Please provide:
 4. What do you know specifically about "${song.title}"?
    a. **Original recording:** Stick to facts only — album name, year, label, and musicians who played on it. No editorializing or subjective descriptions.
    b. **Chord accuracy:** Compare the chords provided above with what is generally understood or published about this song's harmony. If the chords I've entered seem wrong, incomplete, or could be improved, point that out with specifics.
-   c. **Sampling & connections:** Note any well-known songs that sample this track, songs that this track samples, or closely related tunes (interpolations, covers, canonical variations) — only widely recognized connections, not loose associations.
 
 Keep the response concise and practical.`
 
