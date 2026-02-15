@@ -15,9 +15,11 @@ npx prisma migrate deploy
 npx tsx prisma/seed.ts
 
 # Stop any existing dev server so the .next/dev/lock is released
+DEV_WAS_RUNNING=""
 DEV_PID=$(lsof -nP -iTCP:3000 -sTCP:LISTEN -t 2>/dev/null || true)
 if [ -n "$DEV_PID" ]; then
   echo "Stopping dev server (pid $DEV_PID) to release .next/dev/lock..."
+  DEV_WAS_RUNNING="1"
   kill "$DEV_PID" 2>/dev/null || true
   sleep 1
 fi
@@ -25,7 +27,17 @@ fi
 # Start test server in the background
 npx next dev --port "$TEST_PORT" &
 SERVER_PID=$!
-trap "kill $SERVER_PID 2>/dev/null || true" EXIT
+
+cleanup() {
+  kill "$SERVER_PID" 2>/dev/null || true
+  # Restart dev server if it was running before tests
+  if [ -n "$DEV_WAS_RUNNING" ]; then
+    echo "Restarting dev server on port 3000..."
+    npx next dev --port 3000 &
+    disown
+  fi
+}
+trap cleanup EXIT
 
 # Wait for the server to be ready
 echo "Waiting for test server on port $TEST_PORT..."

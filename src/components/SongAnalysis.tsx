@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { analyzeSong } from '@/app/song/[id]/analyze'
+import ReactMarkdown from 'react-markdown'
+import { analyzeSong, clearAnalysis } from '@/app/song/[id]/analyze'
 
 interface SongAnalysisProps {
   songId: number
@@ -58,14 +59,34 @@ export default function SongAnalysis({ songId, cachedAnalysis, cachedAnalysisUpd
 
       {analysis && (
         <div className="mt-4 p-6 bg-white rounded-lg shadow border border-purple-100">
-          {analysisUpdatedAt && (
-            <p className="text-sm text-gray-400 mb-3">
-              Analysis generated on {formatTimestamp(analysisUpdatedAt)}
-            </p>
-          )}
-          <h3 className="text-lg font-semibold text-purple-900 mb-3">Music Theory Analysis</h3>
-          <div className="text-gray-700 whitespace-pre-wrap leading-relaxed">
-            {analysis}
+          <div className="flex justify-between items-start mb-3">
+            <div>
+              {analysisUpdatedAt && (
+                <p className="text-sm text-gray-400">
+                  Analysis generated on {formatTimestamp(analysisUpdatedAt)}
+                </p>
+              )}
+              <h3 className="text-lg font-semibold text-purple-900">Music Theory Analysis</h3>
+            </div>
+            <button
+              onClick={async () => {
+                if (!confirm('Delete this analysis?')) return
+                setAnalysis(null)
+                setAnalysisUpdatedAt(null)
+                await clearAnalysis(songId)
+              }}
+              className="text-gray-400 hover:text-red-500 transition-colors"
+              title="Delete Analysis"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 6h18" />
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+              </svg>
+            </button>
+          </div>
+          <div className="prose prose-sm prose-purple max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-li:text-gray-700 prose-strong:text-gray-900">
+            <ReactMarkdown>{analysis}</ReactMarkdown>
           </div>
         </div>
       )}

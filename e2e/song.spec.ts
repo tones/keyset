@@ -209,6 +209,39 @@ test.describe('Song Page', () => {
     await expect(page.getByRole('button', { name: 'Re-analyze Song' })).toBeVisible()
   })
 
+  test('delete analysis with confirmation', async ({ page }) => {
+    // Song 4 has a seeded analysis
+    await page.goto('/song/4')
+    await expect(page.getByText('Music Theory Analysis')).toBeVisible()
+
+    // Accept the confirmation dialog
+    page.on('dialog', dialog => dialog.accept())
+    await page.locator('button[title="Delete Analysis"]').click()
+
+    // Analysis should be removed, button should revert
+    await expect(page.getByText('Music Theory Analysis')).not.toBeVisible()
+    await expect(page.getByRole('button', { name: 'Analyze Song' })).toBeVisible()
+
+    // Reload and verify persistence
+    await page.reload()
+    await expect(page.getByText('Music Theory Analysis')).not.toBeVisible()
+    await expect(page.getByRole('button', { name: 'Analyze Song' })).toBeVisible()
+  })
+
+  test('delete analysis — cancel keeps it', async ({ page }) => {
+    // Song 3 (Fly Me to the Moon) has a seeded analysis
+    await page.goto('/song/3')
+    await expect(page.getByText('Music Theory Analysis')).toBeVisible()
+
+    // Dismiss the confirmation dialog
+    page.on('dialog', dialog => dialog.dismiss())
+    await page.locator('button[title="Delete Analysis"]').click()
+
+    // Analysis should still be visible
+    await expect(page.getByText('Music Theory Analysis')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Re-analyze Song' })).toBeVisible()
+  })
+
   test('back link navigates home', async ({ page }) => {
     await page.goto('/song/4')
     await page.getByRole('link', { name: '← Back to Key Sets' }).click()

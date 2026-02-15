@@ -15,9 +15,17 @@ async function main() {
   await prisma.$executeRawUnsafe("DELETE FROM sqlite_sequence WHERE name IN ('Song', 'KeySet', 'KeyPress')")
 
   // Songs 1–3: filler songs with 2 key sets each (key set ids 1–6)
-  const song1 = await prisma.song.create({ data: { title: "Autumn Leaves" } })
+  const song1 = await prisma.song.create({ data: {
+    title: "Autumn Leaves",
+    analysis: "Key: A minor\n\n1. \"A minor\" — A minor triad\n2. \"D7\" — D dominant 7\n\nClassic ii-V progression.",
+    analysisUpdatedAt: new Date('2026-01-10T08:00:00Z'),
+  } })
   const song2 = await prisma.song.create({ data: { title: "Blue Bossa" } })
-  const song3 = await prisma.song.create({ data: { title: "Fly Me to the Moon" } })
+  const song3 = await prisma.song.create({ data: {
+    title: "Fly Me to the Moon",
+    analysis: "Key: A minor\n\n1. \"Am7\" — A minor 7\n2. \"Dm7\" — D minor 7\n\nClassic jazz standard progression.",
+    analysisUpdatedAt: new Date('2026-01-12T09:00:00Z'),
+  } })
 
   // Song 4: the main test song (key set ids 7–9)
   const song4 = await prisma.song.create({ data: {

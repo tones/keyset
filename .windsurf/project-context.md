@@ -21,7 +21,8 @@ npm run dev
 - **Database:** Prisma ORM with SQLite
 - **LLM:** Anthropic Claude (via @anthropic-ai/sdk) for music theory analysis
 - **Drag-and-drop:** @dnd-kit (core, sortable, utilities)
-- **Styling:** Tailwind CSS 4
+- **Styling:** Tailwind CSS 4 with @tailwindcss/typography (prose classes)
+- **Markdown:** react-markdown for rendering LLM analysis output
 - **Language:** TypeScript
 - **Testing:** Playwright E2E tests
 
@@ -49,7 +50,7 @@ Uses **singular nouns** (`/song/`), not plurals.
 - **`EditableTitle`** (`src/components/EditableTitle.tsx`) — Generic inline-editable title. Click to edit, Enter to save, Escape to cancel. Accepts an `onSave` callback prop.
 - **`SongList`** (`src/components/SongList.tsx`) — Client component rendering song cards as clickable links on the home page. Includes trash icon with confirmation dialog for deleting songs.
 - **`SortableKeySetList`** (`src/components/SortableKeySetList.tsx`) — Drag-and-drop sortable list of key set cards using @dnd-kit. Includes add (plus icon), delete (trash icon with confirmation), inline key set rename actions. Piano keys are toggled inline with optimistic UI updates and immediate server persistence.
-- **`SongAnalysis`** (`src/components/SongAnalysis.tsx`) — Client component that shows cached LLM analysis or triggers a new one via the Analyze Song button. Displays timestamp of when analysis was generated. Requires `ANTHROPIC_API_KEY` env var.
+- **`SongAnalysis`** (`src/components/SongAnalysis.tsx`) — Client component that shows cached LLM analysis or triggers a new one via the Analyze Song button. Displays timestamp of when analysis was generated. Includes trash icon to delete cached analysis with confirmation. Renders markdown via `react-markdown` with Tailwind `prose` classes. Requires `ANTHROPIC_API_KEY` env var.
 
 ## Important Gotchas
 
@@ -61,7 +62,7 @@ Uses **singular nouns** (`/song/`), not plurals.
 
 - `src/app/actions.ts` — `createSong` (creates "Untitled Song", redirects to it), `deleteSong` (deletes song with cascade, revalidates home)
 - `src/app/song/[id]/actions.ts` — `updateSongTitle`, `reorderKeySets`, `createKeySet`, `deleteKeySet`, `toggleKeyPress`, `updateKeySetName`
-- `src/app/song/[id]/analyze.ts` — `analyzeSong` (calls Anthropic Claude, caches result in Song.analysis)
+- `src/app/song/[id]/analyze.ts` — `analyzeSong` (calls Anthropic Claude, caches result in Song.analysis), `clearAnalysis` (removes cached analysis from Song)
 
 ## Keeping This File Up to Date
 

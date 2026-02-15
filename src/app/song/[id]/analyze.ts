@@ -11,6 +11,14 @@ function midiToNoteName(midi: number): string {
   return `${NOTE_NAMES[midi % 12]}${octave}`
 }
 
+export async function clearAnalysis(songId: number): Promise<void> {
+  await prisma.song.update({
+    where: { id: songId },
+    data: { analysis: null, analysisUpdatedAt: null },
+  })
+  revalidatePath(`/song/${songId}`)
+}
+
 export async function analyzeSong(songId: number): Promise<{ analysis: string; analysisUpdatedAt: string }> {
   const song = await prisma.song.findUnique({
     where: { id: songId },
