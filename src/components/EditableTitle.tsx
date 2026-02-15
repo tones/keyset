@@ -5,9 +5,12 @@ import { useState, useRef, useEffect } from 'react'
 interface EditableTitleProps {
   initialTitle: string
   onSave: (title: string) => Promise<void>
+  className?: string
+  inputClassName?: string
+  tag?: 'h1' | 'h2' | 'h3'
 }
 
-export default function EditableTitle({ initialTitle, onSave }: EditableTitleProps) {
+export default function EditableTitle({ initialTitle, onSave, className, inputClassName, tag: Tag = 'h1' }: EditableTitleProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [title, setTitle] = useState(initialTitle)
   const [saving, setSaving] = useState(false)
@@ -59,19 +62,19 @@ export default function EditableTitle({ initialTitle, onSave }: EditableTitlePro
           onKeyDown={handleKeyDown}
           onBlur={handleSave}
           disabled={saving}
-          className="text-3xl font-bold bg-white border border-blue-400 rounded px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500 w-full"
+          className={inputClassName ?? "text-3xl font-bold bg-white border border-blue-400 rounded px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500 w-full"}
         />
       </div>
     )
   }
 
   return (
-    <h1
-      className="text-3xl font-bold text-gray-900 cursor-pointer hover:text-gray-700 transition-colors"
+    <Tag
+      className={className ?? "text-3xl font-bold text-gray-900 cursor-pointer hover:text-gray-700 transition-colors"}
       onClick={() => setIsEditing(true)}
       title="Click to edit title"
     >
       {title}
-    </h1>
+    </Tag>
   )
 }
