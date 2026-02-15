@@ -48,7 +48,7 @@ Uses **singular nouns** (`/song/`), not plurals.
 
 ## Key Components
 
-- **`SongView`** (`src/components/SongView.tsx`) — Client wrapper with Edit/Perform toggle. Edit mode shows `SortableKeySetList`; Perform mode shows `PerformView` (compact 2-column grid, read-only, no editing UI).
+- **`SongView`** (`src/components/SongView.tsx`) — Client wrapper that renders the song header (title + Edit/Perform toggle on one row, YouTube link below as subtitle) and switches between `SortableKeySetList` (edit mode) and `PerformView` (perform mode). Accepts `initialTitle`, `initialYoutubeUrl`, `onSaveTitle`, `onSaveYoutubeUrl` props.
 - **`PerformView`** (`src/components/PerformView.tsx`) — Dense read-only view of keyset cards in a 2-column grid with compact 70px keyboards. Shows chord label and play button only.
 - **`PianoKeyboard`** (`src/components/PianoKeyboard.tsx`) — Renders a piano keyboard with highlighted notes in per-key colors. Accepts `noteColors` map (midiNote → color name) for multi-color support. Optional `height` prop (default 110px). Supports an optional `onToggle` callback for interactive mode. Uses absolute positioning with a boundary-based algorithm for black key placement. Has `data-testid="piano-keyboard"` for test selection and `data-note` attributes on each key.
 - **`EditableTitle`** (`src/components/EditableTitle.tsx`) — Generic inline-editable title. Click to edit, Enter to save, Escape to cancel. Accepts an `onSave` callback prop.

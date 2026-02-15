@@ -3,8 +3,6 @@ export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import EditableTitle from '@/components/EditableTitle'
-import YouTubeLink from '@/components/YouTubeLink'
 import SongView from '@/components/SongView'
 import SongAnalysis from '@/components/SongAnalysis'
 import { identifyChord } from '@/lib/chordId'
@@ -39,15 +37,18 @@ export default async function SongPage({ params }: { params: Promise<{ id: strin
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <Link href="/" className="text-blue-500 hover:text-blue-700 mb-4">
-            ← Back to Keysets
-          </Link>
-          <EditableTitle initialTitle={song.title} onSave={async (title) => { 'use server'; const { updateSongTitle } = await import('./actions'); await updateSongTitle(song.id, title); }} />
-          <YouTubeLink initialUrl={song.youtubeUrl} onSave={async (url) => { 'use server'; const { updateYoutubeUrl } = await import('./actions'); await updateYoutubeUrl(song.id, url); }} />
-        </div>
+        <Link href="/" className="text-blue-500 hover:text-blue-700 text-sm">
+          ← Back to Keysets
+        </Link>
 
-        <SongView songId={song.id} keySets={song.keySets} />
+        <SongView
+          songId={song.id}
+          keySets={song.keySets}
+          initialTitle={song.title}
+          initialYoutubeUrl={song.youtubeUrl}
+          onSaveTitle={async (title) => { 'use server'; const { updateSongTitle } = await import('./actions'); await updateSongTitle(song.id, title); }}
+          onSaveYoutubeUrl={async (url) => { 'use server'; const { updateYoutubeUrl } = await import('./actions'); await updateYoutubeUrl(song.id, url); }}
+        />
 
         <SongAnalysis
           songId={song.id}

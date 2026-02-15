@@ -93,10 +93,16 @@ test.describe('Song Page', () => {
     const firstCardText = await cards.nth(0).locator('h2').textContent()
     const secondCardText = await cards.nth(1).locator('h2').textContent()
 
-    // Drag first card to second position
-    const firstCard = cards.nth(0).locator('button[title="Drag to reorder"]')
-    const secondCard = cards.nth(1).locator('button[title="Drag to reorder"]')
-    await firstCard.dragTo(secondCard)
+    // Drag first card past second card using manual mouse steps
+    const firstHandle = cards.nth(0).locator('button[title="Drag to reorder"]')
+    const secondHandle = cards.nth(1).locator('button[title="Drag to reorder"]')
+    const fromBox = (await firstHandle.boundingBox())!
+    const toBox = (await secondHandle.boundingBox())!
+    await page.mouse.move(fromBox.x + fromBox.width / 2, fromBox.y + fromBox.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(toBox.x + toBox.width / 2, toBox.y + toBox.height / 2, { steps: 10 })
+    await page.mouse.move(toBox.x + toBox.width / 2, toBox.y + toBox.height + 20, { steps: 5 })
+    await page.mouse.up()
 
     // After drag, the order should be swapped
     await expect(cards.nth(0).locator('h2')).toHaveText(secondCardText!)
@@ -108,9 +114,15 @@ test.describe('Song Page', () => {
     await expect(cards.nth(1).locator('h2')).toHaveText(firstCardText!)
 
     // Restore original order
-    const restoreFirst = cards.nth(0).locator('button[title="Drag to reorder"]')
-    const restoreSecond = cards.nth(1).locator('button[title="Drag to reorder"]')
-    await restoreFirst.dragTo(restoreSecond)
+    const rFromHandle = cards.nth(0).locator('button[title="Drag to reorder"]')
+    const rToHandle = cards.nth(1).locator('button[title="Drag to reorder"]')
+    const rFromBox = (await rFromHandle.boundingBox())!
+    const rToBox = (await rToHandle.boundingBox())!
+    await page.mouse.move(rFromBox.x + rFromBox.width / 2, rFromBox.y + rFromBox.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(rToBox.x + rToBox.width / 2, rToBox.y + rToBox.height / 2, { steps: 10 })
+    await page.mouse.move(rToBox.x + rToBox.width / 2, rToBox.y + rToBox.height + 20, { steps: 5 })
+    await page.mouse.up()
   })
 
   test('delete key set with confirmation', async ({ page }) => {
