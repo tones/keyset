@@ -12,6 +12,12 @@ test.describe('Song Page', () => {
     // Should have piano keyboard containers (one per key set)
     const pianos = page.getByTestId('piano-keyboard')
     await expect(pianos).toHaveCount(3)
+    // Should show chord labels
+    const chordLabels = page.getByTestId('chord-label')
+    await expect(chordLabels).toHaveCount(3)
+    await expect(chordLabels.nth(0)).toHaveText('CM')
+    await expect(chordLabels.nth(1)).toHaveText('FM')
+    await expect(chordLabels.nth(2)).toHaveText('GM')
   })
 
   test('page title is the song name', async ({ page }) => {

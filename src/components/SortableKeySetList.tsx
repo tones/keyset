@@ -20,6 +20,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import PianoKeyboard from '@/components/PianoKeyboard'
 import EditableTitle from '@/components/EditableTitle'
+import { identifyChord } from '@/lib/chordId'
 import { reorderKeySets, deleteKeySet, createKeySet, toggleKeyPress, updateKeySetName } from '@/app/song/[id]/actions'
 
 interface KeyPress {
@@ -96,6 +97,12 @@ function SortableKeySetCard({ keySet, songId, onDelete, onToggleNote, onRename }
           </button>
         </div>
       </div>
+
+      {keySet.keyPresses.length > 0 && (
+        <p className="text-sm text-gray-500 mb-2" data-testid="chord-label">
+          {identifyChord(keySet.keyPresses.map((kp) => kp.midiNote))}
+        </p>
+      )}
 
       <PianoKeyboard
         highlightedNotes={keySet.keyPresses.map((kp) => kp.midiNote)}
