@@ -7,6 +7,7 @@ interface PianoKeyboardProps {
   noteColors?: Record<number, string>  // midiNote -> color name
   startNote?: number
   endNote?: number
+  height?: number  // px, default 110
   onToggle?: (midiNote: number) => void
 }
 
@@ -31,7 +32,7 @@ const BLACK_KEY_BIAS: Record<number, number> = {
   10: 0.6,  // A#
 }
 
-export default function PianoKeyboard({ highlightedNotes, noteColors = {}, startNote = 48, endNote = 84, onToggle }: PianoKeyboardProps) {
+export default function PianoKeyboard({ highlightedNotes, noteColors = {}, startNote = 48, endNote = 84, height = 110, onToggle }: PianoKeyboardProps) {
   const highlightSet = new Set(highlightedNotes)
 
   // Collect all white keys in range and assign each an index
@@ -83,7 +84,7 @@ export default function PianoKeyboard({ highlightedNotes, noteColors = {}, start
   }
 
   return (
-    <div data-testid="piano-keyboard" className="relative w-full overflow-hidden rounded-lg border border-gray-200 bg-gray-100" style={{ height: '110px' }}>
+    <div data-testid="piano-keyboard" className="relative w-full overflow-hidden rounded-lg border border-gray-200 bg-gray-100" style={{ height: `${height}px` }}>
       {/* White keys */}
       {whiteKeys.map((note, i) => {
         const isHighlighted = highlightSet.has(note)

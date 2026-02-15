@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import EditableTitle from '@/components/EditableTitle'
-import SortableKeySetList from '@/components/SortableKeySetList'
+import SongView from '@/components/SongView'
 import SongAnalysis from '@/components/SongAnalysis'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -43,7 +43,7 @@ export default async function SongPage({ params }: { params: Promise<{ id: strin
           <EditableTitle initialTitle={song.title} onSave={async (title) => { 'use server'; const { updateSongTitle } = await import('./actions'); await updateSongTitle(song.id, title); }} />
         </div>
 
-        <SortableKeySetList songId={song.id} keySets={song.keySets} />
+        <SongView songId={song.id} keySets={song.keySets} />
 
         <SongAnalysis
           songId={song.id}
