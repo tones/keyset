@@ -1,14 +1,40 @@
 'use server'
 
-import Anthropic from '@anthropic-ai/sdk'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { identifyChord } from '@/lib/chordId'
 
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 
 function midiToNoteName(midi: number): string {
   const octave = Math.floor(midi / 12) - 1
   return `${NOTE_NAMES[midi % 12]}${octave}`
+}
+
+// Switch between 'openai' and 'anthropic' via env var (default: openai)
+const LLM_PROVIDER = process.env.LLM_PROVIDER ?? 'openai'
+
+async function callOpenAI(prompt: string): Promise<string> {
+  const OpenAI = (await import('openai')).default
+  const client = new OpenAI()
+  const response = await client.chat.completions.create({
+    model: 'gpt-4o',
+    max_tokens: 1024,
+    messages: [{ role: 'user', content: prompt }],
+  })
+  return response.choices[0]?.message?.content ?? 'No analysis available.'
+}
+
+async function callAnthropic(prompt: string): Promise<string> {
+  const Anthropic = (await import('@anthropic-ai/sdk')).default
+  const client = new Anthropic()
+  const message = await client.messages.create({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 1024,
+    messages: [{ role: 'user', content: prompt }],
+  })
+  const textBlock = message.content.find((block) => block.type === 'text')
+  return textBlock?.text ?? 'No analysis available.'
 }
 
 export async function clearAnalysis(songId: number): Promise<void> {
@@ -37,39 +63,35 @@ export async function analyzeSong(songId: number): Promise<{ analysis: string; a
 
   const description = song.keySets
     .map((ks, i) => {
+      const midiNotes = ks.keyPresses.map((kp) => kp.midiNote)
       const notes = ks.keyPresses.map((kp) => midiToNoteName(kp.midiNote)).join(', ')
-      return `${i + 1}. Key Set ${ks.position}: ${notes || '(no notes)'}`
+      const chordId = midiNotes.length > 0 ? identifyChord(midiNotes) : null
+      return `${i + 1}. ${chordId ?? 'Key Set ' + ks.position} — notes: ${notes || 'none'}`
     })
     .join('\n')
 
-  const client = new Anthropic()
-
-  const message = await client.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 1024,
-    messages: [
-      {
-        role: 'user',
-        content: `You are a music theory expert. Analyze the following song sections. Each section has a name and a set of notes being played simultaneously (as a chord or key set).
+  const prompt = `You are a music theory expert. Analyze the following chord progression.
 
 Song: "${song.title}"
 
-Sections:
+Chord progression (chord names were identified by our app from the notes):
 ${description}
 
 Please provide:
 1. The likely key of the song
-2. For each section, identify the chord (e.g., C major, F minor 7, G dominant 7, etc.)
-3. Describe the chord progression and any interesting harmonic relationships
-4. Any suggestions for the musician
+2. A description of the chord progression and any interesting harmonic relationships (you may refine the chord names if you think our app's identification could be improved, but explain your reasoning)
+3. Suggestions for the musician (voicings, extensions, substitutions, etc.)
+4. What do you know specifically about "${song.title}"?
+   a. **Original recording:** Stick to facts only — album name, year, label, and musicians who played on it. No editorializing or subjective descriptions.
+   b. **Chord accuracy:** Compare the chords provided above with what is generally understood or published about this song's harmony. If the chords I've entered seem wrong, incomplete, or could be improved, point that out with specifics.
+   c. **Sampling & connections:** Note any well-known songs that sample this track, songs that this track samples, or closely related tunes (interpolations, covers, canonical variations) — only widely recognized connections, not loose associations.
 
-Keep the response concise and practical.`,
-      },
-    ],
-  })
+Keep the response concise and practical.`
 
-  const textBlock = message.content.find((block) => block.type === 'text')
-  const analysisText = textBlock?.text ?? 'No analysis available.'
+  const analysisText = LLM_PROVIDER === 'anthropic'
+    ? await callAnthropic(prompt)
+    : await callOpenAI(prompt)
+
   const now = new Date()
 
   await prisma.song.update({

@@ -19,7 +19,7 @@ npm run dev
 
 - **Framework:** Next.js 16 (App Router, Server Components, Server Actions)
 - **Database:** Prisma ORM with SQLite
-- **LLM:** Anthropic Claude (via @anthropic-ai/sdk) for music theory analysis
+- **LLM:** OpenAI GPT-4o (default) or Anthropic Claude, swappable via `LLM_PROVIDER` env var
 - **Drag-and-drop:** @dnd-kit (core, sortable, utilities)
 - **Styling:** Tailwind CSS 4 with @tailwindcss/typography (prose classes)
 - **Markdown:** react-markdown for rendering LLM analysis output
@@ -57,7 +57,7 @@ Uses **singular nouns** (`/song/`), not plurals.
 - **`playChord`** (`src/lib/playChord.ts`) — Plays a chord from MIDI notes using Tone.js `Sampler` with Salamander grand piano samples (~1MB from CDN). Exports `preloadPiano()` which is called on `SortableKeySetList` mount to load samples in the background. Falls back to `Tone.loaded()` await if samples aren't ready when user clicks play.
 - **`colors`** (`src/lib/colors.ts`) — Defines the 6 available key press colors (red, blue, green, purple, orange, yellow) with hex values for white/black keys. Exports `KEY_COLORS`, `COLOR_NAMES`, `DEFAULT_COLOR`.
 - **`chordId`** (`src/lib/chordId.ts`) — Utility function `identifyChord(midiNotes)` that identifies chords from MIDI notes using the `tonal` library (`Chord.detect`). Handles inversions, extended chords (9ths, 11ths, 13ths), altered chords, slash chords, and more. Returns standard chord symbols like "CM", "Dm7", "G7".
-- **`SongAnalysis`** (`src/components/SongAnalysis.tsx`) — Client component that shows cached LLM analysis or triggers a new one via the Analyze Song button. Displays timestamp of when analysis was generated. Includes trash icon to delete cached analysis with confirmation. Renders markdown via `react-markdown` with Tailwind `prose` classes. Requires `ANTHROPIC_API_KEY` env var.
+- **`SongAnalysis`** (`src/components/SongAnalysis.tsx`) — Client component that shows cached LLM analysis or triggers a new one via the Analyze Song button. Displays timestamp of when analysis was generated. Includes ChatGPT discuss button (opens ChatGPT with pre-filled song context) and trash icon to delete analysis. Renders markdown via `react-markdown` with Tailwind `prose` classes.
 
 ## Important Gotchas
 
@@ -77,7 +77,7 @@ Uses **singular nouns** (`/song/`), not plurals.
 - **Region:** `sjc` (San Jose)
 - **Auth:** HTTP Basic Auth via `src/proxy.ts` (Next.js 16 "proxy" convention). Only active when `AUTH_PASSWORD` secret is set (production). No auth in local dev.
 - **Database:** SQLite on a persistent Fly volume mounted at `/data`. `DATABASE_URL=file:/data/keyset.db`.
-- **Secrets:** `AUTH_PASSWORD`, `ANTHROPIC_API_KEY` (set via `fly secrets set`)
+- **Secrets:** `AUTH_PASSWORD`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` (set via `fly secrets set`). `LLM_PROVIDER` defaults to `openai`.
 - **Build:** Multi-stage Dockerfile with `output: "standalone"` in `next.config.ts`. Pages use `force-dynamic` to avoid DB access at build time.
 - **Startup:** `scripts/start.sh` runs `prisma migrate deploy` then `node server.js`.
 - **Redeploy:** `fly deploy --app keyset-app` from the project root.

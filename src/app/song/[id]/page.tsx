@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation'
 import EditableTitle from '@/components/EditableTitle'
 import SongView from '@/components/SongView'
 import SongAnalysis from '@/components/SongAnalysis'
+import { identifyChord } from '@/lib/chordId'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -47,6 +48,8 @@ export default async function SongPage({ params }: { params: Promise<{ id: strin
 
         <SongAnalysis
           songId={song.id}
+          songTitle={song.title}
+          chordSummary={song.keySets.map((ks) => ks.keyPresses.length > 0 ? identifyChord(ks.keyPresses.map((kp) => kp.midiNote)) : '(empty)').join(' → ')}
           cachedAnalysis={song.analysis}
           cachedAnalysisUpdatedAt={song.analysisUpdatedAt?.toISOString()}
         />
