@@ -19,12 +19,12 @@ npm run dev
 
 - **Framework:** Next.js 16 (App Router, Server Components, Server Actions)
 - **Database:** Prisma ORM with SQLite
-- **LLM:** OpenAI GPT-4o (default) or Anthropic Claude, swappable via `LLM_PROVIDER` env var
+- **LLM:** Anthropic Claude or OpenAI GPT-4o, swappable via `LLM_PROVIDER` env var (currently set to `anthropic`)
 - **Drag-and-drop:** @dnd-kit (core, sortable, utilities)
 - **Styling:** Tailwind CSS 4 with @tailwindcss/typography (prose classes)
 - **Markdown:** react-markdown for rendering LLM analysis output
 - **Music theory:** tonal (chord detection from MIDI notes)
-- **Audio:** Tone.js (PolySynth for chord playback)
+- **Audio:** Tone.js (Sampler with Salamander piano samples for chord playback)
 - **Language:** TypeScript
 - **Testing:** Playwright E2E tests
 
@@ -52,10 +52,11 @@ Uses **singular nouns** (`/song/`), not plurals.
 - **`PerformView`** (`src/components/PerformView.tsx`) — Dense read-only view of keyset cards in a 2-column grid with compact 70px keyboards. Shows chord label and play button only.
 - **`PianoKeyboard`** (`src/components/PianoKeyboard.tsx`) — Renders a piano keyboard with highlighted notes in per-key colors. Accepts `noteColors` map (midiNote → color name) for multi-color support. Optional `height` prop (default 110px). Supports an optional `onToggle` callback for interactive mode. Uses absolute positioning with a boundary-based algorithm for black key placement. Has `data-testid="piano-keyboard"` for test selection and `data-note` attributes on each key.
 - **`EditableTitle`** (`src/components/EditableTitle.tsx`) — Generic inline-editable title. Click to edit, Enter to save, Escape to cancel. Accepts an `onSave` callback prop.
-- **`SongList`** (`src/components/SongList.tsx`) — Client component rendering song cards as clickable links on the home page. Includes trash icon with confirmation dialog for deleting songs.
+- **`SongList`** (`src/components/SongList.tsx`) — Client component rendering song cards as clickable links on the home page. Includes duplicate button and trash icon with confirmation dialog.
 - **`SortableKeySetList`** (`src/components/SortableKeySetList.tsx`) — Drag-and-drop sortable list of key set cards using @dnd-kit. Includes add (plus icon), delete (trash icon with confirmation). Piano keys are toggled inline with optimistic UI updates and immediate server persistence. Each card's heading shows the auto-detected chord label (via `chordId`) that updates live as notes are toggled. Color palette bar above each keyboard lets users pick a brush color; clicking an active key with a different color recolors it.
 - **`playChord`** (`src/lib/playChord.ts`) — Plays a chord from MIDI notes using Tone.js `Sampler` with Salamander grand piano samples (~1MB from CDN). Exports `preloadPiano()` which is called on `SortableKeySetList` mount to load samples in the background. Falls back to `Tone.loaded()` await if samples aren't ready when user clicks play.
 - **`colors`** (`src/lib/colors.ts`) — Defines the 6 available key press colors (red, blue, green, purple, orange, yellow) with hex values for white/black keys. Exports `KEY_COLORS`, `COLOR_NAMES`, `DEFAULT_COLOR`.
+- **`midi`** (`src/lib/midi.ts`) — Shared `midiToNoteName(midi)` utility for converting MIDI note numbers to note names (e.g. 60 → "C4"). Used by `analyze.ts` and the song page.
 - **`chordId`** (`src/lib/chordId.ts`) — Utility function `identifyChord(midiNotes)` that identifies chords from MIDI notes using the `tonal` library (`Chord.detect`). Handles inversions, extended chords (9ths, 11ths, 13ths), altered chords, slash chords, and more. Returns standard chord symbols like "CM", "Dm7", "G7".
 - **`SongAnalysis`** (`src/components/SongAnalysis.tsx`) — Client component that shows cached LLM analysis or triggers a new one via the Analyze button (shows provider name). Displays timestamp of when analysis was generated. Includes Claude discuss button (opens `claude.ai/new?q=` with pre-filled song context) and trash icon to delete analysis. Renders markdown via `react-markdown` with Tailwind `prose` classes.
 

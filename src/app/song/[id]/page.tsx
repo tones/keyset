@@ -7,6 +7,7 @@ import EditableTitle from '@/components/EditableTitle'
 import SongView from '@/components/SongView'
 import SongAnalysis from '@/components/SongAnalysis'
 import { identifyChord } from '@/lib/chordId'
+import { midiToNoteName } from '@/lib/midi'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -50,8 +51,7 @@ export default async function SongPage({ params }: { params: Promise<{ id: strin
           songId={song.id}
           songTitle={song.title}
           chordDetail={song.keySets.map((ks, i) => {
-            const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-            const notes = ks.keyPresses.map((kp) => `${NOTE_NAMES[kp.midiNote % 12]}${Math.floor(kp.midiNote / 12) - 1}`).join(', ')
+            const notes = ks.keyPresses.map((kp) => midiToNoteName(kp.midiNote)).join(', ')
             const chordName = ks.keyPresses.length > 0 ? identifyChord(ks.keyPresses.map((kp) => kp.midiNote)) : '(empty)'
             return `${i + 1}. ${chordName} — notes: ${notes || 'none'}`
           }).join('\n')}

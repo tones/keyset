@@ -3,13 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { identifyChord } from '@/lib/chordId'
-
-const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-
-function midiToNoteName(midi: number): string {
-  const octave = Math.floor(midi / 12) - 1
-  return `${NOTE_NAMES[midi % 12]}${octave}`
-}
+import { midiToNoteName } from '@/lib/midi'
 
 // Switch between 'openai' and 'anthropic' via env var (default: openai)
 const LLM_PROVIDER = process.env.LLM_PROVIDER ?? 'openai'

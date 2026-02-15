@@ -25,7 +25,7 @@ export async function duplicateSong(songId: number) {
 
   if (!song) throw new Error('Song not found')
 
-  const copy = await prisma.song.create({
+  await prisma.song.create({
     data: {
       title: `${song.title} (copy)`,
       keySets: {
