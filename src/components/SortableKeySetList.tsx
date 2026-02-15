@@ -22,7 +22,7 @@ import { CSS } from '@dnd-kit/utilities'
 import PianoKeyboard from '@/components/PianoKeyboard'
 import { identifyChord } from '@/lib/chordId'
 import { playChord, preloadPiano } from '@/lib/playChord'
-import { reorderKeySets, deleteKeySet, createKeySet, toggleKeyPress, shiftOctave, updateKeySetType } from '@/app/song/[id]/actions'
+import { reorderKeySets, deleteKeySet, createKeySet, duplicateKeySet, toggleKeyPress, shiftOctave, updateKeySetType } from '@/app/song/[id]/actions'
 
 interface KeyPress {
   id: number
@@ -42,7 +42,7 @@ interface SortableKeySetListProps {
   keySets: KeySet[]
 }
 
-function SortableKeySetCard({ keySet, songId, onDelete, onToggleNote, onShiftOctave, onToggleType }: { keySet: KeySet; songId: number; onDelete: (id: number) => void; onToggleNote: (keySetId: number, midiNote: number, color: string) => void; onShiftOctave: (keySetId: number, direction: 'up' | 'down') => void; onToggleType: (keySetId: number) => void }) {
+function SortableKeySetCard({ keySet, songId, onDelete, onDuplicate, onToggleNote, onShiftOctave, onToggleType }: { keySet: KeySet; songId: number; onDelete: (id: number) => void; onDuplicate: (id: number) => void; onToggleNote: (keySetId: number, midiNote: number, color: string) => void; onShiftOctave: (keySetId: number, direction: 'up' | 'down') => void; onToggleType: (keySetId: number) => void }) {
   const [activeColor, setActiveColor] = useState(DEFAULT_COLOR)
   const {
     attributes,
@@ -137,6 +137,16 @@ function SortableKeySetCard({ keySet, songId, onDelete, onToggleNote, onShiftOct
             </>
           )}
           <button
+            onClick={() => onDuplicate(keySet.id)}
+            className="text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
+            title="Duplicate Key Set"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+          </button>
+          <button
             onClick={() => onDelete(keySet.id)}
             className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
             title="Delete Key Set"
@@ -175,6 +185,16 @@ export default function SortableKeySetList({ songId, keySets: initialKeySets }: 
   async function handleAdd() {
     const newKeySet = await createKeySet(songId)
     setKeySets((prev) => [...prev, { ...newKeySet, type: 'chord', keyPresses: [] }])
+  }
+
+  async function handleDuplicate(keySetId: number) {
+    const copy = await duplicateKeySet(keySetId, songId)
+    setKeySets((prev) => {
+      const idx = prev.findIndex((ks) => ks.id === keySetId)
+      const updated = [...prev]
+      updated.splice(idx + 1, 0, copy)
+      return updated
+    })
   }
 
   async function handleDelete(keySetId: number) {
@@ -249,7 +269,7 @@ export default function SortableKeySetList({ songId, keySets: initialKeySets }: 
       <SortableContext items={keySets.map((ks) => ks.id)} strategy={verticalListSortingStrategy}>
         <div className="space-y-6">
           {keySets.map((keySet) => (
-            <SortableKeySetCard key={keySet.id} keySet={keySet} songId={songId} onDelete={handleDelete} onToggleNote={handleToggleNote} onShiftOctave={handleShiftOctave} onToggleType={handleToggleType} />
+            <SortableKeySetCard key={keySet.id} keySet={keySet} songId={songId} onDelete={handleDelete} onDuplicate={handleDuplicate} onToggleNote={handleToggleNote} onShiftOctave={handleShiftOctave} onToggleType={handleToggleType} />
           ))}
         </div>
       </SortableContext>

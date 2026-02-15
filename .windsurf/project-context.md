@@ -70,7 +70,7 @@ Uses **singular nouns** (`/song/`), not plurals.
 ## Server Actions
 
 - `src/app/actions.ts` — `createSong` (creates "Untitled Song", redirects to it), `deleteSong` (deletes song with cascade, revalidates home), `duplicateSong` (copies song with all keysets/keypresses, appends "(copy)" to title, stays on home page)
-- `src/app/song/[id]/actions.ts` — `updateYoutubeUrl`, `updateSongTitle`, `reorderKeySets`, `createKeySet`, `deleteKeySet`, `toggleKeyPress`, `shiftOctave` (moves all notes ±12 semitones, clamped to 0–127), `updateKeySetType` (toggles between "chord" and "flourish")
+- `src/app/song/[id]/actions.ts` — `updateYoutubeUrl`, `updateSongTitle`, `reorderKeySets`, `createKeySet`, `duplicateKeySet` (copies key set with all key presses, inserts after original), `deleteKeySet`, `toggleKeyPress`, `shiftOctave` (moves all notes ±12 semitones, clamped to 0–127), `updateKeySetType` (toggles between "chord" and "flourish")
 - `src/app/song/[id]/analyze.ts` — `analyzeSong` (calls OpenAI or Anthropic based on `LLM_PROVIDER` env var, sends chord IDs + notes, caches result in Song.analysis), `clearAnalysis` (removes cached analysis from Song)
 
 ## Deployment (Fly.io)

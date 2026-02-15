@@ -47,6 +47,45 @@ export async function reorderKeySets(songId: number, orderedKeySetIds: number[])
   revalidatePath(`/song/${songId}`)
 }
 
+export async function duplicateKeySet(keySetId: number, songId: number) {
+  const original = await prisma.keySet.findUnique({
+    where: { id: keySetId },
+    include: { keyPresses: true },
+  })
+  if (!original) throw new Error('Key set not found')
+
+  // Shift all key sets after the original up by 1 to make room
+  const later = await prisma.keySet.findMany({
+    where: { songId, position: { gt: original.position } },
+    orderBy: { position: 'desc' },
+  })
+  for (const ks of later) {
+    await prisma.keySet.update({
+      where: { id: ks.id },
+      data: { position: ks.position + 1 },
+    })
+  }
+
+  const copy = await prisma.keySet.create({
+    data: {
+      songId,
+      position: original.position + 1,
+      type: original.type,
+      keyPresses: {
+        create: original.keyPresses.map((kp) => ({
+          midiNote: kp.midiNote,
+          color: kp.color,
+        })),
+      },
+    },
+    include: { keyPresses: true },
+  })
+
+  revalidatePath(`/song/${songId}`)
+  revalidatePath('/')
+  return copy
+}
+
 export async function createKeySet(songId: number) {
   const lastKeySet = await prisma.keySet.findFirst({
     where: { songId },

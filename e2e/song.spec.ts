@@ -174,6 +174,25 @@ test.describe('Song Page', () => {
     await expect(cards).toHaveCount(countBefore)
   })
 
+  test('duplicate key set creates a copy below', async ({ page }) => {
+    await page.goto('/song/4')
+    const cards = page.locator('[data-testid="keyset-card"]')
+    const countBefore = await cards.count()
+    const firstLabel = await cards.nth(0).locator('h2').textContent()
+
+    // Duplicate the first key set
+    await cards.nth(0).locator('button[title="Duplicate Key Set"]').click()
+    await expect(cards).toHaveCount(countBefore + 1)
+
+    // The copy should appear right after the original with the same chord label
+    await expect(cards.nth(1).locator('h2')).toHaveText(firstLabel!)
+
+    // Clean up: delete the duplicate
+    page.on('dialog', dialog => dialog.accept())
+    await cards.nth(1).locator('button[title="Delete Key Set"]').click()
+    await expect(cards).toHaveCount(countBefore)
+  })
+
   test('toggle key on song page persists', async ({ page }) => {
     await page.goto('/song/4')
     const firstPiano = page.getByTestId('piano-keyboard').first()
