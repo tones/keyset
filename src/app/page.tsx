@@ -24,7 +24,7 @@ export default async function Home() {
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold">Key Sets</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Key Sets</h1>
         </div>
         
         {songs.length === 0 ? (
@@ -36,7 +36,7 @@ export default async function Home() {
             {songs.map((song) => (
               <div key={song.id} className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
                 <div className="flex justify-between items-start mb-4">
-                  <h2 className="text-xl font-semibold">{song.title}</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">{song.title}</h2>
                   <Link 
                     href={`/song/${song.id}`}
                     className="text-blue-500 hover:text-blue-700"
@@ -51,10 +51,10 @@ export default async function Home() {
                   ) : (
                     song.keySets.map((keySet) => (
                       <div key={keySet.id} className="border-l-4 border-blue-500 pl-4">
-                        <h3 className="font-medium text-gray-800">
+                        <h3 className="font-medium text-gray-700">
                           {keySet.name || `Key Set ${keySet.position}`}
                         </h3>
-                        <div className="text-sm text-gray-600 font-mono">
+                        <div className="text-sm text-gray-500 font-mono">
                           {keySet.keyPresses.map(kp => kp.midiNote).join(', ')}
                         </div>
                       </div>

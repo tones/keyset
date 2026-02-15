@@ -9,59 +9,76 @@ async function main() {
   await prisma.song.deleteMany()
 
   // Create sample song
-  const song = await prisma.song.create({
-    data: {
-      title: "Twinkle Twinkle Little Star"
-    }
+  const songs = await prisma.song.createMany({
+    data: [
+      { title: "Twinkle Twinkle Little Star" },
+      { title: "Autumn Leaves" },
+      { title: "Blue Bossa" },
+    ],
   })
+
+  const createdSongs = await prisma.song.findMany({ orderBy: { id: 'asc' } })
 
   // Create key sets for the song
-  const keySet1 = await prisma.keySet.create({
-    data: {
-      name: "Verse 1 - C Major",
-      position: 1,
-      songId: song.id
-    }
-  })
+  const keySetSpecs: Array<{
+    songId: number
+    name: string
+    position: number
+    midiNotes: number[]
+  }> = []
 
-  const keySet2 = await prisma.keySet.create({
-    data: {
-      name: "Verse 2 - F Major", 
-      position: 2,
-      songId: song.id
-    }
-  })
+  const byTitle = new Map(createdSongs.map((s) => [s.title, s]))
+  const twinkle = byTitle.get("Twinkle Twinkle Little Star")
+  const autumn = byTitle.get("Autumn Leaves")
+  const bossa = byTitle.get("Blue Bossa")
 
-  const keySet3 = await prisma.keySet.create({
-    data: {
-      name: "Bridge - G Major",
-      position: 3, 
-      songId: song.id
-    }
+  if (!twinkle || !autumn || !bossa) throw new Error('Seed songs not found after creation')
+
+  keySetSpecs.push(
+    { songId: twinkle.id, name: "Verse 1 - C Major", position: 1, midiNotes: [60, 64, 67, 72] },
+    { songId: twinkle.id, name: "Verse 2 - F Major", position: 2, midiNotes: [65, 69, 72, 77] },
+    { songId: twinkle.id, name: "Bridge - G Major", position: 3, midiNotes: [67, 71, 74, 79] },
+  )
+
+  keySetSpecs.push(
+    { songId: autumn.id, name: "A minor", position: 1, midiNotes: [57, 60, 64, 69] },
+    { songId: autumn.id, name: "D7", position: 2, midiNotes: [62, 66, 69, 72] },
+    { songId: autumn.id, name: "G major", position: 3, midiNotes: [55, 59, 62, 67] },
+    { songId: autumn.id, name: "C major", position: 4, midiNotes: [60, 64, 67, 72] },
+  )
+
+  keySetSpecs.push(
+    { songId: bossa.id, name: "Cm7", position: 1, midiNotes: [60, 63, 67, 70] },
+    { songId: bossa.id, name: "Fm7", position: 2, midiNotes: [65, 68, 72, 75] },
+    { songId: bossa.id, name: "Dm7b5", position: 3, midiNotes: [62, 65, 68, 72] },
+    { songId: bossa.id, name: "G7", position: 4, midiNotes: [67, 71, 74, 77] },
+    { songId: bossa.id, name: "Cm7 (repeat)", position: 5, midiNotes: [60, 63, 67, 70] },
+  )
+
+  const createdKeySets = await prisma.$transaction(
+    keySetSpecs.map((spec) =>
+      prisma.keySet.create({
+        data: {
+          name: spec.name,
+          position: spec.position,
+          songId: spec.songId,
+        },
+      }),
+    ),
+  )
+
+  const keyPressRows = createdKeySets.flatMap((ks) => {
+    const spec = keySetSpecs.find(
+      (s) => s.songId === ks.songId && s.position === ks.position && s.name === ks.name,
+    )
+    if (!spec) return []
+    return spec.midiNotes.map((midiNote) => ({ midiNote, keySetId: ks.id }))
   })
 
   // Create key presses for each key set
-  await prisma.keyPress.createMany({
-    data: [
-      // Key set 1 - C Major (C, E, G, C)
-      { midiNote: 60, keySetId: keySet1.id }, // C4
-      { midiNote: 64, keySetId: keySet1.id }, // E4  
-      { midiNote: 67, keySetId: keySet1.id }, // G4
-      { midiNote: 72, keySetId: keySet1.id }, // C5
-      
-      // Key set 2 - F Major (F, A, C, F)
-      { midiNote: 65, keySetId: keySet2.id }, // F4
-      { midiNote: 69, keySetId: keySet2.id }, // A4
-      { midiNote: 72, keySetId: keySet2.id }, // C5
-      { midiNote: 77, keySetId: keySet2.id }, // F5
-      
-      // Key set 3 - G Major (G, B, D, G)
-      { midiNote: 67, keySetId: keySet3.id }, // G4
-      { midiNote: 71, keySetId: keySet3.id }, // B4
-      { midiNote: 74, keySetId: keySet3.id }, // D5
-      { midiNote: 79, keySetId: keySet3.id }, // G5
-    ]
-  })
+  if (keyPressRows.length > 0) {
+    await prisma.keyPress.createMany({ data: keyPressRows })
+  }
 
   console.log('Database seeded successfully!')
 }

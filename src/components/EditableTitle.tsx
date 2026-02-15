@@ -67,7 +67,7 @@ export default function EditableTitle({ initialTitle, onSave }: EditableTitlePro
 
   return (
     <h1
-      className="text-3xl font-bold cursor-pointer hover:text-gray-600 transition-colors"
+      className="text-3xl font-bold text-gray-900 cursor-pointer hover:text-gray-700 transition-colors"
       onClick={() => setIsEditing(true)}
       title="Click to edit title"
     >

@@ -74,7 +74,7 @@ function SortableKeySetCard({ keySet, onDelete }: { keySet: KeySet; onDelete: (i
               <circle cx="13" cy="16" r="1.5" />
             </svg>
           </button>
-          <h2 className="text-xl font-semibold">
+          <h2 className="text-xl font-semibold text-gray-900">
             {keySet.name || `Key Set ${keySet.position}`}
           </h2>
         </div>
