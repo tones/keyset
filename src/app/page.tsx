@@ -18,7 +18,7 @@ export default async function Home() {
       }
     },
     orderBy: {
-      createdAt: 'desc'
+      title: 'asc'
     }
   })
 
