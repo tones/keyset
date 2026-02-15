@@ -3,9 +3,6 @@ export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import SongView from '@/components/SongView'
-import SongAnalysis from '@/components/SongAnalysis'
-import { identifyChord } from '@/lib/chordId'
-import { midiToNoteName } from '@/lib/midi'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -42,21 +39,11 @@ export default async function SongPage({ params }: { params: Promise<{ id: strin
           initialTitle={song.title}
           imageUrl={song.imageUrl}
           initialYoutubeUrl={song.youtubeUrl}
+          llmProvider={process.env.LLM_PROVIDER ?? 'openai'}
+          cachedAnalysis={song.analysis ?? null}
+          cachedAnalysisUpdatedAt={song.analysisUpdatedAt?.toISOString() ?? null}
           onSaveTitle={async (title) => { 'use server'; const { updateSongTitle } = await import('./actions'); await updateSongTitle(song.id, title); }}
           onSaveYoutubeUrl={async (url) => { 'use server'; const { updateYoutubeUrl } = await import('./actions'); await updateYoutubeUrl(song.id, url); }}
-        />
-
-        <SongAnalysis
-          songId={song.id}
-          songTitle={song.title}
-          chordDetail={song.keySets.filter((ks) => ks.type !== 'flourish').map((ks, i) => {
-            const notes = ks.keyPresses.map((kp) => midiToNoteName(kp.midiNote)).join(', ')
-            const chordName = ks.keyPresses.length > 0 ? identifyChord(ks.keyPresses.map((kp) => kp.midiNote)) : '(empty)'
-            return `${i + 1}. ${chordName} — notes: ${notes || 'none'}`
-          }).join('\n')}
-          llmProvider={process.env.LLM_PROVIDER ?? 'openai'}
-          cachedAnalysis={song.analysis}
-          cachedAnalysisUpdatedAt={song.analysisUpdatedAt?.toISOString()}
         />
       </div>
     </div>

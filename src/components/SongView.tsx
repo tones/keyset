@@ -2,10 +2,14 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import SortableKeySetList from '@/components/SortableKeySetList'
+import SongAnalysis from '@/components/SongAnalysis'
 import EditableTitle from '@/components/EditableTitle'
 import YouTubeLink from '@/components/YouTubeLink'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { saveKeySets } from '@/app/song/[id]/actions'
+import { analyzeSong } from '@/app/song/[id]/analyze'
+import { identifyChord } from '@/lib/chordId'
+import { midiToNoteName } from '@/lib/midi'
 import type { KeySet } from '@/types'
 
 function ToggleSwitch({ label, enabled, onToggle, activeColor = 'bg-gray-900' }: { label: string; enabled: boolean; onToggle: () => void; activeColor?: string }) {
@@ -28,35 +32,81 @@ interface SongViewProps {
   initialTitle: string
   imageUrl: string | null
   initialYoutubeUrl: string | null
+  llmProvider: string
+  cachedAnalysis: string | null
+  cachedAnalysisUpdatedAt: string | null
   onSaveTitle: (title: string) => Promise<void>
   onSaveYoutubeUrl: (url: string | null) => Promise<void>
 }
 
 let nextTempId = -1
 
-export default function SongView({ songId, keySets: serverKeySets, initialTitle, imageUrl, initialYoutubeUrl, onSaveTitle, onSaveYoutubeUrl }: SongViewProps) {
+export default function SongView({ songId, keySets: serverKeySets, initialTitle, imageUrl, initialYoutubeUrl, llmProvider, cachedAnalysis, cachedAnalysisUpdatedAt, onSaveTitle, onSaveYoutubeUrl }: SongViewProps) {
+  const router = useRouter()
   const [mode, setMode] = useState<'full' | 'compact'>('full')
   const [showCommonTones, setShowCommonTones] = useState(true)
   const [keySets, setKeySets] = useState(serverKeySets)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [analysis, setAnalysis] = useState<string | null>(cachedAnalysis)
+  const [analysisUpdatedAt, setAnalysisUpdatedAt] = useState<string | null>(cachedAnalysisUpdatedAt)
+  const [analysisLoading, setAnalysisLoading] = useState(false)
+  const [analysisError, setAnalysisError] = useState<string | null>(null)
 
-  function serialize(ks: KeySet[]) {
-    return JSON.stringify(ks.map(k => ({ t: k.type, kp: k.keyPresses.map(p => [p.midiNote, p.color]) })))
+  function serialize(ks: KeySet[], a: string | null, aAt: string | null) {
+    return JSON.stringify({
+      ks: ks.map(k => ({ t: k.type, kp: k.keyPresses.map(p => [p.midiNote, p.color]) })),
+      a, aAt,
+    })
   }
 
   const keySetsRef = useRef(keySets)
   keySetsRef.current = keySets
+  const analysisRef = useRef(analysis)
+  analysisRef.current = analysis
+  const analysisUpdatedAtRef = useRef(analysisUpdatedAt)
+  analysisUpdatedAtRef.current = analysisUpdatedAt
 
-  const savedRef = useRef(serialize(serverKeySets))
-  const isDirty = serialize(keySets) !== savedRef.current
+  const savedRef = useRef(serialize(serverKeySets, cachedAnalysis, cachedAnalysisUpdatedAt))
+  const isDirty = serialize(keySets, analysis, analysisUpdatedAt) !== savedRef.current
 
   const handleSaveRef = useRef<() => void>(() => {})
+
+  function buildChordDetail(ks: KeySet[]) {
+    return ks
+      .filter(k => k.type !== 'flourish')
+      .map((k, i) => {
+        const notes = k.keyPresses.map(kp => midiToNoteName(kp.midiNote)).join(', ')
+        const chordName = k.keyPresses.length > 0 ? identifyChord(k.keyPresses.map(kp => kp.midiNote)) : '(empty)'
+        return `${i + 1}. ${chordName} \u2014 notes: ${notes || 'none'}`
+      })
+      .join('\n')
+  }
+
+  async function handleAnalyze() {
+    setAnalysisLoading(true)
+    setAnalysisError(null)
+    try {
+      const chordDetail = buildChordDetail(keySetsRef.current)
+      const result = await analyzeSong(songId, initialTitle, chordDetail)
+      setAnalysis(result.analysis)
+      setAnalysisUpdatedAt(result.analysisUpdatedAt)
+    } catch (e) {
+      setAnalysisError(e instanceof Error ? e.message : 'Analysis failed')
+    } finally {
+      setAnalysisLoading(false)
+    }
+  }
+
+  function handleClearAnalysis() {
+    setAnalysis(null)
+    setAnalysisUpdatedAt(null)
+  }
 
   // Warn on browser close/refresh with unsaved changes + Ctrl/Cmd+S to save
   useEffect(() => {
     function handleBeforeUnload(e: BeforeUnloadEvent) {
-      if (serialize(keySets) !== savedRef.current) {
+      if (serialize(keySets, analysis, analysisUpdatedAt) !== savedRef.current) {
         e.preventDefault()
       }
     }
@@ -72,18 +122,20 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
       window.removeEventListener('beforeunload', handleBeforeUnload)
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [keySets])
+  }, [keySets, analysis, analysisUpdatedAt])
 
   async function handleSave() {
     setSaving(true)
     setSaveError(null)
     const current = keySetsRef.current
+    const currentAnalysis = analysisRef.current
+    const currentAnalysisUpdatedAt = analysisUpdatedAtRef.current
     try {
       await saveKeySets(songId, current.map(ks => ({
         type: ks.type,
         keyPresses: ks.keyPresses.map(kp => ({ midiNote: kp.midiNote, color: kp.color })),
-      })))
-      savedRef.current = serialize(current)
+      })), { text: currentAnalysis, updatedAt: currentAnalysisUpdatedAt })
+      savedRef.current = serialize(current, currentAnalysis, currentAnalysisUpdatedAt)
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : String(err))
     } finally {
@@ -95,7 +147,9 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
   function handleReset() {
     if (!confirm('Discard unsaved changes?')) return
     setKeySets(serverKeySets)
-    savedRef.current = serialize(serverKeySets)
+    setAnalysis(cachedAnalysis)
+    setAnalysisUpdatedAt(cachedAnalysisUpdatedAt)
+    savedRef.current = serialize(serverKeySets, cachedAnalysis, cachedAnalysisUpdatedAt)
   }
 
   // --- Key set mutation handlers (all local state only) ---
@@ -174,9 +228,20 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
   return (
     <>
       <div className="flex items-center justify-between mb-3 h-6">
-        <Link href="/" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+        <a
+          href="/"
+          onClick={(e) => {
+            if (isDirty && !confirm('You have unsaved changes. Leave without saving?')) {
+              e.preventDefault()
+              return
+            }
+            e.preventDefault()
+            router.push('/')
+          }}
+          className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+        >
           ‹ Keysets
-        </Link>
+        </a>
         <div className={`flex items-center gap-2 ${isDirty ? '' : 'invisible'}`} data-testid="save-bar">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
           <span className="text-xs text-gray-400">Edited</span>
@@ -236,6 +301,18 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
         onShiftNotes={handleShiftNotes}
         onToggleType={handleToggleType}
         onReorder={handleReorder}
+      />
+
+      <SongAnalysis
+        songTitle={initialTitle}
+        chordDetail={buildChordDetail(keySets)}
+        llmProvider={llmProvider}
+        analysis={analysis}
+        analysisUpdatedAt={analysisUpdatedAt}
+        onAnalyze={handleAnalyze}
+        onClear={handleClearAnalysis}
+        loading={analysisLoading}
+        error={analysisError}
       />
     </>
   )

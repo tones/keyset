@@ -1,16 +1,17 @@
 'use client'
 
-import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
-import { analyzeSong, clearAnalysis } from '@/app/song/[id]/analyze'
 
 interface SongAnalysisProps {
-  songId: number
   songTitle: string
   chordDetail: string
   llmProvider: string
-  cachedAnalysis?: string | null
-  cachedAnalysisUpdatedAt?: string | null
+  analysis: string | null
+  analysisUpdatedAt: string | null
+  onAnalyze: () => Promise<void>
+  onClear: () => void
+  loading: boolean
+  error: string | null
 }
 
 function formatTimestamp(iso: string): string {
@@ -25,30 +26,12 @@ function formatTimestamp(iso: string): string {
   })
 }
 
-export default function SongAnalysis({ songId, songTitle, chordDetail, llmProvider, cachedAnalysis, cachedAnalysisUpdatedAt }: SongAnalysisProps) {
-  const [analysis, setAnalysis] = useState<string | null>(cachedAnalysis ?? null)
-  const [analysisUpdatedAt, setAnalysisUpdatedAt] = useState<string | null>(cachedAnalysisUpdatedAt ?? null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  async function handleAnalyze() {
-    setLoading(true)
-    setError(null)
-    try {
-      const result = await analyzeSong(songId)
-      setAnalysis(result.analysis)
-      setAnalysisUpdatedAt(result.analysisUpdatedAt)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Analysis failed')
-    } finally {
-      setLoading(false)
-    }
-  }
+export default function SongAnalysis({ songTitle, chordDetail, llmProvider, analysis, analysisUpdatedAt, onAnalyze, onClear, loading, error }: SongAnalysisProps) {
 
   return (
     <div className="mt-8">
       <button
-        onClick={handleAnalyze}
+        onClick={onAnalyze}
         disabled={loading}
         className="px-5 py-2.5 rounded-xl font-sans text-base disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
         style={{ backgroundColor: '#1a1a18', color: '#F5F5F0' }}
@@ -82,11 +65,9 @@ export default function SongAnalysis({ songId, songTitle, chordDetail, llmProvid
               </svg>
             </button>
             <button
-              onClick={async () => {
+              onClick={() => {
                 if (!confirm('Delete this analysis?')) return
-                setAnalysis(null)
-                setAnalysisUpdatedAt(null)
-                await clearAnalysis(songId)
+                onClear()
               }}
               className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
               title="Delete Analysis"

@@ -378,9 +378,12 @@ test.describe('Song Page', () => {
     page.on('dialog', dialog => dialog.accept())
     await page.locator('button[title="Delete Analysis"]').click()
 
-    // Analysis should be removed, button should revert
+    // Analysis should be removed locally, button should revert
     await expect(page.getByText('C major triad')).not.toBeVisible()
     await expect(page.getByRole('button', { name: /Analyze with/ })).toBeVisible()
+
+    // Save to persist the deletion
+    await clickSave(page)
 
     // Reload and verify persistence
     await page.reload()
@@ -402,6 +405,56 @@ test.describe('Song Page', () => {
     await expect(page.getByRole('button', { name: /Re-analyze with/ })).toBeVisible()
   })
 
+  test('deleting analysis marks page as dirty', async ({ page }) => {
+    // Song 3 still has its analysis after the cancel test above
+    await page.goto('/song/3')
+    await expect(page.getByText('A minor 7')).toBeVisible()
+    await expect(page.getByTestId('save-bar')).not.toBeVisible()
+
+    // Delete analysis
+    page.on('dialog', dialog => dialog.accept())
+    await page.locator('button[title="Delete Analysis"]').click()
+
+    // Save bar should appear (analysis deletion is an unsaved change)
+    await expect(page.getByTestId('save-bar')).toBeVisible()
+  })
+
+  test('resetting after deleting analysis restores it', async ({ page }) => {
+    // Song 3 still has its analysis in DB (previous test didn't save)
+    await page.goto('/song/3')
+    await expect(page.getByText('A minor 7')).toBeVisible()
+
+    // Delete analysis
+    page.on('dialog', dialog => dialog.accept())
+    await page.locator('button[title="Delete Analysis"]').click()
+    await expect(page.getByText('A minor 7')).not.toBeVisible()
+
+    // Reset — should restore the analysis
+    await page.getByTestId('reset-button').click()
+    await expect(page.getByText('A minor 7')).toBeVisible()
+    await expect(page.getByRole('button', { name: /Re-analyze with/ })).toBeVisible()
+  })
+
+  test('analysis persists after save and reload', async ({ page }) => {
+    // Song 3 still has its seeded analysis
+    await page.goto('/song/3')
+    await expect(page.getByText('A minor 7')).toBeVisible()
+    await expect(page.getByText('Analysis generated on')).toBeVisible()
+
+    // Make a trivial change to trigger dirty state, then save
+    await page.getByTestId('keyset-card').first().getByTestId('type-toggle').click()
+    await clickSave(page)
+
+    // Toggle back and save to restore original state
+    await page.getByTestId('keyset-card').first().getByTestId('type-toggle').click()
+    await clickSave(page)
+
+    // Reload — analysis should still be present
+    await page.reload()
+    await expect(page.getByText('A minor 7')).toBeVisible()
+    await expect(page.getByText('Analysis generated on')).toBeVisible()
+  })
+
   test('YouTube link is visible when set', async ({ page }) => {
     await page.goto('/song/4')
     const link = page.getByRole('link', { name: 'YouTube' })
@@ -418,6 +471,35 @@ test.describe('Song Page', () => {
     await page.goto('/song/4')
     await page.getByRole('link', { name: '‹ Keysets' }).click()
     await expect(page).toHaveURL('/')
+  })
+
+  test('navigating away with unsaved changes shows confirmation — dismiss stays', async ({ page }) => {
+    await page.goto('/song/4')
+    // Make a change to trigger dirty state
+    await page.getByTestId('keyset-card').first().getByTestId('type-toggle').click()
+    await expect(page.getByTestId('save-bar')).toBeVisible()
+
+    // Dismiss the confirmation dialog — should stay on the page
+    page.on('dialog', dialog => dialog.dismiss())
+    await page.getByRole('link', { name: '‹ Keysets' }).click()
+    await expect(page).toHaveURL(/\/song\/4/)
+  })
+
+  test('navigating away with unsaved changes — accept leaves page', async ({ page }) => {
+    await page.goto('/song/4')
+    // Make a change to trigger dirty state
+    await page.getByTestId('keyset-card').first().getByTestId('type-toggle').click()
+    await expect(page.getByTestId('save-bar')).toBeVisible()
+
+    // Accept the confirmation dialog — should navigate home
+    page.on('dialog', dialog => dialog.accept())
+    await page.getByRole('link', { name: '‹ Keysets' }).click()
+    await expect(page).toHaveURL('/')
+
+    // Restore: go back and fix
+    await page.goto('/song/4')
+    await page.getByTestId('keyset-card').first().getByTestId('type-toggle').click()
+    await clickSave(page)
   })
 
   test('common tone lines appear between keysets sharing notes', async ({ page }) => {
