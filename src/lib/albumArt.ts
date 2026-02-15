@@ -25,10 +25,11 @@ export async function fetchAlbumArt(songTitle: string): Promise<string | null> {
 
   const token = await getSpotifyToken()
   const res = await fetch(
-    `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=1`,
+    `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=10`,
     { headers: { 'Authorization': `Bearer ${token}` } },
   )
   const data = await res.json()
-  const track = data.tracks?.items?.[0]
+  const items = data.tracks?.items ?? []
+  const track = items.find((t: { album?: { album_type?: string } }) => t.album?.album_type !== 'compilation') ?? items[0]
   return track?.album?.images?.[0]?.url ?? null
 }
