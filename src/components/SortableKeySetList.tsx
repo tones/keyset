@@ -22,6 +22,7 @@ import { CSS } from '@dnd-kit/utilities'
 import PianoKeyboard from '@/components/PianoKeyboard'
 import { identifyChord } from '@/lib/chordId'
 import { playChord, preloadPiano } from '@/lib/playChord'
+import { keyCenterPct } from '@/lib/pianoLayout'
 
 interface KeyPress {
   id: number
@@ -48,9 +49,39 @@ interface SortableKeySetListProps {
   onReorder: (keySets: KeySet[]) => void
 }
 
+
+function CommonToneLines({ above, below, padX = 24, compact = false }: { above: KeySet; below: KeySet; padX?: number; compact?: boolean }) {
+  const aboveNotes = new Set(above.keyPresses.map(kp => kp.midiNote))
+  const common = below.keyPresses.filter(kp => aboveNotes.has(kp.midiNote)).map(kp => kp.midiNote)
+  if (common.length === 0) return null
+
+  const h = compact ? 45 : 110
+  const overlap = compact ? 12 : 28
+  const bottomOverlap = compact ? 14 : 55
+  return (
+    <div className="relative w-full pointer-events-none" style={{ height: h - overlap - bottomOverlap, paddingLeft: padX, paddingRight: padX, marginTop: -overlap, marginBottom: -bottomOverlap, zIndex: 3 }}>
+      <svg className="w-full" style={{ height: h, marginTop: -overlap }} viewBox={`0 0 1000 ${h}`} preserveAspectRatio="none">
+        {common.map(note => {
+          const x = keyCenterPct(note) * 10
+          return (
+            <line
+              key={note}
+              x1={x} y1={0} x2={x} y2={h}
+              stroke="#eab308"
+              strokeWidth="3"
+              strokeDasharray="5 3"
+              opacity="0.8"
+            />
+          )
+        })}
+      </svg>
+    </div>
+  )
+}
+
 function CompactKeySetCard({ keySet }: { keySet: KeySet }) {
   return (
-    <div className={`rounded-lg shadow p-3 border ${keySet.type === 'flourish' ? 'bg-amber-50 border-amber-200' : 'bg-white border-transparent'}`} data-testid="keyset-card">
+    <div className={`p-3 ${keySet.type === 'flourish' ? 'bg-amber-50' : ''}`} data-testid="keyset-card">
       <div className="flex items-center gap-2 mb-2">
         <h2 className="text-sm font-semibold text-gray-900" data-testid="chord-label">
           {keySet.type === 'flourish'
@@ -274,9 +305,12 @@ export default function SortableKeySetList({ keySets, compact, onAdd, onDelete, 
 
   if (compact) {
     return (
-      <div className="space-y-3">
-        {keySets.map((keySet) => (
-          <CompactKeySetCard key={keySet.id} keySet={keySet} />
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        {keySets.map((keySet, i) => (
+          <div key={keySet.id}>
+            {i > 0 && <CommonToneLines above={keySets[i - 1]} below={keySet} padX={12} compact />}
+            <CompactKeySetCard keySet={keySet} />
+          </div>
         ))}
       </div>
     )
@@ -286,9 +320,12 @@ export default function SortableKeySetList({ keySets, compact, onAdd, onDelete, 
     <>
     <DndContext id="keyset-dnd" sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={keySets.map((ks) => ks.id)} strategy={verticalListSortingStrategy}>
-        <div className="space-y-6">
-          {keySets.map((keySet) => (
-            <SortableKeySetCard key={keySet.id} keySet={keySet} onDelete={onDelete} onDuplicate={onDuplicate} onToggleNote={onToggleNote} onShiftNotes={onShiftNotes} onToggleType={onToggleType} />
+        <div>
+          {keySets.map((keySet, i) => (
+            <div key={keySet.id}>
+              {i > 0 && <div className="py-3"><CommonToneLines above={keySets[i - 1]} below={keySet} /></div>}
+              <SortableKeySetCard keySet={keySet} onDelete={onDelete} onDuplicate={onDuplicate} onToggleNote={onToggleNote} onShiftNotes={onShiftNotes} onToggleType={onToggleType} />
+            </div>
           ))}
         </div>
       </SortableContext>
