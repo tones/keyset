@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { KEY_COLORS, COLOR_NAMES, DEFAULT_COLOR } from '@/lib/colors'
+import { KEY_COLORS, DEFAULT_COLOR } from '@/lib/colors'
 import {
   DndContext,
   closestCenter,
@@ -22,7 +22,7 @@ import { CSS } from '@dnd-kit/utilities'
 import PianoKeyboard from '@/components/PianoKeyboard'
 import { identifyChord } from '@/lib/chordId'
 import { playChord, preloadPiano } from '@/lib/playChord'
-import { reorderKeySets, deleteKeySet, createKeySet, toggleKeyPress, shiftOctave } from '@/app/song/[id]/actions'
+import { reorderKeySets, deleteKeySet, createKeySet, toggleKeyPress, shiftOctave, updateKeySetType } from '@/app/song/[id]/actions'
 
 interface KeyPress {
   id: number
@@ -33,6 +33,7 @@ interface KeyPress {
 interface KeySet {
   id: number
   position: number
+  type: string
   keyPresses: KeyPress[]
 }
 
@@ -41,7 +42,7 @@ interface SortableKeySetListProps {
   keySets: KeySet[]
 }
 
-function SortableKeySetCard({ keySet, songId, onDelete, onToggleNote, onShiftOctave }: { keySet: KeySet; songId: number; onDelete: (id: number) => void; onToggleNote: (keySetId: number, midiNote: number, color: string) => void; onShiftOctave: (keySetId: number, direction: 'up' | 'down') => void }) {
+function SortableKeySetCard({ keySet, songId, onDelete, onToggleNote, onShiftOctave, onToggleType }: { keySet: KeySet; songId: number; onDelete: (id: number) => void; onToggleNote: (keySetId: number, midiNote: number, color: string) => void; onShiftOctave: (keySetId: number, direction: 'up' | 'down') => void; onToggleType: (keySetId: number) => void }) {
   const [activeColor, setActiveColor] = useState(DEFAULT_COLOR)
   const {
     attributes,
@@ -59,8 +60,8 @@ function SortableKeySetCard({ keySet, songId, onDelete, onToggleNote, onShiftOct
   }
 
   return (
-    <div ref={setNodeRef} style={style} className="bg-white rounded-lg shadow p-6" data-testid="keyset-card">
-      <div className="flex justify-between items-center mb-4">
+    <div ref={setNodeRef} style={style} className={`rounded-lg shadow p-6 border ${keySet.type === 'flourish' ? 'bg-amber-50 border-amber-200' : 'bg-white border-transparent'}`} data-testid="keyset-card">
+      <div className="flex items-center mb-4">
         <div className="flex items-center gap-3">
           <button
             {...attributes}
@@ -78,10 +79,30 @@ function SortableKeySetCard({ keySet, songId, onDelete, onToggleNote, onShiftOct
             </svg>
           </button>
           <h2 className="text-xl font-semibold text-gray-900" data-testid="chord-label">
-            {keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map((kp) => kp.midiNote)) : `Key Set ${keySet.position}`}
+            {keySet.type === 'flourish'
+              ? <span className="text-amber-600 italic">Flourish</span>
+              : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map((kp) => kp.midiNote)) : '\u00A0'}
           </h2>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-auto">
+          <button
+            onClick={() => onToggleType(keySet.id)}
+            className={`cursor-pointer transition-colors text-xs font-medium px-2 py-0.5 rounded-full ${keySet.type === 'flourish' ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+            title={keySet.type === 'flourish' ? 'Switch to Chord' : 'Switch to Flourish'}
+            data-testid="type-toggle"
+          >
+            {keySet.type === 'flourish' ? '♪' : '♫'}
+          </button>
+          <button
+            onClick={() => setActiveColor(activeColor === 'red' ? 'blue' : 'red')}
+            className="cursor-pointer transition-all hover:scale-110"
+            title={`Color: ${activeColor === 'red' ? 'Red' : 'Blue'} (click to toggle)`}
+            data-testid="color-toggle"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="8" fill={KEY_COLORS[activeColor].white} />
+            </svg>
+          </button>
           {keySet.keyPresses.length > 0 && (
             <>
               <button
@@ -129,18 +150,6 @@ function SortableKeySetCard({ keySet, songId, onDelete, onToggleNote, onShiftOct
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5 mb-2" data-testid="color-palette">
-        {COLOR_NAMES.map((name) => (
-          <button
-            key={name}
-            onClick={() => setActiveColor(name)}
-            className={`w-5 h-5 rounded-full cursor-pointer transition-all ${activeColor === name ? 'ring-2 ring-offset-1 ring-gray-400 scale-110' : 'hover:scale-110'}`}
-            style={{ backgroundColor: KEY_COLORS[name].white }}
-            title={KEY_COLORS[name].label}
-          />
-        ))}
-      </div>
-
       <PianoKeyboard
         highlightedNotes={keySet.keyPresses.map((kp) => kp.midiNote)}
         noteColors={Object.fromEntries(keySet.keyPresses.map((kp) => [kp.midiNote, kp.color]))}
@@ -166,7 +175,7 @@ export default function SortableKeySetList({ songId, keySets: initialKeySets }: 
 
   async function handleAdd() {
     const newKeySet = await createKeySet(songId)
-    setKeySets((prev) => [...prev, { ...newKeySet, keyPresses: [] }])
+    setKeySets((prev) => [...prev, { ...newKeySet, type: 'chord', keyPresses: [] }])
   }
 
   async function handleDelete(keySetId: number) {
@@ -211,6 +220,18 @@ export default function SortableKeySetList({ songId, keySets: initialKeySets }: 
     await shiftOctave(keySetId, songId, direction)
   }
 
+  async function handleToggleType(keySetId: number) {
+    setKeySets((prev) =>
+      prev.map((ks) => {
+        if (ks.id !== keySetId) return ks
+        return { ...ks, type: ks.type === 'flourish' ? 'chord' : 'flourish' }
+      })
+    )
+    const ks = keySets.find((ks) => ks.id === keySetId)
+    const newType = ks?.type === 'flourish' ? 'chord' : 'flourish'
+    await updateKeySetType(keySetId, songId, newType)
+  }
+
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
     if (!over || active.id === over.id) return
@@ -229,7 +250,7 @@ export default function SortableKeySetList({ songId, keySets: initialKeySets }: 
       <SortableContext items={keySets.map((ks) => ks.id)} strategy={verticalListSortingStrategy}>
         <div className="space-y-6">
           {keySets.map((keySet) => (
-            <SortableKeySetCard key={keySet.id} keySet={keySet} songId={songId} onDelete={handleDelete} onToggleNote={handleToggleNote} onShiftOctave={handleShiftOctave} />
+            <SortableKeySetCard key={keySet.id} keySet={keySet} songId={songId} onDelete={handleDelete} onToggleNote={handleToggleNote} onShiftOctave={handleShiftOctave} onToggleType={handleToggleType} />
           ))}
         </div>
       </SortableContext>

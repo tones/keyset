@@ -31,6 +31,7 @@ export async function duplicateSong(songId: number) {
       keySets: {
         create: song.keySets.map((ks) => ({
           position: ks.position,
+          type: ks.type,
           keyPresses: {
             create: ks.keyPresses.map((kp) => ({
               midiNote: kp.midiNote,

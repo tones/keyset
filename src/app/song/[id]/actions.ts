@@ -100,6 +100,14 @@ export async function shiftOctave(keySetId: number, songId: number, direction: '
   revalidatePath(`/song/${songId}`)
 }
 
+export async function updateKeySetType(keySetId: number, songId: number, type: 'chord' | 'flourish') {
+  await prisma.keySet.update({
+    where: { id: keySetId },
+    data: { type },
+  })
+  revalidatePath(`/song/${songId}`)
+}
+
 export async function deleteKeySet(keySetId: number, songId: number) {
   await prisma.keySet.delete({
     where: { id: keySetId },

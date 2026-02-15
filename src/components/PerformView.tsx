@@ -13,6 +13,7 @@ interface KeyPress {
 interface KeySet {
   id: number
   position: number
+  type: string
   keyPresses: KeyPress[]
 }
 
@@ -20,10 +21,12 @@ export default function PerformView({ keySets }: { keySets: KeySet[] }) {
   return (
     <div className="grid grid-cols-2 gap-3">
       {keySets.map((keySet) => (
-        <div key={keySet.id} className="bg-white rounded-lg shadow p-3">
+        <div key={keySet.id} className={`rounded-lg shadow p-3 border ${keySet.type === 'flourish' ? 'bg-amber-50 border-amber-200' : 'bg-white border-transparent'}`}>
           <div className="flex items-center gap-2 mb-2">
             <h2 className="text-sm font-semibold text-gray-900">
-              {keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map((kp) => kp.midiNote)) : `Key Set ${keySet.position}`}
+              {keySet.type === 'flourish'
+                ? <span className="text-amber-600 italic">Flourish</span>
+                : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map((kp) => kp.midiNote)) : '\u00A0'}
             </h2>
             {keySet.keyPresses.length > 0 && (
               <button

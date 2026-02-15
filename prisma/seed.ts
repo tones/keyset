@@ -39,19 +39,20 @@ async function main() {
 
   // Key sets for songs 1–3 (ids 1–6)
   const fillerKeySets = [
-    { songId: song1.id, position: 1, midiNotes: [57, 60, 64, 69] },
-    { songId: song1.id, position: 2, midiNotes: [62, 66, 69, 72] },
-    { songId: song2.id, position: 1, midiNotes: [60, 63, 67, 70] },
-    { songId: song2.id, position: 2, midiNotes: [65, 68, 72, 75] },
-    { songId: song3.id, position: 1, midiNotes: [57, 60, 64, 67] },
-    { songId: song3.id, position: 2, midiNotes: [62, 65, 69, 72] },
+    { songId: song1.id, position: 1, type: 'chord' as const, midiNotes: [57, 60, 64, 69] },
+    { songId: song1.id, position: 2, type: 'chord' as const, midiNotes: [62, 66, 69, 72] },
+    { songId: song2.id, position: 1, type: 'chord' as const, midiNotes: [60, 63, 67, 70] },
+    { songId: song2.id, position: 2, type: 'chord' as const, midiNotes: [65, 68, 72, 75] },
+    { songId: song3.id, position: 1, type: 'chord' as const, midiNotes: [57, 60, 64, 67] },
+    { songId: song3.id, position: 2, type: 'chord' as const, midiNotes: [62, 65, 69, 72] },
   ]
 
-  // Key sets for song 4 (ids 7–9)
+  // Key sets for song 4 (ids 7–10)
   const testKeySets = [
-    { songId: song4.id, position: 1, midiNotes: [60, 64, 67, 72] },
-    { songId: song4.id, position: 2, midiNotes: [65, 69, 72, 77] },
-    { songId: song4.id, position: 3, midiNotes: [67, 71, 74, 79] },
+    { songId: song4.id, position: 1, type: 'chord' as const, midiNotes: [60, 64, 67, 72] },
+    { songId: song4.id, position: 2, type: 'chord' as const, midiNotes: [65, 69, 72, 77] },
+    { songId: song4.id, position: 3, type: 'chord' as const, midiNotes: [67, 71, 74, 79] },
+    { songId: song4.id, position: 4, type: 'flourish' as const, midiNotes: [60, 62, 64, 65, 67] },
   ]
 
   const allSpecs = [...fillerKeySets, ...testKeySets]
@@ -60,7 +61,7 @@ async function main() {
   const createdKeySets = []
   for (const spec of allSpecs) {
     const ks = await prisma.keySet.create({
-      data: { position: spec.position, songId: spec.songId },
+      data: { position: spec.position, type: spec.type, songId: spec.songId },
     })
     createdKeySets.push(ks)
   }

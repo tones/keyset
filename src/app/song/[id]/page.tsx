@@ -50,7 +50,7 @@ export default async function SongPage({ params }: { params: Promise<{ id: strin
         <SongAnalysis
           songId={song.id}
           songTitle={song.title}
-          chordDetail={song.keySets.map((ks, i) => {
+          chordDetail={song.keySets.filter((ks) => ks.type !== 'flourish').map((ks, i) => {
             const notes = ks.keyPresses.map((kp) => midiToNoteName(kp.midiNote)).join(', ')
             const chordName = ks.keyPresses.length > 0 ? identifyChord(ks.keyPresses.map((kp) => kp.midiNote)) : '(empty)'
             return `${i + 1}. ${chordName} — notes: ${notes || 'none'}`

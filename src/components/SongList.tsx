@@ -12,6 +12,7 @@ interface KeyPress {
 interface KeySet {
   id: number
   position: number
+  type: string
   keyPresses: KeyPress[]
 }
 
@@ -77,8 +78,10 @@ export default function SongList({ songs }: { songs: Song[] }) {
           ) : (
             <div className="flex flex-wrap gap-2">
               {song.keySets.map((keySet) => (
-                <span key={keySet.id} className="inline-block bg-blue-50 text-blue-700 text-sm font-medium px-3 py-1 rounded-full">
-                  {keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map(kp => kp.midiNote)) : '—'}
+                <span key={keySet.id} className={`inline-block text-sm font-medium px-3 py-1 rounded-full ${keySet.type === 'flourish' ? 'bg-amber-50 text-amber-600 italic' : 'bg-blue-50 text-blue-700'}`}>
+                  {keySet.type === 'flourish'
+                    ? '♪'
+                    : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map(kp => kp.midiNote)) : '—'}
                 </span>
               ))}
             </div>

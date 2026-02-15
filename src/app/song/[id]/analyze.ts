@@ -55,12 +55,18 @@ export async function analyzeSong(songId: number): Promise<{ analysis: string; a
     return { analysis: 'No key sets to analyze.', analysisUpdatedAt: new Date().toISOString() }
   }
 
-  const description = song.keySets
+  const chordKeySets = song.keySets.filter((ks) => ks.type !== 'flourish')
+
+  if (chordKeySets.length === 0) {
+    return { analysis: 'No chord key sets to analyze (all key sets are flourishes).', analysisUpdatedAt: new Date().toISOString() }
+  }
+
+  const description = chordKeySets
     .map((ks, i) => {
       const midiNotes = ks.keyPresses.map((kp) => kp.midiNote)
       const notes = ks.keyPresses.map((kp) => midiToNoteName(kp.midiNote)).join(', ')
       const chordId = midiNotes.length > 0 ? identifyChord(midiNotes) : null
-      return `${i + 1}. ${chordId ?? 'Key Set ' + ks.position} — notes: ${notes || 'none'}`
+      return `${i + 1}. ${chordId ?? '(empty)'} — notes: ${notes || 'none'}`
     })
     .join('\n')
 

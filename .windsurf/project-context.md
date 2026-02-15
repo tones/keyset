@@ -32,7 +32,7 @@ npm run dev
 
 ```
 Song (id, title, analysis?, analysisUpdatedAt?, createdAt, updatedAt)
-  └─ KeySet (id, position, songId, createdAt, updatedAt)
+  └─ KeySet (id, position, type, songId, createdAt, updatedAt)
        └─ KeyPress (id, midiNote, color, keySetId, createdAt)
 ```
 
@@ -53,7 +53,7 @@ Uses **singular nouns** (`/song/`), not plurals.
 - **`PianoKeyboard`** (`src/components/PianoKeyboard.tsx`) — Renders a piano keyboard with highlighted notes in per-key colors. Accepts `noteColors` map (midiNote → color name) for multi-color support. Optional `height` prop (default 110px). Supports an optional `onToggle` callback for interactive mode. Uses absolute positioning with a boundary-based algorithm for black key placement. Has `data-testid="piano-keyboard"` for test selection and `data-note` attributes on each key.
 - **`EditableTitle`** (`src/components/EditableTitle.tsx`) — Generic inline-editable title. Click to edit, Enter to save, Escape to cancel. Accepts an `onSave` callback prop.
 - **`SongList`** (`src/components/SongList.tsx`) — Client component rendering song cards as clickable links on the home page. Includes duplicate button and trash icon with confirmation dialog.
-- **`SortableKeySetList`** (`src/components/SortableKeySetList.tsx`) — Drag-and-drop sortable list of key set cards using @dnd-kit. Includes add (plus icon), delete (trash icon with confirmation), octave up/down buttons. All action icons (play, octave down, octave up, trash) grouped in upper-right control panel. Piano keys are toggled inline with optimistic UI updates and immediate server persistence. Each card's heading shows the auto-detected chord label (via `chordId`) that updates live as notes are toggled. Color palette bar above each keyboard lets users pick a brush color; clicking an active key with a different color recolors it.
+- **`SortableKeySetList`** (`src/components/SortableKeySetList.tsx`) — Drag-and-drop sortable list of key set cards using @dnd-kit. Each card has a single control bar row: left (drag handle + chord label), right (type toggle, color toggle, play, octave down, octave up, trash). All key set controls go in this row. Key sets have a `type` field: "chord" (default) or "flourish". Flourish key sets show an italic amber "Flourish" label instead of chord name, and have a warm amber background/border. Chord/flourish toggle is a music note icon (♫/♪). Empty chord key sets show a blank label until notes are added. Piano keys are toggled inline with optimistic UI updates and immediate server persistence. Each chord card's heading shows the auto-detected chord label (via `chordId`) that updates live as notes are toggled. Binary red/blue color toggle lets users switch brush color for bass note distinction.
 - **`playChord`** (`src/lib/playChord.ts`) — Plays a chord from MIDI notes using Tone.js `Sampler` with Salamander grand piano samples (~1MB from CDN). Exports `preloadPiano()` which is called on `SortableKeySetList` mount to load samples in the background. Falls back to `Tone.loaded()` await if samples aren't ready when user clicks play.
 - **`colors`** (`src/lib/colors.ts`) — Defines the 6 available key press colors (red, blue, green, purple, orange, yellow) with hex values for white/black keys. Exports `KEY_COLORS`, `COLOR_NAMES`, `DEFAULT_COLOR`.
 - **`midi`** (`src/lib/midi.ts`) — Shared `midiToNoteName(midi)` utility for converting MIDI note numbers to note names (e.g. 60 → "C4"). Used by `analyze.ts` and the song page.
@@ -69,7 +69,7 @@ Uses **singular nouns** (`/song/`), not plurals.
 ## Server Actions
 
 - `src/app/actions.ts` — `createSong` (creates "Untitled Song", redirects to it), `deleteSong` (deletes song with cascade, revalidates home), `duplicateSong` (copies song with all keysets/keypresses, appends "(copy)" to title, stays on home page)
-- `src/app/song/[id]/actions.ts` — `updateSongTitle`, `reorderKeySets`, `createKeySet`, `deleteKeySet`, `toggleKeyPress`, `shiftOctave` (moves all notes ±12 semitones, clamped to 0–127)
+- `src/app/song/[id]/actions.ts` — `updateSongTitle`, `reorderKeySets`, `createKeySet`, `deleteKeySet`, `toggleKeyPress`, `shiftOctave` (moves all notes ±12 semitones, clamped to 0–127), `updateKeySetType` (toggles between "chord" and "flourish")
 - `src/app/song/[id]/analyze.ts` — `analyzeSong` (calls OpenAI or Anthropic based on `LLM_PROVIDER` env var, sends chord IDs + notes, caches result in Song.analysis), `clearAnalysis` (removes cached analysis from Song)
 
 ## Deployment (Fly.io)

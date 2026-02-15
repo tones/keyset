@@ -7,16 +7,37 @@ test.describe('Song Page', () => {
     await page.goto('/song/4')
     // Should have piano keyboard containers (one per key set)
     const pianos = page.getByTestId('piano-keyboard')
-    await expect(pianos).toHaveCount(3)
-    // Should show chord labels as headings
+    await expect(pianos).toHaveCount(4)
+    // Should show chord labels as headings (3 chords + 1 flourish)
     const chordLabels = page.getByTestId('chord-label')
-    await expect(chordLabels).toHaveCount(3)
+    await expect(chordLabels).toHaveCount(4)
     await expect(chordLabels.nth(0)).toHaveText('CM')
     await expect(chordLabels.nth(1)).toHaveText('FM')
     await expect(chordLabels.nth(2)).toHaveText('GM')
+    await expect(chordLabels.nth(3)).toHaveText('Flourish')
     // Each key set with notes should have a play button
     const playButtons = page.locator('button[title="Play Chord"]')
-    await expect(playButtons).toHaveCount(3)
+    await expect(playButtons).toHaveCount(4)
+  })
+
+  test('flourish toggle switches type and persists', async ({ page }) => {
+    await page.goto('/song/4')
+    const firstCard = page.getByTestId('keyset-card').first()
+
+    // First card should be a chord (CM)
+    await expect(firstCard.locator('h2')).toHaveText('CM')
+
+    // Toggle to flourish
+    await firstCard.getByTestId('type-toggle').click()
+    await expect(firstCard.locator('h2')).toHaveText('Flourish')
+
+    // Reload and verify persistence
+    await page.reload()
+    await expect(page.getByTestId('keyset-card').first().locator('h2')).toHaveText('Flourish')
+
+    // Toggle back to chord to restore state
+    await page.getByTestId('keyset-card').first().getByTestId('type-toggle').click()
+    await expect(page.getByTestId('keyset-card').first().locator('h2')).toHaveText('CM')
   })
 
   test('page title is the song name', async ({ page }) => {
@@ -171,16 +192,13 @@ test.describe('Song Page', () => {
     await reloadedKey.click()
   })
 
-  test('color palette changes key color and persists', async ({ page }) => {
+  test('color toggle switches between red and blue and persists', async ({ page }) => {
     await page.goto('/song/4')
     const firstCard = page.getByTestId('keyset-card').first()
-    const palette = firstCard.getByTestId('color-palette')
+    const toggle = firstCard.getByTestId('color-toggle')
 
-    // Palette should have 6 color swatches
-    await expect(palette.locator('button')).toHaveCount(6)
-
-    // Select blue
-    await palette.locator('button[title="Blue"]').click()
+    // Default color is red — toggle to blue
+    await toggle.click()
 
     // Find an unhighlighted white key and click it
     const piano = firstCard.getByTestId('piano-keyboard')
@@ -197,8 +215,8 @@ test.describe('Song Page', () => {
     const reloadedColor = await reloadedKey.evaluate((el) => getComputedStyle(el).backgroundColor)
     expect(reloadedColor).toBe('rgb(59, 130, 246)')
 
-    // Clean up: click to toggle off (need to select blue first since default is red)
-    await page.getByTestId('keyset-card').first().getByTestId('color-palette').locator('button[title="Blue"]').click()
+    // Clean up: toggle to blue then click to remove
+    await page.getByTestId('keyset-card').first().getByTestId('color-toggle').click()
     await reloadedKey.click()
   })
 
