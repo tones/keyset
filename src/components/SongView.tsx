@@ -214,16 +214,16 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
               </svg>
             </div>
           )}
-          <div className="flex-1 p-4 min-w-0 flex flex-col justify-between">
-            <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 pl-3 pr-3 py-2 min-w-0 flex justify-between gap-3">
+            <div className="min-w-0 flex flex-col justify-center">
               <EditableTitle initialTitle={initialTitle} onSave={onSaveTitle} />
-              <div className="flex flex-col items-end gap-2 shrink-0">
+              <div className="mt-1">
                 <YouTubeLink initialUrl={initialYoutubeUrl} onSave={onSaveYoutubeUrl} />
-                <div className="flex items-center gap-3">
-                  <ToggleSwitch label="Compact" enabled={mode === 'compact'} onToggle={() => setMode(mode === 'compact' ? 'full' : 'compact')} />
-                  <ToggleSwitch label="Common Tones" enabled={showCommonTones} onToggle={() => setShowCommonTones(!showCommonTones)} activeColor="bg-yellow-500" />
-                </div>
               </div>
+            </div>
+            <div className="flex flex-col items-end gap-2 shrink-0 pt-2">
+              <ToggleSwitch label="Compact" enabled={mode === 'compact'} onToggle={() => setMode(mode === 'compact' ? 'full' : 'compact')} />
+              <ToggleSwitch label="Guides" enabled={showCommonTones} onToggle={() => setShowCommonTones(!showCommonTones)} activeColor="bg-yellow-500" />
             </div>
           </div>
         </div>

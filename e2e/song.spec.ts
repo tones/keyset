@@ -441,11 +441,11 @@ test.describe('Song Page', () => {
     await expect(lines).toHaveCount(2)
 
     // Toggle off
-    await page.getByText('Common Tones').click()
+    await page.getByText('Guides').click()
     await expect(lines).toHaveCount(0)
 
     // Toggle back on
-    await page.getByText('Common Tones').click()
+    await page.getByText('Guides').click()
     await expect(lines).toHaveCount(2)
   })
 
@@ -455,7 +455,7 @@ test.describe('Song Page', () => {
     const boxBefore = await firstCard.boundingBox()
 
     // Toggle off
-    await page.getByText('Common Tones').click()
+    await page.getByText('Guides').click()
     const boxAfter = await firstCard.boundingBox()
 
     expect(boxBefore!.y).toBe(boxAfter!.y)
