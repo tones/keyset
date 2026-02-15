@@ -8,79 +8,58 @@ async function main() {
   await prisma.keySet.deleteMany()
   await prisma.song.deleteMany()
 
-  // Create sample song
-  const songs = await prisma.song.createMany({
-    data: [
-      { title: "Twinkle Twinkle Little Star" },
-      { title: "Autumn Leaves" },
-      { title: "Blue Bossa" },
-    ],
-  })
+  // Reset autoincrement sequences so IDs are predictable
+  await prisma.$executeRawUnsafe("DELETE FROM sqlite_sequence WHERE name IN ('Song', 'KeySet', 'KeyPress')")
 
-  const createdSongs = await prisma.song.findMany({ orderBy: { id: 'asc' } })
+  // Songs 1–3: filler songs with 2 key sets each (key set ids 1–6)
+  const song1 = await prisma.song.create({ data: { title: "Autumn Leaves" } })
+  const song2 = await prisma.song.create({ data: { title: "Blue Bossa" } })
+  const song3 = await prisma.song.create({ data: { title: "Fly Me to the Moon" } })
 
-  // Create key sets for the song
-  const keySetSpecs: Array<{
-    songId: number
-    name: string
-    position: number
-    midiNotes: number[]
-  }> = []
+  // Song 4: the main test song (key set ids 7–9)
+  const song4 = await prisma.song.create({ data: { title: "Tim's Beautiful Song" } })
 
-  const byTitle = new Map(createdSongs.map((s) => [s.title, s]))
-  const twinkle = byTitle.get("Twinkle Twinkle Little Star")
-  const autumn = byTitle.get("Autumn Leaves")
-  const bossa = byTitle.get("Blue Bossa")
+  // Song 5: empty song (no key sets — used by "no key sets yet" test)
+  await prisma.song.create({ data: { title: "Empty Song" } })
 
-  if (!twinkle || !autumn || !bossa) throw new Error('Seed songs not found after creation')
+  // Key sets for songs 1–3 (ids 1–6)
+  const fillerKeySets = [
+    { songId: song1.id, name: "A minor",  position: 1, midiNotes: [57, 60, 64, 69] },
+    { songId: song1.id, name: "D7",       position: 2, midiNotes: [62, 66, 69, 72] },
+    { songId: song2.id, name: "Cm7",      position: 1, midiNotes: [60, 63, 67, 70] },
+    { songId: song2.id, name: "Fm7",      position: 2, midiNotes: [65, 68, 72, 75] },
+    { songId: song3.id, name: "Am7",      position: 1, midiNotes: [57, 60, 64, 67] },
+    { songId: song3.id, name: "Dm7",      position: 2, midiNotes: [62, 65, 69, 72] },
+  ]
 
-  keySetSpecs.push(
-    { songId: twinkle.id, name: "Verse 1 - C Major", position: 1, midiNotes: [60, 64, 67, 72] },
-    { songId: twinkle.id, name: "Verse 2 - F Major", position: 2, midiNotes: [65, 69, 72, 77] },
-    { songId: twinkle.id, name: "Bridge - G Major", position: 3, midiNotes: [67, 71, 74, 79] },
-  )
+  // Key sets for song 4 (ids 7–9)
+  const testKeySets = [
+    { songId: song4.id, name: "Verse 1 - C Major", position: 1, midiNotes: [60, 64, 67, 72] },
+    { songId: song4.id, name: "Verse 2 - F Major", position: 2, midiNotes: [65, 69, 72, 77] },
+    { songId: song4.id, name: "Bridge - G Major",  position: 3, midiNotes: [67, 71, 74, 79] },
+  ]
 
-  keySetSpecs.push(
-    { songId: autumn.id, name: "A minor", position: 1, midiNotes: [57, 60, 64, 69] },
-    { songId: autumn.id, name: "D7", position: 2, midiNotes: [62, 66, 69, 72] },
-    { songId: autumn.id, name: "G major", position: 3, midiNotes: [55, 59, 62, 67] },
-    { songId: autumn.id, name: "C major", position: 4, midiNotes: [60, 64, 67, 72] },
-  )
+  const allSpecs = [...fillerKeySets, ...testKeySets]
 
-  keySetSpecs.push(
-    { songId: bossa.id, name: "Cm7", position: 1, midiNotes: [60, 63, 67, 70] },
-    { songId: bossa.id, name: "Fm7", position: 2, midiNotes: [65, 68, 72, 75] },
-    { songId: bossa.id, name: "Dm7b5", position: 3, midiNotes: [62, 65, 68, 72] },
-    { songId: bossa.id, name: "G7", position: 4, midiNotes: [67, 71, 74, 77] },
-    { songId: bossa.id, name: "Cm7 (repeat)", position: 5, midiNotes: [60, 63, 67, 70] },
-  )
-
-  const createdKeySets = await prisma.$transaction(
-    keySetSpecs.map((spec) =>
-      prisma.keySet.create({
-        data: {
-          name: spec.name,
-          position: spec.position,
-          songId: spec.songId,
-        },
-      }),
-    ),
-  )
-
-  const keyPressRows = createdKeySets.flatMap((ks) => {
-    const spec = keySetSpecs.find(
-      (s) => s.songId === ks.songId && s.position === ks.position && s.name === ks.name,
-    )
-    if (!spec) return []
-    return spec.midiNotes.map((midiNote) => ({ midiNote, keySetId: ks.id }))
-  })
-
-  // Create key presses for each key set
-  if (keyPressRows.length > 0) {
-    await prisma.keyPress.createMany({ data: keyPressRows })
+  // Create key sets in order so autoincrement IDs are predictable
+  const createdKeySets = []
+  for (const spec of allSpecs) {
+    const ks = await prisma.keySet.create({
+      data: { name: spec.name, position: spec.position, songId: spec.songId },
+    })
+    createdKeySets.push(ks)
   }
 
+  // Create key presses for each key set
+  const keyPressRows = createdKeySets.flatMap((ks, i) =>
+    allSpecs[i].midiNotes.map((midiNote) => ({ midiNote, keySetId: ks.id })),
+  )
+  await prisma.keyPress.createMany({ data: keyPressRows })
+
   console.log('Database seeded successfully!')
+  console.log(`  Songs: ${await prisma.song.count()}`)
+  console.log(`  Key Sets: ${await prisma.keySet.count()}`)
+  console.log(`  Key Presses: ${await prisma.keyPress.count()}`)
 }
 
 main()

@@ -7,11 +7,16 @@ description: How to run tests and the testing conventions for this project
 ## Running Tests
 
 ```bash
-npx playwright test          # headless (fast, for CI)
-npx playwright test --headed # watch the browser run tests
+npm run test:e2e              # recommended: seeds a separate test.db, starts server on port 3001, runs all tests
+npm run test:e2e -- --headed  # same but watch the browser run tests
 ```
 
-The dev server must be running on `http://localhost:3000`, or Playwright will start one automatically via the `webServer` config in `playwright.config.ts`.
+This uses `scripts/test-e2e.sh` which:
+1. Sets `DATABASE_URL` to `file:./test.db` (your `dev.db` is never touched)
+2. Runs `prisma migrate deploy` and seeds the test database
+3. Runs `npx playwright test`, which starts a Next.js dev server on port 3001
+
+You can pass any Playwright CLI flags after `--`, e.g. `npm run test:e2e -- --grep "rename"`.
 
 ## Convention
 

@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('Song Page', () => {
+  test.describe.configure({ mode: 'serial' })
+
   test('displays key sets with piano keyboards', async ({ page }) => {
     await page.goto('/song/4')
     // Should show key set names
