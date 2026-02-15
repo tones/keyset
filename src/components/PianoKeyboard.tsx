@@ -1,7 +1,10 @@
 'use client'
 
+import { KEY_COLORS, DEFAULT_COLOR } from '@/lib/colors'
+
 interface PianoKeyboardProps {
   highlightedNotes: number[]
+  noteColors?: Record<number, string>  // midiNote -> color name
   startNote?: number
   endNote?: number
   onToggle?: (midiNote: number) => void
@@ -28,7 +31,7 @@ const BLACK_KEY_BIAS: Record<number, number> = {
   10: 0.6,  // A#
 }
 
-export default function PianoKeyboard({ highlightedNotes, startNote = 48, endNote = 84, onToggle }: PianoKeyboardProps) {
+export default function PianoKeyboard({ highlightedNotes, noteColors = {}, startNote = 48, endNote = 84, onToggle }: PianoKeyboardProps) {
   const highlightSet = new Set(highlightedNotes)
 
   // Collect all white keys in range and assign each an index
@@ -84,6 +87,8 @@ export default function PianoKeyboard({ highlightedNotes, startNote = 48, endNot
       {/* White keys */}
       {whiteKeys.map((note, i) => {
         const isHighlighted = highlightSet.has(note)
+        const colorName = noteColors[note] ?? DEFAULT_COLOR
+        const color = KEY_COLORS[colorName] ?? KEY_COLORS[DEFAULT_COLOR]
         return (
           <div
             key={note}
@@ -94,7 +99,7 @@ export default function PianoKeyboard({ highlightedNotes, startNote = 48, endNot
               left: `${i * wPct}%`,
               width: `${wPct}%`,
               height: '100%',
-              backgroundColor: isHighlighted ? '#ef4444' : '#ffffff',
+              backgroundColor: isHighlighted ? color.white : '#ffffff',
               zIndex: 1,
             }}
             onClick={onToggle ? () => onToggle(note) : undefined}
@@ -105,6 +110,8 @@ export default function PianoKeyboard({ highlightedNotes, startNote = 48, endNot
       {/* Black keys */}
       {blackKeys.map((note) => {
         const isHighlighted = highlightSet.has(note)
+        const colorName = noteColors[note] ?? DEFAULT_COLOR
+        const color = KEY_COLORS[colorName] ?? KEY_COLORS[DEFAULT_COLOR]
         return (
           <div
             key={note}
@@ -115,7 +122,7 @@ export default function PianoKeyboard({ highlightedNotes, startNote = 48, endNot
               left: `${blackKeyLeftPct(note)}%`,
               width: `${bPct}%`,
               height: `${BLACK_KEY_HEIGHT}%`,
-              backgroundColor: isHighlighted ? '#dc2626' : '#1a1a1a',
+              backgroundColor: isHighlighted ? color.black : '#1a1a1a',
               zIndex: 2,
             }}
             onClick={onToggle ? () => onToggle(note) : undefined}

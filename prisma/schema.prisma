@@ -43,6 +43,7 @@ model KeySet {
 model KeyPress {
   id          Int      @id @default(autoincrement())
   midiNote    Int      // MIDI note number (0-127)
+  color       String   @default("red") // Key highlight color
   createdAt   DateTime @default(now())
   
   // Relationship

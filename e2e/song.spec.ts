@@ -168,6 +168,37 @@ test.describe('Song Page', () => {
     await reloadedKey.click()
   })
 
+  test('color palette changes key color and persists', async ({ page }) => {
+    await page.goto('/song/4')
+    const firstCard = page.getByTestId('keyset-card').first()
+    const palette = firstCard.getByTestId('color-palette')
+
+    // Palette should have 6 color swatches
+    await expect(palette.locator('button')).toHaveCount(6)
+
+    // Select blue
+    await palette.locator('button[title="Blue"]').click()
+
+    // Find an unhighlighted white key and click it
+    const piano = firstCard.getByTestId('piano-keyboard')
+    const testKey = piano.locator('[data-note="62"]') // D4, not in C major chord
+    await testKey.click()
+
+    // Key should be blue (rgb(59, 130, 246) = #3b82f6)
+    const color = await testKey.evaluate((el) => getComputedStyle(el).backgroundColor)
+    expect(color).toBe('rgb(59, 130, 246)')
+
+    // Reload and verify persistence
+    await page.reload()
+    const reloadedKey = page.getByTestId('keyset-card').first().getByTestId('piano-keyboard').locator('[data-note="62"]')
+    const reloadedColor = await reloadedKey.evaluate((el) => getComputedStyle(el).backgroundColor)
+    expect(reloadedColor).toBe('rgb(59, 130, 246)')
+
+    // Clean up: click to toggle off (need to select blue first since default is red)
+    await page.getByTestId('keyset-card').first().getByTestId('color-palette').locator('button[title="Blue"]').click()
+    await reloadedKey.click()
+  })
+
   test('Analyze Song button is visible', async ({ page }) => {
     // Song 2 has no cached analysis, so button says "Analyze Song"
     await page.goto('/song/2')

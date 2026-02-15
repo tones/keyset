@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { KEY_COLORS, COLOR_NAMES, DEFAULT_COLOR } from '@/lib/colors'
 import {
   DndContext,
   closestCenter,
@@ -25,6 +26,7 @@ import { reorderKeySets, deleteKeySet, createKeySet, toggleKeyPress } from '@/ap
 interface KeyPress {
   id: number
   midiNote: number
+  color: string
 }
 
 interface KeySet {
@@ -38,7 +40,8 @@ interface SortableKeySetListProps {
   keySets: KeySet[]
 }
 
-function SortableKeySetCard({ keySet, songId, onDelete, onToggleNote }: { keySet: KeySet; songId: number; onDelete: (id: number) => void; onToggleNote: (keySetId: number, midiNote: number) => void }) {
+function SortableKeySetCard({ keySet, songId, onDelete, onToggleNote }: { keySet: KeySet; songId: number; onDelete: (id: number) => void; onToggleNote: (keySetId: number, midiNote: number, color: string) => void }) {
+  const [activeColor, setActiveColor] = useState(DEFAULT_COLOR)
   const {
     attributes,
     listeners,
@@ -92,9 +95,22 @@ function SortableKeySetCard({ keySet, songId, onDelete, onToggleNote }: { keySet
         </div>
       </div>
 
+      <div className="flex items-center gap-1.5 mb-2" data-testid="color-palette">
+        {COLOR_NAMES.map((name) => (
+          <button
+            key={name}
+            onClick={() => setActiveColor(name)}
+            className={`w-5 h-5 rounded-full cursor-pointer transition-all ${activeColor === name ? 'ring-2 ring-offset-1 ring-gray-400 scale-110' : 'hover:scale-110'}`}
+            style={{ backgroundColor: KEY_COLORS[name].white }}
+            title={KEY_COLORS[name].label}
+          />
+        ))}
+      </div>
+
       <PianoKeyboard
         highlightedNotes={keySet.keyPresses.map((kp) => kp.midiNote)}
-        onToggle={(midiNote) => onToggleNote(keySet.id, midiNote)}
+        noteColors={Object.fromEntries(keySet.keyPresses.map((kp) => [kp.midiNote, kp.color]))}
+        onToggle={(midiNote) => onToggleNote(keySet.id, midiNote, activeColor)}
       />
     </div>
   )
@@ -121,20 +137,24 @@ export default function SortableKeySetList({ songId, keySets: initialKeySets }: 
     await deleteKeySet(keySetId, songId)
   }
 
-  async function handleToggleNote(keySetId: number, midiNote: number) {
+  async function handleToggleNote(keySetId: number, midiNote: number, color: string) {
     setKeySets((prev) =>
       prev.map((ks) => {
         if (ks.id !== keySetId) return ks
-        const hasNote = ks.keyPresses.some((kp) => kp.midiNote === midiNote)
-        return {
-          ...ks,
-          keyPresses: hasNote
-            ? ks.keyPresses.filter((kp) => kp.midiNote !== midiNote)
-            : [...ks.keyPresses, { id: -Date.now(), midiNote }],
+        const existing = ks.keyPresses.find((kp) => kp.midiNote === midiNote)
+        if (existing && existing.color === color) {
+          // Same color: toggle off
+          return { ...ks, keyPresses: ks.keyPresses.filter((kp) => kp.midiNote !== midiNote) }
+        } else if (existing) {
+          // Different color: update color
+          return { ...ks, keyPresses: ks.keyPresses.map((kp) => kp.midiNote === midiNote ? { ...kp, color } : kp) }
+        } else {
+          // New note: add with color
+          return { ...ks, keyPresses: [...ks.keyPresses, { id: -Date.now(), midiNote, color }] }
         }
       })
     )
-    await toggleKeyPress(keySetId, midiNote, songId)
+    await toggleKeyPress(keySetId, midiNote, songId, color)
   }
 
   async function handleDragEnd(event: DragEndEvent) {
