@@ -69,7 +69,7 @@ Uses **singular nouns** (`/song/`), not plurals.
 
 - `src/app/actions.ts` — `createSong` (creates "Untitled Song", redirects to it), `deleteSong` (deletes song with cascade, revalidates home)
 - `src/app/song/[id]/actions.ts` — `updateSongTitle`, `reorderKeySets`, `createKeySet`, `deleteKeySet`, `toggleKeyPress`
-- `src/app/song/[id]/analyze.ts` — `analyzeSong` (calls Anthropic Claude, caches result in Song.analysis), `clearAnalysis` (removes cached analysis from Song)
+- `src/app/song/[id]/analyze.ts` — `analyzeSong` (calls OpenAI or Anthropic based on `LLM_PROVIDER` env var, sends chord IDs + notes, caches result in Song.analysis), `clearAnalysis` (removes cached analysis from Song)
 
 ## Deployment (Fly.io)
 
