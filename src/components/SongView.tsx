@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import SortableKeySetList from '@/components/SortableKeySetList'
-import PerformView from '@/components/PerformView'
 import EditableTitle from '@/components/EditableTitle'
 import YouTubeLink from '@/components/YouTubeLink'
 import { saveKeySets } from '@/app/song/[id]/actions'
@@ -24,6 +23,7 @@ interface SongViewProps {
   songId: number
   keySets: KeySet[]
   initialTitle: string
+  imageUrl: string | null
   initialYoutubeUrl: string | null
   onSaveTitle: (title: string) => Promise<void>
   onSaveYoutubeUrl: (url: string | null) => Promise<void>
@@ -31,8 +31,8 @@ interface SongViewProps {
 
 let nextTempId = -1
 
-export default function SongView({ songId, keySets: serverKeySets, initialTitle, initialYoutubeUrl, onSaveTitle, onSaveYoutubeUrl }: SongViewProps) {
-  const [mode, setMode] = useState<'edit' | 'perform'>('edit')
+export default function SongView({ songId, keySets: serverKeySets, initialTitle, imageUrl, initialYoutubeUrl, onSaveTitle, onSaveYoutubeUrl }: SongViewProps) {
+  const [mode, setMode] = useState<'full' | 'compact'>('full')
   const [keySets, setKeySets] = useState(serverKeySets)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -94,12 +94,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
     savedRef.current = serialize(serverKeySets)
   }
 
-  function handleModeSwitch(newMode: 'edit' | 'perform') {
-    if (isDirty && newMode !== mode) {
-      if (!confirm('You have unsaved changes. Discard?')) return
-      setKeySets(serverKeySets)
-      savedRef.current = serialize(serverKeySets)
-    }
+  function handleModeSwitch(newMode: 'full' | 'compact') {
     setMode(newMode)
   }
 
@@ -178,67 +173,85 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
 
   return (
     <>
-      <div className="mb-6">
-        <div className="flex items-center justify-between gap-4">
-          <EditableTitle initialTitle={initialTitle} onSave={onSaveTitle} />
-          <div className="flex gap-1.5 shrink-0">
-            <button
-              onClick={() => handleModeSwitch('edit')}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${mode === 'edit' ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
-            >
-              Edit
-            </button>
-            <button
-              onClick={() => handleModeSwitch('perform')}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${mode === 'perform' ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
-            >
-              Perform
-            </button>
+      <div className="bg-white rounded-lg shadow mb-6 overflow-hidden">
+        <div className="flex">
+          {imageUrl ? (
+            <img src={imageUrl} alt="" className="w-28 h-28 object-cover shrink-0" />
+          ) : (
+            <div className="w-28 h-28 bg-gray-100 shrink-0 flex items-center justify-center">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300">
+                <path d="M9 18V5l12-2v13" />
+                <circle cx="6" cy="18" r="3" />
+                <circle cx="18" cy="16" r="3" />
+              </svg>
+            </div>
+          )}
+          <div className="flex-1 p-4 min-w-0 flex flex-col justify-between">
+            <div>
+              <EditableTitle initialTitle={initialTitle} onSave={onSaveTitle} />
+              <div className="mt-1">
+                <YouTubeLink initialUrl={initialYoutubeUrl} onSave={onSaveYoutubeUrl} />
+              </div>
+            </div>
+            <div className="flex gap-1.5 mt-2">
+              <button
+                onClick={() => handleModeSwitch('full')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${mode === 'full' ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
+              >
+                Full
+              </button>
+              <button
+                onClick={() => handleModeSwitch('compact')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${mode === 'compact' ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
+              >
+                Compact
+              </button>
+            </div>
           </div>
         </div>
-        <div className="mt-1 flex items-center justify-between">
-          <YouTubeLink initialUrl={initialYoutubeUrl} onSave={onSaveYoutubeUrl} />
-          {isDirty && (
-            <div className="flex items-center gap-3" data-testid="save-bar">
+        <div className="h-10 border-t border-gray-100 px-4 flex items-center justify-between">
+          {isDirty ? (
+            <div className="flex items-center justify-between w-full" data-testid="save-bar">
               <span className="text-sm text-amber-600 flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
                 Unsaved changes
               </span>
-              {saveError && <span className="text-sm text-red-600" data-testid="save-error">{saveError}</span>}
-              <button
-                onClick={handleReset}
-                className="px-3 py-1 text-sm font-medium rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 cursor-pointer transition-colors"
-                data-testid="reset-button"
-              >
-                Reset
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="px-3 py-1 text-sm font-medium rounded-md bg-gray-900 text-white hover:bg-gray-800 cursor-pointer transition-colors disabled:opacity-50"
-                data-testid="save-button"
-              >
-                {saving ? 'Saving…' : 'Save'}
-              </button>
+              <div className="flex items-center gap-2">
+                {saveError && <span className="text-sm text-red-600" data-testid="save-error">{saveError}</span>}
+                <button
+                  onClick={handleReset}
+                  className="px-3 py-1 text-sm font-medium rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 cursor-pointer transition-colors"
+                  data-testid="reset-button"
+                >
+                  Reset
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="px-3 py-1 text-sm font-medium rounded-md bg-gray-900 text-white hover:bg-gray-800 cursor-pointer transition-colors disabled:opacity-50"
+                  data-testid="save-button"
+                >
+                  {saving ? 'Saving…' : 'Save'}
+                </button>
+              </div>
             </div>
+          ) : (
+            <span />
           )}
         </div>
       </div>
 
-      {mode === 'edit' ? (
-        <SortableKeySetList
-          keySets={keySets}
-          onAdd={handleAdd}
-          onDelete={handleDelete}
-          onDuplicate={handleDuplicate}
-          onToggleNote={handleToggleNote}
-          onShiftNotes={handleShiftNotes}
-          onToggleType={handleToggleType}
-          onReorder={handleReorder}
-        />
-      ) : (
-        <PerformView keySets={keySets} />
-      )}
+      <SortableKeySetList
+        keySets={keySets}
+        compact={mode === 'compact'}
+        onAdd={handleAdd}
+        onDelete={handleDelete}
+        onDuplicate={handleDuplicate}
+        onToggleNote={handleToggleNote}
+        onShiftNotes={handleShiftNotes}
+        onToggleType={handleToggleType}
+        onReorder={handleReorder}
+      />
     </>
   )
 }

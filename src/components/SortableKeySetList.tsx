@@ -38,6 +38,7 @@ interface KeySet {
 
 interface SortableKeySetListProps {
   keySets: KeySet[]
+  compact?: boolean
   onAdd: () => void
   onDelete: (id: number) => void
   onDuplicate: (id: number) => void
@@ -45,6 +46,36 @@ interface SortableKeySetListProps {
   onShiftNotes: (keySetId: number, delta: number) => void
   onToggleType: (keySetId: number) => void
   onReorder: (keySets: KeySet[]) => void
+}
+
+function CompactKeySetCard({ keySet }: { keySet: KeySet }) {
+  return (
+    <div className={`rounded-lg shadow p-3 border ${keySet.type === 'flourish' ? 'bg-amber-50 border-amber-200' : 'bg-white border-transparent'}`} data-testid="keyset-card">
+      <div className="flex items-center gap-2 mb-2">
+        <h2 className="text-sm font-semibold text-gray-900" data-testid="chord-label">
+          {keySet.type === 'flourish'
+            ? <span className="text-amber-600 italic">Flourish</span>
+            : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map((kp) => kp.midiNote)) : '\u00A0'}
+        </h2>
+        {keySet.keyPresses.length > 0 && (
+          <button
+            onClick={() => playChord(keySet.keyPresses.map((kp) => kp.midiNote))}
+            className="text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
+            title="Play Chord"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </button>
+        )}
+      </div>
+      <PianoKeyboard
+        highlightedNotes={keySet.keyPresses.map((kp) => kp.midiNote)}
+        noteColors={Object.fromEntries(keySet.keyPresses.map((kp) => [kp.midiNote, kp.color]))}
+        height={70}
+      />
+    </div>
+  )
 }
 
 function SortableKeySetCard({ keySet, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType }: { keySet: KeySet; onDelete: (id: number) => void; onDuplicate: (id: number) => void; onToggleNote: (keySetId: number, midiNote: number, color: string) => void; onShiftNotes: (keySetId: number, delta: number) => void; onToggleType: (keySetId: number) => void }) {
@@ -219,7 +250,7 @@ function SortableKeySetCard({ keySet, onDelete, onDuplicate, onToggleNote, onShi
   )
 }
 
-export default function SortableKeySetList({ keySets, onAdd, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType, onReorder }: SortableKeySetListProps) {
+export default function SortableKeySetList({ keySets, compact, onAdd, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType, onReorder }: SortableKeySetListProps) {
   useEffect(() => {
     preloadPiano()
   }, [])
@@ -239,6 +270,16 @@ export default function SortableKeySetList({ keySets, onAdd, onDelete, onDuplica
     const newIndex = keySets.findIndex((ks) => ks.id === over.id)
     const newOrder = arrayMove(keySets, oldIndex, newIndex)
     onReorder(newOrder)
+  }
+
+  if (compact) {
+    return (
+      <div className="space-y-3">
+        {keySets.map((keySet) => (
+          <CompactKeySetCard key={keySet.id} keySet={keySet} />
+        ))}
+      </div>
+    )
   }
 
   return (
