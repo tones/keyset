@@ -22,7 +22,7 @@ import { CSS } from '@dnd-kit/utilities'
 import PianoKeyboard from '@/components/PianoKeyboard'
 import { identifyChord } from '@/lib/chordId'
 import { playChord, preloadPiano } from '@/lib/playChord'
-import { reorderKeySets, deleteKeySet, createKeySet, duplicateKeySet, toggleKeyPress, shiftOctave, updateKeySetType } from '@/app/song/[id]/actions'
+import { reorderKeySets, deleteKeySet, createKeySet, duplicateKeySet, toggleKeyPress, shiftNotes, updateKeySetType } from '@/app/song/[id]/actions'
 
 interface KeyPress {
   id: number
@@ -42,8 +42,10 @@ interface SortableKeySetListProps {
   keySets: KeySet[]
 }
 
-function SortableKeySetCard({ keySet, songId, onDelete, onDuplicate, onToggleNote, onShiftOctave, onToggleType }: { keySet: KeySet; songId: number; onDelete: (id: number) => void; onDuplicate: (id: number) => void; onToggleNote: (keySetId: number, midiNote: number, color: string) => void; onShiftOctave: (keySetId: number, direction: 'up' | 'down') => void; onToggleType: (keySetId: number) => void }) {
+function SortableKeySetCard({ keySet, songId, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType }: { keySet: KeySet; songId: number; onDelete: (id: number) => void; onDuplicate: (id: number) => void; onToggleNote: (keySetId: number, midiNote: number, color: string) => void; onShiftNotes: (keySetId: number, delta: number) => void; onToggleType: (keySetId: number) => void }) {
   const [activeColor, setActiveColor] = useState(DEFAULT_COLOR)
+  const [showTranspose, setShowTranspose] = useState(false)
+
   const {
     attributes,
     listeners,
@@ -114,26 +116,39 @@ function SortableKeySetCard({ keySet, songId, onDelete, onDuplicate, onToggleNot
                   <path d="M8 5v14l11-7z" />
                 </svg>
               </button>
-              <button
-                onClick={() => onShiftOctave(keySet.id, 'down')}
-                className="text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
-                title="Octave Down"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M19 12H5" />
-                  <path d="M12 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <button
-                onClick={() => onShiftOctave(keySet.id, 'up')}
-                className="text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
-                title="Octave Up"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14" />
-                  <path d="M12 5l7 7-7 7" />
-                </svg>
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setShowTranspose(!showTranspose)}
+                  className="text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
+                  title="Transpose"
+                  data-testid="transpose-button"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M7 16l-4-4 4-4" />
+                    <path d="M17 8l4 4-4 4" />
+                    <path d="M3 12h18" />
+                  </svg>
+                </button>
+                {showTranspose && (
+                  <div className="absolute right-0 top-8 z-10 bg-white rounded-lg shadow-lg border border-gray-200 p-3 min-w-[180px]" data-testid="transpose-popover" onMouseLeave={() => setShowTranspose(false)}>
+                    <div className="text-xs font-medium text-gray-500 mb-2">Transpose</div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-gray-700">Step</span>
+                      <div className="flex gap-1">
+                        <button onClick={() => onShiftNotes(keySet.id, -1)} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded cursor-pointer transition-colors" title="Step Down">← 1</button>
+                        <button onClick={() => onShiftNotes(keySet.id, 1)} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded cursor-pointer transition-colors" title="Step Up">1 →</button>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-700">Octave</span>
+                      <div className="flex gap-1">
+                        <button onClick={() => onShiftNotes(keySet.id, -12)} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded cursor-pointer transition-colors" title="Octave Down">← 12</button>
+                        <button onClick={() => onShiftNotes(keySet.id, 12)} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded cursor-pointer transition-colors" title="Octave Up">12 →</button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </>
           )}
           <button
@@ -223,8 +238,7 @@ export default function SortableKeySetList({ songId, keySets: initialKeySets }: 
     await toggleKeyPress(keySetId, midiNote, songId, color)
   }
 
-  async function handleShiftOctave(keySetId: number, direction: 'up' | 'down') {
-    const delta = direction === 'up' ? 12 : -12
+  async function handleShiftNotes(keySetId: number, delta: number) {
     setKeySets((prev) =>
       prev.map((ks) => {
         if (ks.id !== keySetId) return ks
@@ -236,7 +250,7 @@ export default function SortableKeySetList({ songId, keySets: initialKeySets }: 
         return { ...ks, keyPresses: ks.keyPresses.map((kp) => ({ ...kp, midiNote: kp.midiNote + delta })) }
       })
     )
-    await shiftOctave(keySetId, songId, direction)
+    await shiftNotes(keySetId, songId, delta)
   }
 
   async function handleToggleType(keySetId: number) {
@@ -269,7 +283,7 @@ export default function SortableKeySetList({ songId, keySets: initialKeySets }: 
       <SortableContext items={keySets.map((ks) => ks.id)} strategy={verticalListSortingStrategy}>
         <div className="space-y-6">
           {keySets.map((keySet) => (
-            <SortableKeySetCard key={keySet.id} keySet={keySet} songId={songId} onDelete={handleDelete} onDuplicate={handleDuplicate} onToggleNote={handleToggleNote} onShiftOctave={handleShiftOctave} onToggleType={handleToggleType} />
+            <SortableKeySetCard key={keySet.id} keySet={keySet} songId={songId} onDelete={handleDelete} onDuplicate={handleDuplicate} onToggleNote={handleToggleNote} onShiftNotes={handleShiftNotes} onToggleType={handleToggleType} />
           ))}
         </div>
       </SortableContext>

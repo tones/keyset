@@ -124,9 +124,8 @@ export async function toggleKeyPress(keySetId: number, midiNote: number, songId:
   revalidatePath(`/song/${songId}`)
 }
 
-export async function shiftOctave(keySetId: number, songId: number, direction: 'up' | 'down') {
+export async function shiftNotes(keySetId: number, songId: number, delta: number) {
   const keyPresses = await prisma.keyPress.findMany({ where: { keySetId } })
-  const delta = direction === 'up' ? 12 : -12
 
   // Check all notes stay in valid MIDI range (0–127)
   const allValid = keyPresses.every((kp) => {
@@ -145,6 +144,10 @@ export async function shiftOctave(keySetId: number, songId: number, direction: '
   )
 
   revalidatePath(`/song/${songId}`)
+}
+
+export async function shiftOctave(keySetId: number, songId: number, direction: 'up' | 'down') {
+  await shiftNotes(keySetId, songId, direction === 'up' ? 12 : -12)
 }
 
 export async function updateKeySetType(keySetId: number, songId: number, type: 'chord' | 'flourish') {

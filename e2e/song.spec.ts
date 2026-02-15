@@ -251,7 +251,7 @@ test.describe('Song Page', () => {
     await reloadedKey.click()
   })
 
-  test('octave up and down shifts notes and persists', async ({ page }) => {
+  test('transpose popover shifts notes and persists', async ({ page }) => {
     // Use song 1 (Autumn Leaves) — not modified by prior tests
     // Key set 1 has notes [57, 60, 64, 69] (Am)
     await page.goto('/song/1')
@@ -264,7 +264,8 @@ test.describe('Song Page', () => {
     )
     expect(noteBefore).not.toBe('rgb(255, 255, 255)')
 
-    // Click octave up — notes should shift from [57,60,64,69] to [69,72,76,81]
+    // Open transpose popover and click octave up
+    await firstCard.getByTestId('transpose-button').click()
     await firstCard.locator('button[title="Octave Up"]').click()
 
     // Original note 57 should no longer be highlighted (white key = white bg)
@@ -276,6 +277,7 @@ test.describe('Song Page', () => {
     await expect(reloadedPiano.locator('[data-note="57"]')).toHaveCSS('background-color', 'rgb(255, 255, 255)')
 
     // Shift back down to restore original state
+    await page.getByTestId('keyset-card').first().getByTestId('transpose-button').click()
     await page.getByTestId('keyset-card').first().locator('button[title="Octave Down"]').click()
 
     // Note 57 should be highlighted again
