@@ -20,7 +20,11 @@ async function main() {
   const song3 = await prisma.song.create({ data: { title: "Fly Me to the Moon" } })
 
   // Song 4: the main test song (key set ids 7–9)
-  const song4 = await prisma.song.create({ data: { title: "Tim's Beautiful Song" } })
+  const song4 = await prisma.song.create({ data: {
+    title: "Tim's Beautiful Song",
+    analysis: "Key: C major\n\n1. \"Verse 1 - C Major\" (C4, E4, G4, C5) — C major triad\n2. \"Verse 2 - F Major\" (F4, A4, C5, F5) — F major triad\n3. \"Bridge - G Major\" (G4, B4, D5, G5) — G major triad\n\nThis is a classic I-IV-V progression in C major.",
+    analysisUpdatedAt: new Date('2026-01-15T10:30:00Z'),
+  } })
 
   // Song 5: empty song (no key sets — used by "no key sets yet" test)
   await prisma.song.create({ data: { title: "Empty Song" } })

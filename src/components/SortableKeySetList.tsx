@@ -56,7 +56,7 @@ function SortableKeySetCard({ keySet, songId, onDelete, onToggleNote, onRename }
   }
 
   return (
-    <div ref={setNodeRef} style={style} className="bg-white rounded-lg shadow p-6">
+    <div ref={setNodeRef} style={style} className="bg-white rounded-lg shadow p-6" data-testid="keyset-card">
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-3">
           <button

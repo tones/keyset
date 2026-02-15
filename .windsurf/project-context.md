@@ -19,6 +19,7 @@ npm run dev
 
 - **Framework:** Next.js 16 (App Router, Server Components, Server Actions)
 - **Database:** Prisma ORM with SQLite
+- **LLM:** Anthropic Claude (via @anthropic-ai/sdk) for music theory analysis
 - **Drag-and-drop:** @dnd-kit (core, sortable, utilities)
 - **Styling:** Tailwind CSS 4
 - **Language:** TypeScript
@@ -27,7 +28,7 @@ npm run dev
 ## Data Model
 
 ```
-Song (id, title, createdAt, updatedAt)
+Song (id, title, analysis?, analysisUpdatedAt?, createdAt, updatedAt)
   └─ KeySet (id, name?, position, songId, createdAt, updatedAt)
        └─ KeyPress (id, midiNote, keySetId, createdAt)
 ```
@@ -47,7 +48,8 @@ Uses **singular nouns** (`/song/`), not plurals.
 - **`PianoKeyboard`** (`src/components/PianoKeyboard.tsx`) — Renders a piano keyboard with highlighted notes. Supports an optional `onToggle` callback for interactive mode. Uses absolute positioning with a boundary-based algorithm for black key placement. Has `data-testid="piano-keyboard"` for test selection and `data-note` attributes on each key.
 - **`EditableTitle`** (`src/components/EditableTitle.tsx`) — Generic inline-editable title. Click to edit, Enter to save, Escape to cancel. Accepts an `onSave` callback prop.
 - **`SongList`** (`src/components/SongList.tsx`) — Client component rendering song cards as clickable links on the home page. Includes trash icon with confirmation dialog for deleting songs.
-- **`SortableKeySetList`** (`src/components/SortableKeySetList.tsx`) — Drag-and-drop sortable list of key set cards using @dnd-kit. Includes add (plus icon), delete (trash icon with confirmation) actions. Piano keys are toggled inline with optimistic UI updates and immediate server persistence.
+- **`SortableKeySetList`** (`src/components/SortableKeySetList.tsx`) — Drag-and-drop sortable list of key set cards using @dnd-kit. Includes add (plus icon), delete (trash icon with confirmation), inline key set rename actions. Piano keys are toggled inline with optimistic UI updates and immediate server persistence.
+- **`SongAnalysis`** (`src/components/SongAnalysis.tsx`) — Client component that shows cached LLM analysis or triggers a new one via the Analyze Song button. Displays timestamp of when analysis was generated. Requires `ANTHROPIC_API_KEY` env var.
 
 ## Important Gotchas
 
@@ -58,7 +60,8 @@ Uses **singular nouns** (`/song/`), not plurals.
 ## Server Actions
 
 - `src/app/actions.ts` — `createSong` (creates "Untitled Song", redirects to it), `deleteSong` (deletes song with cascade, revalidates home)
-- `src/app/song/[id]/actions.ts` — `updateSongTitle`, `reorderKeySets`, `createKeySet`, `deleteKeySet`, `toggleKeyPress`
+- `src/app/song/[id]/actions.ts` — `updateSongTitle`, `reorderKeySets`, `createKeySet`, `deleteKeySet`, `toggleKeyPress`, `updateKeySetName`
+- `src/app/song/[id]/analyze.ts` — `analyzeSong` (calls Anthropic Claude, caches result in Song.analysis)
 
 ## Keeping This File Up to Date
 

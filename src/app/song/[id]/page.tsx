@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import EditableTitle from '@/components/EditableTitle'
 import SortableKeySetList from '@/components/SortableKeySetList'
+import SongAnalysis from '@/components/SongAnalysis'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -41,6 +42,12 @@ export default async function SongPage({ params }: { params: Promise<{ id: strin
         </div>
 
         <SortableKeySetList songId={song.id} keySets={song.keySets} />
+
+        <SongAnalysis
+          songId={song.id}
+          cachedAnalysis={song.analysis}
+          cachedAnalysisUpdatedAt={song.analysisUpdatedAt?.toISOString()}
+        />
       </div>
     </div>
   )

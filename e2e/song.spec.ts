@@ -5,10 +5,10 @@ test.describe('Song Page', () => {
 
   test('displays key sets with piano keyboards', async ({ page }) => {
     await page.goto('/song/4')
-    // Should show key set names
-    await expect(page.getByText('Verse 1 - C Major')).toBeVisible()
-    await expect(page.getByText('Verse 2 - F Major')).toBeVisible()
-    await expect(page.getByText('Bridge - G Major')).toBeVisible()
+    // Should show key set names as headings
+    await expect(page.getByRole('heading', { name: 'Verse 1 - C Major' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Verse 2 - F Major' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Bridge - G Major' })).toBeVisible()
     // Should have piano keyboard containers (one per key set)
     const pianos = page.getByTestId('piano-keyboard')
     await expect(pianos).toHaveCount(3)
@@ -61,7 +61,7 @@ test.describe('Song Page', () => {
 
   test('rename key set — save with Enter', async ({ page }) => {
     await page.goto('/song/4')
-    const cards = page.locator('.bg-white.rounded-lg.shadow.p-6')
+    const cards = page.locator('[data-testid="keyset-card"]')
     const firstCardTitle = cards.nth(0).locator('h2')
     const originalName = await firstCardTitle.textContent()
 
@@ -90,7 +90,7 @@ test.describe('Song Page', () => {
     await page.goto('/song/4')
 
     // Get the initial order of key set names
-    const cards = page.locator('.bg-white.rounded-lg.shadow.p-6')
+    const cards = page.locator('[data-testid="keyset-card"]')
     const firstCardText = await cards.nth(0).locator('h2').textContent()
     const secondCardText = await cards.nth(1).locator('h2').textContent()
 
@@ -121,7 +121,7 @@ test.describe('Song Page', () => {
     await page.locator('button[title="Add Key Set"]').click()
     await page.waitForTimeout(500)
 
-    const cards = page.locator('.bg-white.rounded-lg.shadow.p-6')
+    const cards = page.locator('[data-testid="keyset-card"]')
     const countBefore = await cards.count()
 
     // Click trash on the last card (the one we just added)
@@ -138,7 +138,7 @@ test.describe('Song Page', () => {
 
   test('delete key set — cancel keeps card', async ({ page }) => {
     await page.goto('/song/4')
-    const cards = page.locator('.bg-white.rounded-lg.shadow.p-6')
+    const cards = page.locator('[data-testid="keyset-card"]')
     const countBefore = await cards.count()
 
     // Dismiss the confirmation dialog
@@ -151,7 +151,7 @@ test.describe('Song Page', () => {
 
   test('add new key set', async ({ page }) => {
     await page.goto('/song/4')
-    const cards = page.locator('.bg-white.rounded-lg.shadow.p-6')
+    const cards = page.locator('[data-testid="keyset-card"]')
     const countBefore = await cards.count()
 
     await page.locator('button[title="Add Key Set"]').click()
@@ -191,6 +191,22 @@ test.describe('Song Page', () => {
 
     // Toggle back to restore original state
     await reloadedKey.click()
+  })
+
+  test('Analyze Song button is visible', async ({ page }) => {
+    // Song 2 has no cached analysis, so button says "Analyze Song"
+    await page.goto('/song/2')
+    await expect(page.getByRole('button', { name: 'Analyze Song' })).toBeVisible()
+  })
+
+  test('cached analysis displays on page load with timestamp', async ({ page }) => {
+    // Song 4 (Tim's Beautiful Song) has a seeded analysis
+    await page.goto('/song/4')
+    await expect(page.getByText('Music Theory Analysis')).toBeVisible()
+    await expect(page.getByText('C major triad')).toBeVisible()
+    await expect(page.getByText('Analysis generated on')).toBeVisible()
+    // Button should say "Re-analyze" since analysis already exists
+    await expect(page.getByRole('button', { name: 'Re-analyze Song' })).toBeVisible()
   })
 
   test('back link navigates home', async ({ page }) => {

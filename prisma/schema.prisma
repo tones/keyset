@@ -14,13 +14,15 @@ datasource db {
 }
 
 model Song {
-  id          Int      @id @default(autoincrement())
-  title       String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                 Int       @id @default(autoincrement())
+  title              String
+  analysis           String?
+  analysisUpdatedAt  DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
   
   // One-to-many relationship with KeySets (ordered)
-  keySets     KeySet[]
+  keySets            KeySet[]
 }
 
 model KeySet {
