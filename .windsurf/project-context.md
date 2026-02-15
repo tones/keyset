@@ -53,13 +53,30 @@ Uses **singular nouns** (`/song/`), not plurals.
 - **`PianoKeyboard`** (`src/components/PianoKeyboard.tsx`) — Renders a piano keyboard with highlighted notes in per-key colors. Accepts `noteColors` map (midiNote → color name) for multi-color support. Optional `height` prop (default 110px). Supports an optional `onToggle` callback for interactive mode. Uses absolute positioning with a boundary-based algorithm for black key placement. Has `data-testid="piano-keyboard"` for test selection and `data-note` attributes on each key.
 - **`EditableTitle`** (`src/components/EditableTitle.tsx`) — Generic inline-editable title. Click to edit, Enter to save, Escape to cancel. Accepts an `onSave` callback prop.
 - **`SongList`** (`src/components/SongList.tsx`) — Client component rendering song cards as clickable links on the home page. Includes duplicate button and trash icon with confirmation dialog.
-- **`SortableKeySetList`** (`src/components/SortableKeySetList.tsx`) — Drag-and-drop sortable list of key set cards using @dnd-kit. Each card has a single control bar row: left (drag handle + chord label), right (type toggle, color toggle, play, octave down, octave up, trash). All key set controls go in this row. Key sets have a `type` field: "chord" (default) or "flourish". Flourish key sets show an italic amber "Flourish" label instead of chord name, and have a warm amber background/border. Chord/flourish toggle is a music note icon (♫/♪). Empty chord key sets show a blank label until notes are added. Piano keys are toggled inline with optimistic UI updates and immediate server persistence. Each chord card's heading shows the auto-detected chord label (via `chordId`) that updates live as notes are toggled. Binary red/blue color toggle lets users switch brush color for bass note distinction.
+- **`SortableKeySetList`** (`src/components/SortableKeySetList.tsx`) — Drag-and-drop sortable list of key set cards using @dnd-kit (`id="keyset-dnd"` for stable hydration). Each card has a control bar row split into left (reference) and right (edit actions). **Left:** drag handle, chord label, play button. **Right:** type toggle, color picker, transpose, duplicate, delete. Key sets have a `type` field: "chord" (default) or "flourish". Flourish key sets show an italic amber "Flourish" label and warm amber background/border. Empty chord key sets show a blank label until notes are added. Piano keys are toggled inline with optimistic UI updates and immediate server persistence. Each chord card's heading shows the auto-detected chord label (via `chordId`) that updates live as notes are toggled.
 - **`playChord`** (`src/lib/playChord.ts`) — Plays a chord from MIDI notes using Tone.js `Sampler` with Salamander grand piano samples (~1MB from CDN). Exports `preloadPiano()` which is called on `SortableKeySetList` mount to load samples in the background. Falls back to `Tone.loaded()` await if samples aren't ready when user clicks play.
 - **`colors`** (`src/lib/colors.ts`) — Defines the 6 available key press colors (red, blue, green, purple, orange, yellow) with hex values for white/black keys. Exports `KEY_COLORS`, `COLOR_NAMES`, `DEFAULT_COLOR`.
 - **`midi`** (`src/lib/midi.ts`) — Shared `midiToNoteName(midi)` utility for converting MIDI note numbers to note names (e.g. 60 → "C4"). Used by `analyze.ts` and the song page.
 - **`chordId`** (`src/lib/chordId.ts`) — Utility function `identifyChord(midiNotes)` that identifies chords from MIDI notes using the `tonal` library (`Chord.detect`). Handles inversions, extended chords (9ths, 11ths, 13ths), altered chords, slash chords, and more. Returns standard chord symbols like "CM", "Dm7", "G7".
 - **`YouTubeLink`** (`src/components/YouTubeLink.tsx`) — Client component for inline-editable YouTube URL. Three states: empty ("Add YouTube link" placeholder), set (YouTube icon + link opens in new tab, pencil to edit), editing (text input with Enter/Escape/Save/Cancel). Saves via `updateYoutubeUrl` server action.
 - **`SongAnalysis`** (`src/components/SongAnalysis.tsx`) — Client component that shows cached LLM analysis or triggers a new one via the Analyze button (shows provider name). Displays timestamp of when analysis was generated. Includes Claude discuss button (opens `claude.ai/new?q=` with pre-filled song context) and trash icon to delete analysis. Renders markdown via `react-markdown` with Tailwind `prose` classes.
+
+## Design Guidelines — Key Set Control Bar
+
+All icon buttons in the key set control bar follow a consistent pattern:
+
+- **Button wrapper:** `w-7 h-7 flex items-center justify-center` — uniform hit targets and vertical alignment.
+- **Icon style:** All SVGs are 18×18, stroke-based (`fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"`). No filled icons, no Unicode text.
+- **Color convention:** `text-gray-400 hover:text-blue-500` for most actions. `hover:text-red-500` for destructive (delete). Amber tones for flourish state on the type toggle.
+- **Gap:** `gap-1` between buttons in the right-side action group.
+- **Left vs. right split:** Left side = read-only reference (drag handle, chord label, play). Right side = edit actions (type, color, transpose, duplicate, delete).
+- **Popover pattern:** For controls with multiple options (transpose, color picker), use a popover that:
+  - Opens on click of the icon button.
+  - Closes on `onMouseLeave` of the popover div (stays open while mouse is inside, allowing repeated clicks).
+  - Positioned `absolute right-0 top-8 z-10` with `bg-white rounded-lg shadow-lg border border-gray-200 p-3`.
+  - Has a small `text-xs font-medium text-gray-500 mb-2` title label.
+  - Uses `data-testid` for both the trigger button and the popover div.
+- **When adding a new control:** Follow the same `w-7 h-7` wrapper, 18×18 stroke SVG, and gray-400/blue-500 color scheme. If it needs options, use the popover pattern. Place it in the right group if it edits data, left group if it's read-only.
 
 ## Important Gotchas
 
