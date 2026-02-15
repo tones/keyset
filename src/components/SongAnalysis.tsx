@@ -8,6 +8,7 @@ interface SongAnalysisProps {
   songId: number
   songTitle: string
   chordSummary: string
+  llmProvider: string
   cachedAnalysis?: string | null
   cachedAnalysisUpdatedAt?: string | null
 }
@@ -23,7 +24,7 @@ function formatTimestamp(iso: string): string {
   })
 }
 
-export default function SongAnalysis({ songId, songTitle, chordSummary, cachedAnalysis, cachedAnalysisUpdatedAt }: SongAnalysisProps) {
+export default function SongAnalysis({ songId, songTitle, chordSummary, llmProvider, cachedAnalysis, cachedAnalysisUpdatedAt }: SongAnalysisProps) {
   const [analysis, setAnalysis] = useState<string | null>(cachedAnalysis ?? null)
   const [analysisUpdatedAt, setAnalysisUpdatedAt] = useState<string | null>(cachedAnalysisUpdatedAt ?? null)
   const [loading, setLoading] = useState(false)
@@ -50,7 +51,7 @@ export default function SongAnalysis({ songId, songTitle, chordSummary, cachedAn
         disabled={loading}
         className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        {loading ? 'Analyzing...' : analysis ? 'Re-analyze Song' : 'Analyze Song'}
+        {loading ? 'Analyzing...' : `${analysis ? 'Re-analyze' : 'Analyze'} with ${llmProvider === 'anthropic' ? 'Claude' : 'ChatGPT'}`}
       </button>
 
       {error && (

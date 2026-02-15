@@ -50,6 +50,7 @@ export default async function SongPage({ params }: { params: Promise<{ id: strin
           songId={song.id}
           songTitle={song.title}
           chordSummary={song.keySets.map((ks) => ks.keyPresses.length > 0 ? identifyChord(ks.keyPresses.map((kp) => kp.midiNote)) : '(empty)').join(' → ')}
+          llmProvider={process.env.LLM_PROVIDER ?? 'openai'}
           cachedAnalysis={song.analysis}
           cachedAnalysisUpdatedAt={song.analysisUpdatedAt?.toISOString()}
         />

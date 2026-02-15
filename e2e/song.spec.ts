@@ -203,9 +203,9 @@ test.describe('Song Page', () => {
   })
 
   test('Analyze Song button is visible', async ({ page }) => {
-    // Song 2 has no cached analysis, so button says "Analyze Song"
+    // Song 2 has no cached analysis, so button says "Analyze with ..."
     await page.goto('/song/2')
-    await expect(page.getByRole('button', { name: 'Analyze Song' })).toBeVisible()
+    await expect(page.getByRole('button', { name: /Analyze with/ })).toBeVisible()
   })
 
   test('cached analysis displays on page load with timestamp', async ({ page }) => {
@@ -215,7 +215,7 @@ test.describe('Song Page', () => {
     await expect(page.getByText('C major triad')).toBeVisible()
     await expect(page.getByText('Analysis generated on')).toBeVisible()
     // Button should say "Re-analyze" since analysis already exists
-    await expect(page.getByRole('button', { name: 'Re-analyze Song' })).toBeVisible()
+    await expect(page.getByRole('button', { name: /Re-analyze with/ })).toBeVisible()
   })
 
   test('delete analysis with confirmation', async ({ page }) => {
@@ -229,12 +229,12 @@ test.describe('Song Page', () => {
 
     // Analysis should be removed, button should revert
     await expect(page.getByText('Music Theory Analysis')).not.toBeVisible()
-    await expect(page.getByRole('button', { name: 'Analyze Song' })).toBeVisible()
+    await expect(page.getByRole('button', { name: /Analyze with/ })).toBeVisible()
 
     // Reload and verify persistence
     await page.reload()
     await expect(page.getByText('Music Theory Analysis')).not.toBeVisible()
-    await expect(page.getByRole('button', { name: 'Analyze Song' })).toBeVisible()
+    await expect(page.getByRole('button', { name: /Analyze with/ })).toBeVisible()
   })
 
   test('delete analysis — cancel keeps it', async ({ page }) => {
@@ -248,7 +248,7 @@ test.describe('Song Page', () => {
 
     // Analysis should still be visible
     await expect(page.getByText('Music Theory Analysis')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Re-analyze Song' })).toBeVisible()
+    await expect(page.getByRole('button', { name: /Re-analyze with/ })).toBeVisible()
   })
 
   test('back link navigates home', async ({ page }) => {
