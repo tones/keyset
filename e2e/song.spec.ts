@@ -219,7 +219,7 @@ test.describe('Song Page', () => {
 
   test('back link navigates home', async ({ page }) => {
     await page.goto('/song/4')
-    await page.getByRole('link', { name: '← Back to Key Sets' }).click()
+    await page.getByRole('link', { name: '← Back to Keysets' }).click()
     await expect(page).toHaveURL('/')
   })
 })

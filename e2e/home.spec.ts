@@ -3,14 +3,14 @@ import { test, expect } from '@playwright/test'
 test.describe('Home Page', () => {
   test.describe.configure({ mode: 'serial' })
 
-  test('page title is "Key Sets"', async ({ page }) => {
+  test('page title is "Keysets"', async ({ page }) => {
     await page.goto('/')
-    await expect(page).toHaveTitle('Key Sets')
+    await expect(page).toHaveTitle('Keysets')
   })
 
-  test('displays "Key Sets" heading and lists songs', async ({ page }) => {
+  test('displays "Keysets" heading and lists songs', async ({ page }) => {
     await page.goto('/')
-    await expect(page.locator('h1')).toHaveText('Key Sets')
+    await expect(page.locator('h1')).toHaveText('Keysets')
     const songLinks = page.locator('a[href^="/song/"]')
     await expect(songLinks.first()).toBeVisible()
   })

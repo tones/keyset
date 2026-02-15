@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Key Sets",
-  description: "Manage your key sets",
+  title: "Keysets",
+  description: "Manage your keysets",
 };
 
 export default function RootLayout({

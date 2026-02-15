@@ -36,7 +36,7 @@ export default async function SongPage({ params }: { params: Promise<{ id: strin
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <Link href="/" className="text-blue-500 hover:text-blue-700 mb-4">
-            ← Back to Key Sets
+            ← Back to Keysets
           </Link>
           <EditableTitle initialTitle={song.title} onSave={async (title) => { 'use server'; const { updateSongTitle } = await import('./actions'); await updateSongTitle(song.id, title); }} />
         </div>
