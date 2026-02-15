@@ -3,16 +3,12 @@ import { test, expect } from '@playwright/test'
 test.describe('Song Page', () => {
   test.describe.configure({ mode: 'serial' })
 
-  test('displays key sets with piano keyboards', async ({ page }) => {
+  test('displays key sets with piano keyboards and chord labels', async ({ page }) => {
     await page.goto('/song/4')
-    // Should show key set names as headings
-    await expect(page.getByRole('heading', { name: 'Verse 1 - C Major' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Verse 2 - F Major' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Bridge - G Major' })).toBeVisible()
     // Should have piano keyboard containers (one per key set)
     const pianos = page.getByTestId('piano-keyboard')
     await expect(pianos).toHaveCount(3)
-    // Should show chord labels
+    // Should show chord labels as headings
     const chordLabels = page.getByTestId('chord-label')
     await expect(chordLabels).toHaveCount(3)
     await expect(chordLabels.nth(0)).toHaveText('CM')
@@ -63,33 +59,6 @@ test.describe('Song Page', () => {
 
     // Title should revert
     await expect(heading).toHaveText(originalTitle!)
-  })
-
-  test('rename key set — save with Enter', async ({ page }) => {
-    await page.goto('/song/4')
-    const cards = page.locator('[data-testid="keyset-card"]')
-    const firstCardTitle = cards.nth(0).locator('h2')
-    const originalName = await firstCardTitle.textContent()
-
-    // Click to edit
-    await firstCardTitle.click()
-    const input = cards.nth(0).locator('input[type="text"]')
-    await input.fill('Renamed Key Set')
-    await input.press('Enter')
-
-    // Title should update
-    await expect(firstCardTitle).toHaveText('Renamed Key Set')
-
-    // Reload and verify persistence
-    await page.reload()
-    await expect(cards.nth(0).locator('h2')).toHaveText('Renamed Key Set')
-
-    // Restore original name
-    await cards.nth(0).locator('h2').click()
-    const restoreInput = cards.nth(0).locator('input[type="text"]')
-    await restoreInput.fill(originalName!)
-    await restoreInput.press('Enter')
-    await expect(cards.nth(0).locator('h2')).toHaveText(originalName!)
   })
 
   test('reorder key sets via drag-and-drop persists', async ({ page }) => {

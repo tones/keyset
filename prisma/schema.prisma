@@ -27,7 +27,6 @@ model Song {
 
 model KeySet {
   id          Int      @id @default(autoincrement())
-  name        String?  // Optional name for the key set
   position    Int      // Position in the ordered list
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

@@ -72,16 +72,6 @@ export async function toggleKeyPress(keySetId: number, midiNote: number, songId:
   revalidatePath(`/song/${songId}`)
 }
 
-export async function updateKeySetName(keySetId: number, name: string, songId: number) {
-  await prisma.keySet.update({
-    where: { id: keySetId },
-    data: { name: name.trim() || null },
-  })
-
-  revalidatePath(`/song/${songId}`)
-  revalidatePath('/')
-}
-
 export async function deleteKeySet(keySetId: number, songId: number) {
   await prisma.keySet.delete({
     where: { id: keySetId },

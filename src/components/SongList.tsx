@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { deleteSong } from '@/app/actions'
+import { identifyChord } from '@/lib/chordId'
 
 interface KeyPress {
   id: number
@@ -10,7 +11,6 @@ interface KeyPress {
 
 interface KeySet {
   id: number
-  name: string | null
   position: number
   keyPresses: KeyPress[]
 }
@@ -62,7 +62,7 @@ export default function SongList({ songs }: { songs: Song[] }) {
               song.keySets.map((keySet) => (
                 <div key={keySet.id} className="border-l-4 border-blue-500 pl-4">
                   <h3 className="font-medium text-gray-700">
-                    {keySet.name || `Key Set ${keySet.position}`}
+                    {keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map(kp => kp.midiNote)) : `Key Set ${keySet.position}`}
                   </h3>
                   <div className="text-sm text-gray-500 font-mono">
                     {keySet.keyPresses.map(kp => kp.midiNote).join(', ')}

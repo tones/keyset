@@ -31,7 +31,7 @@ npm run dev
 
 ```
 Song (id, title, analysis?, analysisUpdatedAt?, createdAt, updatedAt)
-  └─ KeySet (id, name?, position, songId, createdAt, updatedAt)
+  └─ KeySet (id, position, songId, createdAt, updatedAt)
        └─ KeyPress (id, midiNote, keySetId, createdAt)
 ```
 
@@ -50,7 +50,7 @@ Uses **singular nouns** (`/song/`), not plurals.
 - **`PianoKeyboard`** (`src/components/PianoKeyboard.tsx`) — Renders a piano keyboard with highlighted notes. Supports an optional `onToggle` callback for interactive mode. Uses absolute positioning with a boundary-based algorithm for black key placement. Has `data-testid="piano-keyboard"` for test selection and `data-note` attributes on each key.
 - **`EditableTitle`** (`src/components/EditableTitle.tsx`) — Generic inline-editable title. Click to edit, Enter to save, Escape to cancel. Accepts an `onSave` callback prop.
 - **`SongList`** (`src/components/SongList.tsx`) — Client component rendering song cards as clickable links on the home page. Includes trash icon with confirmation dialog for deleting songs.
-- **`SortableKeySetList`** (`src/components/SortableKeySetList.tsx`) — Drag-and-drop sortable list of key set cards using @dnd-kit. Includes add (plus icon), delete (trash icon with confirmation), inline key set rename actions. Piano keys are toggled inline with optimistic UI updates and immediate server persistence. Shows deterministic chord label (via `chordId`) that updates live as notes are toggled.
+- **`SortableKeySetList`** (`src/components/SortableKeySetList.tsx`) — Drag-and-drop sortable list of key set cards using @dnd-kit. Includes add (plus icon), delete (trash icon with confirmation). Piano keys are toggled inline with optimistic UI updates and immediate server persistence. Each card's heading shows the auto-detected chord label (via `chordId`) that updates live as notes are toggled.
 - **`chordId`** (`src/lib/chordId.ts`) — Utility function `identifyChord(midiNotes)` that identifies chords from MIDI notes using the `tonal` library (`Chord.detect`). Handles inversions, extended chords (9ths, 11ths, 13ths), altered chords, slash chords, and more. Returns standard chord symbols like "CM", "Dm7", "G7".
 - **`SongAnalysis`** (`src/components/SongAnalysis.tsx`) — Client component that shows cached LLM analysis or triggers a new one via the Analyze Song button. Displays timestamp of when analysis was generated. Includes trash icon to delete cached analysis with confirmation. Renders markdown via `react-markdown` with Tailwind `prose` classes. Requires `ANTHROPIC_API_KEY` env var.
 
@@ -63,7 +63,7 @@ Uses **singular nouns** (`/song/`), not plurals.
 ## Server Actions
 
 - `src/app/actions.ts` — `createSong` (creates "Untitled Song", redirects to it), `deleteSong` (deletes song with cascade, revalidates home)
-- `src/app/song/[id]/actions.ts` — `updateSongTitle`, `reorderKeySets`, `createKeySet`, `deleteKeySet`, `toggleKeyPress`, `updateKeySetName`
+- `src/app/song/[id]/actions.ts` — `updateSongTitle`, `reorderKeySets`, `createKeySet`, `deleteKeySet`, `toggleKeyPress`
 - `src/app/song/[id]/analyze.ts` — `analyzeSong` (calls Anthropic Claude, caches result in Song.analysis), `clearAnalysis` (removes cached analysis from Song)
 
 ## Keeping This File Up to Date

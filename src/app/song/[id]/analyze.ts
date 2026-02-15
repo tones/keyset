@@ -37,9 +37,8 @@ export async function analyzeSong(songId: number): Promise<{ analysis: string; a
 
   const description = song.keySets
     .map((ks, i) => {
-      const name = ks.name || `Key Set ${ks.position}`
       const notes = ks.keyPresses.map((kp) => midiToNoteName(kp.midiNote)).join(', ')
-      return `${i + 1}. "${name}": ${notes || '(no notes)'}`
+      return `${i + 1}. Key Set ${ks.position}: ${notes || '(no notes)'}`
     })
     .join('\n')
 

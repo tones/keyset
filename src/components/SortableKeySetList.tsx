@@ -19,9 +19,8 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import PianoKeyboard from '@/components/PianoKeyboard'
-import EditableTitle from '@/components/EditableTitle'
 import { identifyChord } from '@/lib/chordId'
-import { reorderKeySets, deleteKeySet, createKeySet, toggleKeyPress, updateKeySetName } from '@/app/song/[id]/actions'
+import { reorderKeySets, deleteKeySet, createKeySet, toggleKeyPress } from '@/app/song/[id]/actions'
 
 interface KeyPress {
   id: number
@@ -30,7 +29,6 @@ interface KeyPress {
 
 interface KeySet {
   id: number
-  name: string | null
   position: number
   keyPresses: KeyPress[]
 }
@@ -40,7 +38,7 @@ interface SortableKeySetListProps {
   keySets: KeySet[]
 }
 
-function SortableKeySetCard({ keySet, songId, onDelete, onToggleNote, onRename }: { keySet: KeySet; songId: number; onDelete: (id: number) => void; onToggleNote: (keySetId: number, midiNote: number) => void; onRename: (keySetId: number, name: string) => Promise<void> }) {
+function SortableKeySetCard({ keySet, songId, onDelete, onToggleNote }: { keySet: KeySet; songId: number; onDelete: (id: number) => void; onToggleNote: (keySetId: number, midiNote: number) => void }) {
   const {
     attributes,
     listeners,
@@ -75,13 +73,9 @@ function SortableKeySetCard({ keySet, songId, onDelete, onToggleNote, onRename }
               <circle cx="13" cy="16" r="1.5" />
             </svg>
           </button>
-          <EditableTitle
-            initialTitle={keySet.name || `Key Set ${keySet.position}`}
-            onSave={(name) => onRename(keySet.id, name)}
-            tag="h2"
-            className="text-xl font-semibold text-gray-900 cursor-pointer hover:text-gray-600 transition-colors"
-            inputClassName="text-xl font-semibold bg-white border border-blue-400 rounded px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500 w-full"
-          />
+          <h2 className="text-xl font-semibold text-gray-900" data-testid="chord-label">
+            {keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map((kp) => kp.midiNote)) : `Key Set ${keySet.position}`}
+          </h2>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -97,12 +91,6 @@ function SortableKeySetCard({ keySet, songId, onDelete, onToggleNote, onRename }
           </button>
         </div>
       </div>
-
-      {keySet.keyPresses.length > 0 && (
-        <p className="text-sm text-gray-500 mb-2" data-testid="chord-label">
-          {identifyChord(keySet.keyPresses.map((kp) => kp.midiNote))}
-        </p>
-      )}
 
       <PianoKeyboard
         highlightedNotes={keySet.keyPresses.map((kp) => kp.midiNote)}
@@ -131,13 +119,6 @@ export default function SortableKeySetList({ songId, keySets: initialKeySets }: 
     if (!confirm('Are you sure you want to delete this key set?')) return
     setKeySets((prev) => prev.filter((ks) => ks.id !== keySetId))
     await deleteKeySet(keySetId, songId)
-  }
-
-  async function handleRename(keySetId: number, name: string) {
-    setKeySets((prev) =>
-      prev.map((ks) => (ks.id === keySetId ? { ...ks, name } : ks))
-    )
-    await updateKeySetName(keySetId, name, songId)
   }
 
   async function handleToggleNote(keySetId: number, midiNote: number) {
@@ -174,7 +155,7 @@ export default function SortableKeySetList({ songId, keySets: initialKeySets }: 
       <SortableContext items={keySets.map((ks) => ks.id)} strategy={verticalListSortingStrategy}>
         <div className="space-y-6">
           {keySets.map((keySet) => (
-            <SortableKeySetCard key={keySet.id} keySet={keySet} songId={songId} onDelete={handleDelete} onToggleNote={handleToggleNote} onRename={handleRename} />
+            <SortableKeySetCard key={keySet.id} keySet={keySet} songId={songId} onDelete={handleDelete} onToggleNote={handleToggleNote} />
           ))}
         </div>
       </SortableContext>

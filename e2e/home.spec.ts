@@ -15,10 +15,10 @@ test.describe('Home Page', () => {
     await expect(songLinks.first()).toBeVisible()
   })
 
-  test('song cards show key set names', async ({ page }) => {
+  test('song cards show chord labels', async ({ page }) => {
     await page.goto('/')
-    // Song 4 has key sets with names
-    await expect(page.getByText('Verse 1 - C Major')).toBeVisible()
+    // Song 4 has key sets — chord IDs should be shown
+    await expect(page.getByText('CM').first()).toBeVisible()
   })
 
   test('songs with no key sets show placeholder', async ({ page }) => {

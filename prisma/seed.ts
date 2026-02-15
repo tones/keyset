@@ -39,19 +39,19 @@ async function main() {
 
   // Key sets for songs 1–3 (ids 1–6)
   const fillerKeySets = [
-    { songId: song1.id, name: "A minor",  position: 1, midiNotes: [57, 60, 64, 69] },
-    { songId: song1.id, name: "D7",       position: 2, midiNotes: [62, 66, 69, 72] },
-    { songId: song2.id, name: "Cm7",      position: 1, midiNotes: [60, 63, 67, 70] },
-    { songId: song2.id, name: "Fm7",      position: 2, midiNotes: [65, 68, 72, 75] },
-    { songId: song3.id, name: "Am7",      position: 1, midiNotes: [57, 60, 64, 67] },
-    { songId: song3.id, name: "Dm7",      position: 2, midiNotes: [62, 65, 69, 72] },
+    { songId: song1.id, position: 1, midiNotes: [57, 60, 64, 69] },
+    { songId: song1.id, position: 2, midiNotes: [62, 66, 69, 72] },
+    { songId: song2.id, position: 1, midiNotes: [60, 63, 67, 70] },
+    { songId: song2.id, position: 2, midiNotes: [65, 68, 72, 75] },
+    { songId: song3.id, position: 1, midiNotes: [57, 60, 64, 67] },
+    { songId: song3.id, position: 2, midiNotes: [62, 65, 69, 72] },
   ]
 
   // Key sets for song 4 (ids 7–9)
   const testKeySets = [
-    { songId: song4.id, name: "Verse 1 - C Major", position: 1, midiNotes: [60, 64, 67, 72] },
-    { songId: song4.id, name: "Verse 2 - F Major", position: 2, midiNotes: [65, 69, 72, 77] },
-    { songId: song4.id, name: "Bridge - G Major",  position: 3, midiNotes: [67, 71, 74, 79] },
+    { songId: song4.id, position: 1, midiNotes: [60, 64, 67, 72] },
+    { songId: song4.id, position: 2, midiNotes: [65, 69, 72, 77] },
+    { songId: song4.id, position: 3, midiNotes: [67, 71, 74, 79] },
   ]
 
   const allSpecs = [...fillerKeySets, ...testKeySets]
@@ -60,7 +60,7 @@ async function main() {
   const createdKeySets = []
   for (const spec of allSpecs) {
     const ks = await prisma.keySet.create({
-      data: { name: spec.name, position: spec.position, songId: spec.songId },
+      data: { position: spec.position, songId: spec.songId },
     })
     createdKeySets.push(ks)
   }
