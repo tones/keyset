@@ -28,17 +28,15 @@ Song (id, title, createdAt, updatedAt)
 
 - `/` — Home page, lists all songs
 - `/song/:id` — Song detail page with key set cards
-- `/keyset/:id` — Key set editor with interactive piano
 
-Uses **singular nouns** (`/song/`, `/keyset/`), not plurals.
+Uses **singular nouns** (`/song/`), not plurals.
 
 ## Key Components
 
-- **`PianoKeyboard`** (`src/components/PianoKeyboard.tsx`) — Renders a piano keyboard with highlighted notes. Supports an optional `onToggle` callback for interactive mode. Uses absolute positioning with a boundary-based algorithm for black key placement. Has `data-testid="piano-keyboard"` for test selection.
+- **`PianoKeyboard`** (`src/components/PianoKeyboard.tsx`) — Renders a piano keyboard with highlighted notes. Supports an optional `onToggle` callback for interactive mode. Uses absolute positioning with a boundary-based algorithm for black key placement. Has `data-testid="piano-keyboard"` for test selection and `data-note` attributes on each key.
 - **`EditableTitle`** (`src/components/EditableTitle.tsx`) — Generic inline-editable title. Click to edit, Enter to save, Escape to cancel. Accepts an `onSave` callback prop.
 - **`SongList`** (`src/components/SongList.tsx`) — Client component rendering song cards as clickable links on the home page. Includes trash icon with confirmation dialog for deleting songs.
-- **`SortableKeySetList`** (`src/components/SortableKeySetList.tsx`) — Drag-and-drop sortable list of key set cards using @dnd-kit. Includes add (plus icon), delete (trash icon with confirmation), and edit (pencil icon link) actions.
-- **`EditableKeySet`** (`src/components/EditableKeySet.tsx`) — Interactive key set editor. Toggles keys on/off via PianoKeyboard, shows unsaved changes indicator, Save button persists to database.
+- **`SortableKeySetList`** (`src/components/SortableKeySetList.tsx`) — Drag-and-drop sortable list of key set cards using @dnd-kit. Includes add (plus icon), delete (trash icon with confirmation) actions. Piano keys are toggled inline with optimistic UI updates and immediate server persistence.
 
 ## Important Gotchas
 
@@ -49,8 +47,7 @@ Uses **singular nouns** (`/song/`, `/keyset/`), not plurals.
 ## Server Actions
 
 - `src/app/actions.ts` — `createSong` (creates "Untitled Song", redirects to it), `deleteSong` (deletes song with cascade, revalidates home)
-- `src/app/song/[id]/actions.ts` — `updateSongTitle`, `reorderKeySets`, `createKeySet`, `deleteKeySet`
-- `src/app/keyset/[id]/actions.ts` — `saveKeyPresses`, `updateKeySetName`
+- `src/app/song/[id]/actions.ts` — `updateSongTitle`, `reorderKeySets`, `createKeySet`, `deleteKeySet`, `toggleKeyPress`
 
 ## Keeping This File Up to Date
 

@@ -136,11 +136,34 @@ test.describe('Song Page', () => {
     await expect(cards).toHaveCount(countBefore)
   })
 
-  test('pencil icon links to keyset editor', async ({ page }) => {
+  test('toggle key on song page persists', async ({ page }) => {
     await page.goto('/song/4')
-    const firstEditLink = page.locator('a[title="Edit Keys"]').first()
-    await firstEditLink.click()
-    await expect(page).toHaveURL(/\/keyset\/\d+/)
+    const firstPiano = page.getByTestId('piano-keyboard').first()
+
+    // Find a white key that is NOT highlighted (background should be white)
+    const whiteKeys = firstPiano.locator('[data-note]')
+    const firstKey = whiteKeys.first()
+    const noteBefore = await firstKey.getAttribute('data-note')
+
+    // Get initial color
+    const colorBefore = await firstKey.evaluate((el) => getComputedStyle(el).backgroundColor)
+
+    // Click to toggle
+    await firstKey.click()
+
+    // Color should change
+    const colorAfter = await firstKey.evaluate((el) => getComputedStyle(el).backgroundColor)
+    expect(colorAfter).not.toBe(colorBefore)
+
+    // Reload and verify persistence
+    await page.reload()
+    const reloadedPiano = page.getByTestId('piano-keyboard').first()
+    const reloadedKey = reloadedPiano.locator(`[data-note="${noteBefore}"]`)
+    const colorReloaded = await reloadedKey.evaluate((el) => getComputedStyle(el).backgroundColor)
+    expect(colorReloaded).toBe(colorAfter)
+
+    // Toggle back to restore original state
+    await reloadedKey.click()
   })
 
   test('back link navigates home', async ({ page }) => {

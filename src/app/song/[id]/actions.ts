@@ -58,6 +58,20 @@ export async function createKeySet(songId: number) {
   return keySet
 }
 
+export async function toggleKeyPress(keySetId: number, midiNote: number, songId: number) {
+  const existing = await prisma.keyPress.findFirst({
+    where: { keySetId, midiNote },
+  })
+
+  if (existing) {
+    await prisma.keyPress.delete({ where: { id: existing.id } })
+  } else {
+    await prisma.keyPress.create({ data: { keySetId, midiNote } })
+  }
+
+  revalidatePath(`/song/${songId}`)
+}
+
 export async function deleteKeySet(keySetId: number, songId: number) {
   await prisma.keySet.delete({
     where: { id: keySetId },

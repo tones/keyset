@@ -87,6 +87,7 @@ export default function PianoKeyboard({ highlightedNotes, startNote = 48, endNot
         return (
           <div
             key={note}
+            data-note={note}
             title={getNoteName(note)}
             className={`absolute top-0 border-r border-gray-300 rounded-b${onToggle ? ' cursor-pointer hover:brightness-90' : ''}`}
             style={{
@@ -107,6 +108,7 @@ export default function PianoKeyboard({ highlightedNotes, startNote = 48, endNot
         return (
           <div
             key={note}
+            data-note={note}
             title={getNoteName(note)}
             className={`absolute top-0 rounded-b-md shadow-md${onToggle ? ' cursor-pointer hover:brightness-90' : ''}`}
             style={{

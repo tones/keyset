@@ -18,9 +18,8 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import Link from 'next/link'
 import PianoKeyboard from '@/components/PianoKeyboard'
-import { reorderKeySets, deleteKeySet, createKeySet } from '@/app/song/[id]/actions'
+import { reorderKeySets, deleteKeySet, createKeySet, toggleKeyPress } from '@/app/song/[id]/actions'
 
 interface KeyPress {
   id: number
@@ -39,7 +38,7 @@ interface SortableKeySetListProps {
   keySets: KeySet[]
 }
 
-function SortableKeySetCard({ keySet, onDelete }: { keySet: KeySet; onDelete: (id: number) => void }) {
+function SortableKeySetCard({ keySet, songId, onDelete, onToggleNote }: { keySet: KeySet; songId: number; onDelete: (id: number) => void; onToggleNote: (keySetId: number, midiNote: number) => void }) {
   const {
     attributes,
     listeners,
@@ -79,16 +78,6 @@ function SortableKeySetCard({ keySet, onDelete }: { keySet: KeySet; onDelete: (i
           </h2>
         </div>
         <div className="flex items-center gap-2">
-          <Link
-            href={`/keyset/${keySet.id}`}
-            className="text-gray-400 hover:text-blue-500 transition-colors"
-            title="Edit Keys"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-              <path d="m15 5 4 4" />
-            </svg>
-          </Link>
           <button
             onClick={() => onDelete(keySet.id)}
             className="text-gray-400 hover:text-red-500 transition-colors"
@@ -103,7 +92,10 @@ function SortableKeySetCard({ keySet, onDelete }: { keySet: KeySet; onDelete: (i
         </div>
       </div>
 
-      <PianoKeyboard highlightedNotes={keySet.keyPresses.map((kp) => kp.midiNote)} />
+      <PianoKeyboard
+        highlightedNotes={keySet.keyPresses.map((kp) => kp.midiNote)}
+        onToggle={(midiNote) => onToggleNote(keySet.id, midiNote)}
+      />
     </div>
   )
 }
@@ -129,6 +121,22 @@ export default function SortableKeySetList({ songId, keySets: initialKeySets }: 
     await deleteKeySet(keySetId, songId)
   }
 
+  async function handleToggleNote(keySetId: number, midiNote: number) {
+    setKeySets((prev) =>
+      prev.map((ks) => {
+        if (ks.id !== keySetId) return ks
+        const hasNote = ks.keyPresses.some((kp) => kp.midiNote === midiNote)
+        return {
+          ...ks,
+          keyPresses: hasNote
+            ? ks.keyPresses.filter((kp) => kp.midiNote !== midiNote)
+            : [...ks.keyPresses, { id: -Date.now(), midiNote }],
+        }
+      })
+    )
+    await toggleKeyPress(keySetId, midiNote, songId)
+  }
+
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
     if (!over || active.id === over.id) return
@@ -147,7 +155,7 @@ export default function SortableKeySetList({ songId, keySets: initialKeySets }: 
       <SortableContext items={keySets.map((ks) => ks.id)} strategy={verticalListSortingStrategy}>
         <div className="space-y-6">
           {keySets.map((keySet) => (
-            <SortableKeySetCard key={keySet.id} keySet={keySet} onDelete={handleDelete} />
+            <SortableKeySetCard key={keySet.id} keySet={keySet} songId={songId} onDelete={handleDelete} onToggleNote={handleToggleNote} />
           ))}
         </div>
       </SortableContext>
