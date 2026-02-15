@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { prisma } from '@/lib/prisma'
 import { createSong } from './actions'
 import SongList from '@/components/SongList'

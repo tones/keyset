@@ -69,6 +69,17 @@ Uses **singular nouns** (`/song/`), not plurals.
 - `src/app/song/[id]/actions.ts` — `updateSongTitle`, `reorderKeySets`, `createKeySet`, `deleteKeySet`, `toggleKeyPress`
 - `src/app/song/[id]/analyze.ts` — `analyzeSong` (calls Anthropic Claude, caches result in Song.analysis), `clearAnalysis` (removes cached analysis from Song)
 
+## Deployment (Fly.io)
+
+- **App:** `keyset-app` → https://keyset-app.fly.dev/
+- **Region:** `sjc` (San Jose)
+- **Auth:** HTTP Basic Auth via `src/proxy.ts` (Next.js 16 "proxy" convention). Only active when `AUTH_PASSWORD` secret is set (production). No auth in local dev.
+- **Database:** SQLite on a persistent Fly volume mounted at `/data`. `DATABASE_URL=file:/data/keyset.db`.
+- **Secrets:** `AUTH_PASSWORD`, `ANTHROPIC_API_KEY` (set via `fly secrets set`)
+- **Build:** Multi-stage Dockerfile with `output: "standalone"` in `next.config.ts`. Pages use `force-dynamic` to avoid DB access at build time.
+- **Startup:** `scripts/start.sh` runs `prisma migrate deploy` then `node server.js`.
+- **Redeploy:** `fly deploy --app keyset-app` from the project root.
+
 ## Keeping This File Up to Date
 
 When making changes to the codebase, **always** update the relevant `.windsurf/` files before committing:
