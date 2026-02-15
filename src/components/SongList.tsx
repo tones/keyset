@@ -3,18 +3,7 @@
 import Link from 'next/link'
 import { deleteSong, duplicateSong } from '@/app/actions'
 import { identifyChord } from '@/lib/chordId'
-
-interface KeyPress {
-  id: number
-  midiNote: number
-}
-
-interface KeySet {
-  id: number
-  position: number
-  type: string
-  keyPresses: KeyPress[]
-}
+import type { KeySet } from '@/types'
 
 interface Song {
   id: number

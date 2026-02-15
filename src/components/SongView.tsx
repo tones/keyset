@@ -6,18 +6,20 @@ import EditableTitle from '@/components/EditableTitle'
 import YouTubeLink from '@/components/YouTubeLink'
 import Link from 'next/link'
 import { saveKeySets } from '@/app/song/[id]/actions'
+import type { KeySet } from '@/types'
 
-interface KeyPress {
-  id: number
-  midiNote: number
-  color: string
-}
-
-interface KeySet {
-  id: number
-  position: number
-  type: string
-  keyPresses: KeyPress[]
+function ToggleSwitch({ label, enabled, onToggle, activeColor = 'bg-gray-900' }: { label: string; enabled: boolean; onToggle: () => void; activeColor?: string }) {
+  return (
+    <label className="flex items-center gap-1.5 cursor-pointer select-none">
+      <span className="text-xs font-medium text-gray-500">{label}</span>
+      <button
+        onClick={onToggle}
+        className={`relative w-9 h-5 rounded-full transition-colors ${enabled ? activeColor : 'bg-gray-300'}`}
+      >
+        <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${enabled ? 'translate-x-4' : ''}`} />
+      </button>
+    </label>
+  )
 }
 
 interface SongViewProps {
@@ -94,10 +96,6 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
     if (!confirm('Discard unsaved changes?')) return
     setKeySets(serverKeySets)
     savedRef.current = serialize(serverKeySets)
-  }
-
-  function handleModeSwitch(newMode: 'full' | 'compact') {
-    setMode(newMode)
   }
 
   // --- Key set mutation handlers (all local state only) ---
@@ -222,24 +220,8 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
               <div className="flex flex-col items-end gap-2 shrink-0">
                 <YouTubeLink initialUrl={initialYoutubeUrl} onSave={onSaveYoutubeUrl} />
                 <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-1.5 cursor-pointer select-none">
-                    <span className="text-xs font-medium text-gray-500">Compact</span>
-                    <button
-                      onClick={() => handleModeSwitch(mode === 'compact' ? 'full' : 'compact')}
-                      className={`relative w-9 h-5 rounded-full transition-colors ${mode === 'compact' ? 'bg-gray-900' : 'bg-gray-300'}`}
-                    >
-                      <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${mode === 'compact' ? 'translate-x-4' : ''}`} />
-                    </button>
-                  </label>
-                  <label className="flex items-center gap-1.5 cursor-pointer select-none">
-                    <span className="text-xs font-medium text-gray-500">Common Tones</span>
-                    <button
-                      onClick={() => setShowCommonTones(!showCommonTones)}
-                      className={`relative w-9 h-5 rounded-full transition-colors ${showCommonTones ? 'bg-yellow-500' : 'bg-gray-300'}`}
-                    >
-                      <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${showCommonTones ? 'translate-x-4' : ''}`} />
-                    </button>
-                  </label>
+                  <ToggleSwitch label="Compact" enabled={mode === 'compact'} onToggle={() => setMode(mode === 'compact' ? 'full' : 'compact')} />
+                  <ToggleSwitch label="Common Tones" enabled={showCommonTones} onToggle={() => setShowCommonTones(!showCommonTones)} activeColor="bg-yellow-500" />
                 </div>
               </div>
             </div>

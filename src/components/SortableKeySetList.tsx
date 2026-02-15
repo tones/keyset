@@ -22,20 +22,8 @@ import { CSS } from '@dnd-kit/utilities'
 import PianoKeyboard from '@/components/PianoKeyboard'
 import { identifyChord } from '@/lib/chordId'
 import { playChord, preloadPiano } from '@/lib/playChord'
-import { keyCenterPct } from '@/lib/pianoLayout'
-
-interface KeyPress {
-  id: number
-  midiNote: number
-  color: string
-}
-
-interface KeySet {
-  id: number
-  position: number
-  type: string
-  keyPresses: KeyPress[]
-}
+import { keyCenterPct, buildKeyLayout } from '@/lib/pianoLayout'
+import type { KeySet } from '@/types'
 
 interface SortableKeySetListProps {
   keySets: KeySet[]
@@ -50,6 +38,17 @@ interface SortableKeySetListProps {
   onReorder: (keySets: KeySet[]) => void
 }
 
+interface KeySetCardProps {
+  keySet: KeySet
+  onDelete: (id: number) => void
+  onDuplicate: (id: number) => void
+  onToggleNote: (keySetId: number, midiNote: number, color: string) => void
+  onShiftNotes: (keySetId: number, delta: number) => void
+  onToggleType: (keySetId: number) => void
+}
+
+
+const defaultLayout = buildKeyLayout(48, 84)
 
 function CommonToneLines({ above, below, padX = 24, compact = false, visible = true }: { above: KeySet; below: KeySet; padX?: number; compact?: boolean; visible?: boolean }) {
   const aboveNotes = new Set(above.keyPresses.map(kp => kp.midiNote))
@@ -63,7 +62,7 @@ function CommonToneLines({ above, below, padX = 24, compact = false, visible = t
       {visible && common.length > 0 && (
         <svg className="w-full" style={{ height: h, marginTop: -overlap }} viewBox={`0 0 1000 ${h}`} preserveAspectRatio="none">
           {common.map(note => {
-            const x = keyCenterPct(note) * 10
+            const x = keyCenterPct(note, defaultLayout) * 10
             return (
               <line
                 key={note}
@@ -111,7 +110,7 @@ function CompactKeySetCard({ keySet }: { keySet: KeySet }) {
   )
 }
 
-function SortableKeySetCard({ keySet, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType }: { keySet: KeySet; onDelete: (id: number) => void; onDuplicate: (id: number) => void; onToggleNote: (keySetId: number, midiNote: number, color: string) => void; onShiftNotes: (keySetId: number, delta: number) => void; onToggleType: (keySetId: number) => void }) {
+function SortableKeySetCard({ keySet, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType }: KeySetCardProps) {
   const [activeColor, setActiveColor] = useState(DEFAULT_COLOR)
   const [showTranspose, setShowTranspose] = useState(false)
   const [showColorPicker, setShowColorPicker] = useState(false)
