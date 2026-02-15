@@ -57,7 +57,7 @@ Uses **singular nouns** (`/song/`), not plurals.
 - **`types`** (`src/types.ts`) — Shared `KeyPress` and `KeySet` interfaces used by `SongView`, `SortableKeySetList`, and `SongList`. Single source of truth for data model types on the client side.
 - **`colors`** (`src/lib/colors.ts`) — Defines the 4 available key press colors (red, blue, green, purple) with hex values for white/black keys. Orange and yellow were removed to avoid confusion with flourish amber and common tone yellow. Exports `KEY_COLORS`, `COLOR_NAMES`, `DEFAULT_COLOR`.
 - **`pianoLayout`** (`src/lib/pianoLayout.ts`) — Shared piano key layout math used by both `PianoKeyboard` and `CommonToneLines`. Exports `isBlackKey`, `getNoteName`, `buildKeyLayout`, `blackKeyLeftPct`, `keyCenterPct`, and `BLACK_KEY_BIAS`. Single source of truth for key positioning. `keyCenterPct` accepts an optional pre-built `KeyLayout` to avoid rebuilding per call; `CommonToneLines` uses a module-level `defaultLayout` constant.
-- **`albumArt`** (`src/lib/albumArt.ts`) — Fetches album art via Spotify API. Strips special characters from song title, searches Spotify tracks, grabs album art from result #1. No LLM needed. Spotify token cached in memory with expiry. Called from home page for songs missing `imageUrl`.
+- **`albumArt`** (`src/lib/albumArt.ts`) — Fetches album art via Spotify API. Strips special characters from song title, searches Spotify tracks (limit=10), picks first non-compilation result (`album_type !== 'compilation'`), falls back to first result. No LLM needed. Spotify token cached in memory with expiry. Called from home page for songs missing `imageUrl`.
 - **`midi`** (`src/lib/midi.ts`) — Shared `midiToNoteName(midi)` utility for converting MIDI note numbers to note names (e.g. 60 → "C4"). Used by `analyze.ts` and the song page.
 - **`chordId`** (`src/lib/chordId.ts`) — Utility function `identifyChord(midiNotes)` that identifies chords from MIDI notes using the `tonal` library (`Chord.detect`). Handles inversions, extended chords (9ths, 11ths, 13ths), altered chords, slash chords, and more. Returns standard chord symbols like "CM", "Dm7", "G7".
 - **`YouTubeLink`** (`src/components/YouTubeLink.tsx`) — Client component for inline-editable YouTube URL. Three states: empty ("Add YouTube link" placeholder), set (YouTube icon + link opens in new tab, pencil to edit), editing (text input with Enter/Escape/Save/Cancel). Saves via `updateYoutubeUrl` server action.
@@ -90,7 +90,7 @@ All icon buttons in the key set control bar follow a consistent pattern:
 
 - `src/app/actions.ts` — `createSong` (creates "Untitled Song", redirects to it), `deleteSong` (deletes song with cascade, revalidates home), `duplicateSong` (copies song with all keysets/keypresses, appends "(copy)" to title, stays on home page)
 - `src/app/song/[id]/actions.ts` — `saveKeySets` (atomic full-replace: deletes all key sets for a song then recreates from draft state in a single transaction), `updateYoutubeUrl`, `updateSongTitle`
-- `src/app/song/[id]/analyze.ts` — `analyzeSong` (calls OpenAI or Anthropic based on `LLM_PROVIDER` env var, sends chord IDs + notes, caches result in Song.analysis), `clearAnalysis` (removes cached analysis from Song)
+- `src/app/song/[id]/analyze.ts` — `analyzeSong(songId, songTitle, chordDetail)` (calls OpenAI or Anthropic based on `LLM_PROVIDER` env var, returns analysis text without persisting — analysis is draft state saved via `saveKeySets`). No `clearAnalysis` — clearing is a local state change in `SongView`.
 
 ## Deployment (Fly.io)
 
@@ -103,6 +103,7 @@ All icon buttons in the key set control bar follow a consistent pattern:
 - **Startup:** `scripts/start.sh` runs `prisma migrate deploy` then `node server.js`.
 - **Redeploy:** `fly deploy --app keyset-app` from the project root.
 - **Sync prod → local:** `npm run db:pull` (overwrites `dev.db` at project root with production DB, then restart dev server). Requires `fly ssh issue --agent` if SSH cert has expired (certs last 24h).
+- **⚠️ NEVER push local dev DB to production.** This risks overwriting/losing production data. Only pull (prod → local). To modify production data, use the app UI or run targeted SQL via `fly ssh console` with `better-sqlite3` (e.g. `node -e "const Database=require('better-sqlite3'); ..."`).
 - **Backups:** Fly volume snapshots are enabled (5-day retention, automatic daily).
 
 ## Keeping Context and Tests Up to Date
