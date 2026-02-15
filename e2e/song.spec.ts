@@ -223,13 +223,13 @@ test.describe('Song Page', () => {
     await reloadedKey.click()
   })
 
-  test('color toggle switches between red and blue and persists', async ({ page }) => {
+  test('color picker selects blue and persists', async ({ page }) => {
     await page.goto('/song/4')
     const firstCard = page.getByTestId('keyset-card').first()
-    const toggle = firstCard.getByTestId('color-toggle')
 
-    // Default color is red — toggle to blue
-    await toggle.click()
+    // Open color popover and select blue
+    await firstCard.getByTestId('color-toggle').click()
+    await firstCard.locator('button[title="Blue"]').click()
 
     // Find an unhighlighted white key and click it
     const piano = firstCard.getByTestId('piano-keyboard')
@@ -246,8 +246,9 @@ test.describe('Song Page', () => {
     const reloadedColor = await reloadedKey.evaluate((el) => getComputedStyle(el).backgroundColor)
     expect(reloadedColor).toBe('rgb(59, 130, 246)')
 
-    // Clean up: toggle to blue then click to remove
+    // Clean up: open popover, select blue, click to remove
     await page.getByTestId('keyset-card').first().getByTestId('color-toggle').click()
+    await page.getByTestId('keyset-card').first().locator('button[title="Blue"]').click()
     await reloadedKey.click()
   })
 
