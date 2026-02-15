@@ -57,7 +57,7 @@ Uses **singular nouns** (`/song/`), not plurals.
 - **`playChord`** (`src/lib/playChord.ts`) — Plays a chord from MIDI notes using Tone.js `Sampler` with Salamander grand piano samples (~1MB from CDN). Exports `preloadPiano()` which is called on `SortableKeySetList` mount to load samples in the background. Falls back to `Tone.loaded()` await if samples aren't ready when user clicks play.
 - **`colors`** (`src/lib/colors.ts`) — Defines the 6 available key press colors (red, blue, green, purple, orange, yellow) with hex values for white/black keys. Exports `KEY_COLORS`, `COLOR_NAMES`, `DEFAULT_COLOR`.
 - **`chordId`** (`src/lib/chordId.ts`) — Utility function `identifyChord(midiNotes)` that identifies chords from MIDI notes using the `tonal` library (`Chord.detect`). Handles inversions, extended chords (9ths, 11ths, 13ths), altered chords, slash chords, and more. Returns standard chord symbols like "CM", "Dm7", "G7".
-- **`SongAnalysis`** (`src/components/SongAnalysis.tsx`) — Client component that shows cached LLM analysis or triggers a new one via the Analyze Song button. Displays timestamp of when analysis was generated. Includes ChatGPT discuss button (opens ChatGPT with pre-filled song context) and trash icon to delete analysis. Renders markdown via `react-markdown` with Tailwind `prose` classes.
+- **`SongAnalysis`** (`src/components/SongAnalysis.tsx`) — Client component that shows cached LLM analysis or triggers a new one via the Analyze button (shows provider name). Displays timestamp of when analysis was generated. Includes Claude discuss button (opens `claude.ai/new?q=` with pre-filled song context) and trash icon to delete analysis. Renders markdown via `react-markdown` with Tailwind `prose` classes.
 
 ## Important Gotchas
 
@@ -67,7 +67,7 @@ Uses **singular nouns** (`/song/`), not plurals.
 
 ## Server Actions
 
-- `src/app/actions.ts` — `createSong` (creates "Untitled Song", redirects to it), `deleteSong` (deletes song with cascade, revalidates home)
+- `src/app/actions.ts` — `createSong` (creates "Untitled Song", redirects to it), `deleteSong` (deletes song with cascade, revalidates home), `duplicateSong` (copies song with all keysets/keypresses, appends "(copy)" to title, stays on home page)
 - `src/app/song/[id]/actions.ts` — `updateSongTitle`, `reorderKeySets`, `createKeySet`, `deleteKeySet`, `toggleKeyPress`
 - `src/app/song/[id]/analyze.ts` — `analyzeSong` (calls OpenAI or Anthropic based on `LLM_PROVIDER` env var, sends chord IDs + notes, caches result in Song.analysis), `clearAnalysis` (removes cached analysis from Song)
 

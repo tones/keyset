@@ -75,10 +75,10 @@ export default function SongAnalysis({ songId, songTitle, chordSummary, llmProvi
               <button
                 onClick={() => {
                   const prompt = `I'm studying the song "${songTitle}". Here are the chords: ${chordSummary}\n\nHere is a music theory analysis that was previously generated:\n\n${analysis}\n\nI'd like to discuss the music theory of this song with you. Please help me understand the chord progressions, harmonic relationships, and any interesting patterns.`
-                  window.open(`https://chatgpt.com/?q=${encodeURIComponent(prompt)}`, '_blank')
+                  window.open(`https://claude.ai/new?q=${encodeURIComponent(prompt)}`, '_blank')
                 }}
                 className="text-gray-400 hover:text-purple-500 transition-colors cursor-pointer"
-                title="Discuss in ChatGPT"
+                title="Discuss in Claude"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
