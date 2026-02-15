@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { KEY_COLORS, COLOR_NAMES, DEFAULT_COLOR } from '@/lib/colors'
 import {
   DndContext,
@@ -21,7 +21,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import PianoKeyboard from '@/components/PianoKeyboard'
 import { identifyChord } from '@/lib/chordId'
-import { playChord } from '@/lib/playChord'
+import { playChord, preloadPiano } from '@/lib/playChord'
 import { reorderKeySets, deleteKeySet, createKeySet, toggleKeyPress } from '@/app/song/[id]/actions'
 
 interface KeyPress {
@@ -130,6 +130,10 @@ function SortableKeySetCard({ keySet, songId, onDelete, onToggleNote }: { keySet
 
 export default function SortableKeySetList({ songId, keySets: initialKeySets }: SortableKeySetListProps) {
   const [keySets, setKeySets] = useState(initialKeySets)
+
+  useEffect(() => {
+    preloadPiano()
+  }, [])
 
   const sensors = useSensors(
     useSensor(PointerSensor),
