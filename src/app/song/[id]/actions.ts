@@ -3,6 +3,14 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 
+export async function updateYoutubeUrl(songId: number, url: string | null) {
+  await prisma.song.update({
+    where: { id: songId },
+    data: { youtubeUrl: url || null },
+  })
+  revalidatePath(`/song/${songId}`)
+}
+
 export async function updateSongTitle(songId: number, title: string) {
   if (!title.trim()) {
     throw new Error('Title cannot be empty')

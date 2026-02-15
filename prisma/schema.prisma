@@ -16,6 +16,7 @@ datasource db {
 model Song {
   id                 Int       @id @default(autoincrement())
   title              String
+  youtubeUrl         String?
   analysis           String?
   analysisUpdatedAt  DateTime?
   createdAt          DateTime  @default(now())

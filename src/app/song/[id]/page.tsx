@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import EditableTitle from '@/components/EditableTitle'
+import YouTubeLink from '@/components/YouTubeLink'
 import SongView from '@/components/SongView'
 import SongAnalysis from '@/components/SongAnalysis'
 import { identifyChord } from '@/lib/chordId'
@@ -43,6 +44,7 @@ export default async function SongPage({ params }: { params: Promise<{ id: strin
             ← Back to Keysets
           </Link>
           <EditableTitle initialTitle={song.title} onSave={async (title) => { 'use server'; const { updateSongTitle } = await import('./actions'); await updateSongTitle(song.id, title); }} />
+          <YouTubeLink initialUrl={song.youtubeUrl} onSave={async (url) => { 'use server'; const { updateYoutubeUrl } = await import('./actions'); await updateYoutubeUrl(song.id, url); }} />
         </div>
 
         <SongView songId={song.id} keySets={song.keySets} />

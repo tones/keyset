@@ -302,6 +302,18 @@ test.describe('Song Page', () => {
     await expect(page.getByRole('button', { name: /Re-analyze with/ })).toBeVisible()
   })
 
+  test('YouTube link is visible when set', async ({ page }) => {
+    await page.goto('/song/4')
+    const link = page.getByRole('link', { name: 'YouTube' })
+    await expect(link).toBeVisible()
+    await expect(link).toHaveAttribute('href', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+  })
+
+  test('Add YouTube link placeholder shown when no URL', async ({ page }) => {
+    await page.goto('/song/2')
+    await expect(page.getByText('Add YouTube link')).toBeVisible()
+  })
+
   test('back link navigates home', async ({ page }) => {
     await page.goto('/song/4')
     await page.getByRole('link', { name: '← Back to Keysets' }).click()

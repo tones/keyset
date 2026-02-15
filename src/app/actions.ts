@@ -28,6 +28,7 @@ export async function duplicateSong(songId: number) {
   await prisma.song.create({
     data: {
       title: `${song.title} (copy)`,
+      youtubeUrl: song.youtubeUrl,
       keySets: {
         create: song.keySets.map((ks) => ({
           position: ks.position,

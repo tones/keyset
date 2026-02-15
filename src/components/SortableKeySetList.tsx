@@ -161,7 +161,6 @@ function SortableKeySetCard({ keySet, songId, onDelete, onToggleNote, onShiftOct
 
 export default function SortableKeySetList({ songId, keySets: initialKeySets }: SortableKeySetListProps) {
   const [keySets, setKeySets] = useState(initialKeySets)
-
   useEffect(() => {
     preloadPiano()
   }, [])
@@ -246,7 +245,7 @@ export default function SortableKeySetList({ songId, keySets: initialKeySets }: 
 
   return (
     <>
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+    <DndContext id="keyset-dnd" sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={keySets.map((ks) => ks.id)} strategy={verticalListSortingStrategy}>
         <div className="space-y-6">
           {keySets.map((keySet) => (
