@@ -416,7 +416,7 @@ test.describe('Song Page', () => {
 
   test('back link navigates home', async ({ page }) => {
     await page.goto('/song/4')
-    await page.getByRole('link', { name: '← Back to Keysets' }).click()
+    await page.getByRole('link', { name: '‹ Keysets' }).click()
     await expect(page).toHaveURL('/')
   })
 
@@ -462,10 +462,35 @@ test.describe('Song Page', () => {
     expect(boxBefore!.height).toBe(boxAfter!.height)
   })
 
-  test('save bar appearing does not shift header card position', async ({ page }) => {
+  test('common tone guide lines touch both upper and lower keyboards symmetrically', async ({ page }) => {
     await page.goto('/song/4')
-    // Get the header card position (the white card with album art / title)
-    const headerCard = page.locator('.bg-white.rounded-lg.shadow.mb-6').first()
+    // Get the first two piano keyboards (keysets 1 and 2 share note 72)
+    const pianos = page.getByTestId('piano-keyboard')
+    const upperPiano = pianos.nth(0)
+    const lowerPiano = pianos.nth(1)
+    const upperBox = await upperPiano.boundingBox()
+    const lowerBox = await lowerPiano.boundingBox()
+
+    // Get the SVG that contains the yellow guide lines (has line elements with yellow stroke)
+    const guideSvg = page.locator('svg:has(line[stroke="#eab308"])').first()
+    const svgBox = await guideSvg.boundingBox()
+
+    // How far the SVG overlaps into the upper keyboard (negative = overlap)
+    const overlapAbove = (upperBox!.y + upperBox!.height) - svgBox!.y
+    // How far the SVG overlaps into the lower keyboard (negative = overlap)
+    const overlapBelow = (svgBox!.y + svgBox!.height) - lowerBox!.y
+
+    // Both overlaps should be positive (lines extend into the keyboards)
+    // and roughly symmetric — allow up to 20px difference
+    expect(overlapAbove).toBeGreaterThan(0)
+    expect(overlapBelow).toBeGreaterThan(0)
+    expect(Math.abs(overlapAbove - overlapBelow)).toBeLessThan(20)
+  })
+
+  test('save bar appearing does not shift header position', async ({ page }) => {
+    await page.goto('/song/4')
+    // Get the album art position (first element of the header area)
+    const headerCard = page.locator('img[alt=""]').first()
     const boxBefore = await headerCard.boundingBox()
 
     // Make a change to trigger the save bar

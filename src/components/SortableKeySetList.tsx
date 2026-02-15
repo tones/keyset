@@ -54,8 +54,8 @@ function CommonToneLines({ above, below, padX = 24, compact = false, visible = t
   const aboveNotes = new Set(above.keyPresses.map(kp => kp.midiNote))
   const common = below.keyPresses.filter(kp => aboveNotes.has(kp.midiNote)).map(kp => kp.midiNote)
 
-  const h = compact ? 45 : 110
-  const overlap = compact ? 12 : 28
+  const h = compact ? 45 : 120
+  const overlap = compact ? 12 : 38
   const bottomOverlap = compact ? 14 : 55
   return (
     <div className="relative w-full pointer-events-none" style={{ height: h - overlap - bottomOverlap, paddingLeft: padX, paddingRight: padX, marginTop: -overlap, marginBottom: -bottomOverlap, zIndex: 3 }}>

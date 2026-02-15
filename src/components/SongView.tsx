@@ -173,19 +173,17 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
 
   return (
     <>
-      <div className="flex items-center justify-between mb-2 h-8">
-        <Link href="/" className="text-blue-500 hover:text-blue-700 text-sm">
-          ← Back to Keysets
+      <div className="flex items-center justify-between mb-3 h-6">
+        <Link href="/" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+          ‹ Keysets
         </Link>
-        <div className={`flex items-center gap-3 ${isDirty ? '' : 'invisible'}`} data-testid="save-bar">
-          <span className="text-sm text-amber-600 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
-            Unsaved changes
-          </span>
-          {saveError && <span className="text-sm text-red-600" data-testid="save-error">{saveError}</span>}
+        <div className={`flex items-center gap-2 ${isDirty ? '' : 'invisible'}`} data-testid="save-bar">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
+          <span className="text-xs text-gray-400">Edited</span>
+          {saveError && <span className="text-xs text-red-500" data-testid="save-error">{saveError}</span>}
           <button
             onClick={handleReset}
-            className="px-3 py-1 text-sm font-medium rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 cursor-pointer transition-colors"
+            className="px-2 py-0.5 text-xs font-medium rounded border border-gray-300 text-gray-500 hover:bg-gray-100 cursor-pointer transition-colors"
             data-testid="reset-button"
           >
             Reset
@@ -193,7 +191,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-3 py-1 text-sm font-medium rounded-md bg-gray-900 text-white hover:bg-gray-800 cursor-pointer transition-colors disabled:opacity-50"
+            className="px-2 py-0.5 text-xs font-medium rounded bg-gray-900 text-white hover:bg-gray-800 cursor-pointer transition-colors disabled:opacity-50"
             data-testid="save-button"
           >
             {saving ? 'Saving…' : 'Save'}
@@ -201,30 +199,28 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow mb-6 overflow-hidden">
-        <div className="flex">
-          {imageUrl ? (
-            <img src={imageUrl} alt="" className="w-28 h-28 object-cover shrink-0" />
-          ) : (
-            <div className="w-28 h-28 bg-gray-100 shrink-0 flex items-center justify-center">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300">
-                <path d="M9 18V5l12-2v13" />
-                <circle cx="6" cy="18" r="3" />
-                <circle cx="18" cy="16" r="3" />
-              </svg>
+      <div className="flex items-start gap-4 mb-6">
+        {imageUrl ? (
+          <img src={imageUrl} alt="" className="w-40 h-40 object-cover rounded-lg shadow shrink-0" />
+        ) : (
+          <div className="w-40 h-40 bg-gray-200 rounded-lg shadow shrink-0 flex items-center justify-center">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+              <path d="M9 18V5l12-2v13" />
+              <circle cx="6" cy="18" r="3" />
+              <circle cx="18" cy="16" r="3" />
+            </svg>
+          </div>
+        )}
+        <div className="flex-1 min-w-0 flex justify-between gap-3 pt-1">
+          <div className="min-w-0">
+            <EditableTitle initialTitle={initialTitle} onSave={onSaveTitle} />
+            <div className="mt-1">
+              <YouTubeLink initialUrl={initialYoutubeUrl} onSave={onSaveYoutubeUrl} />
             </div>
-          )}
-          <div className="flex-1 pl-3 pr-3 py-2 min-w-0 flex justify-between gap-3">
-            <div className="min-w-0 flex flex-col justify-center">
-              <EditableTitle initialTitle={initialTitle} onSave={onSaveTitle} />
-              <div className="mt-1">
-                <YouTubeLink initialUrl={initialYoutubeUrl} onSave={onSaveYoutubeUrl} />
-              </div>
-            </div>
-            <div className="flex flex-col items-end gap-2 shrink-0 pt-2">
-              <ToggleSwitch label="Compact" enabled={mode === 'compact'} onToggle={() => setMode(mode === 'compact' ? 'full' : 'compact')} />
-              <ToggleSwitch label="Guides" enabled={showCommonTones} onToggle={() => setShowCommonTones(!showCommonTones)} activeColor="bg-yellow-500" />
-            </div>
+          </div>
+          <div className="flex flex-col items-end gap-2 shrink-0">
+            <ToggleSwitch label="Compact" enabled={mode === 'compact'} onToggle={() => setMode(mode === 'compact' ? 'full' : 'compact')} />
+            <ToggleSwitch label="Guides" enabled={showCommonTones} onToggle={() => setShowCommonTones(!showCommonTones)} activeColor="bg-yellow-500" />
           </div>
         </div>
       </div>
