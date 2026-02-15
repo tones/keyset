@@ -55,22 +55,17 @@ export default function SongList({ songs }: { songs: Song[] }) {
             </button>
           </div>
           
-          <div className="space-y-2">
-            {song.keySets.length === 0 ? (
-              <p className="text-sm text-gray-400">No key sets yet</p>
-            ) : (
-              song.keySets.map((keySet) => (
-                <div key={keySet.id} className="border-l-4 border-blue-500 pl-4">
-                  <h3 className="font-medium text-gray-700">
-                    {keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map(kp => kp.midiNote)) : `Key Set ${keySet.position}`}
-                  </h3>
-                  <div className="text-sm text-gray-500 font-mono">
-                    {keySet.keyPresses.map(kp => kp.midiNote).join(', ')}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          {song.keySets.length === 0 ? (
+            <p className="text-sm text-gray-400">No key sets yet</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {song.keySets.map((keySet) => (
+                <span key={keySet.id} className="inline-block bg-blue-50 text-blue-700 text-sm font-medium px-3 py-1 rounded-full">
+                  {keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map(kp => kp.midiNote)) : '—'}
+                </span>
+              ))}
+            </div>
+          )}
         </Link>
       ))}
     </div>
