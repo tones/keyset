@@ -33,7 +33,7 @@ cleanup() {
   # Restart dev server if it was running before tests
   if [ -n "$DEV_WAS_RUNNING" ]; then
     echo "Restarting dev server on port 3000..."
-    npx next dev --port 3000 &
+    (unset DATABASE_URL && npx next dev --port 3000 &)
     disown
   fi
 }
