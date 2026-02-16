@@ -71,7 +71,7 @@ export function blackKeyLeftPct(midiNote: number, layout: KeyLayout): number {
 
 // Returns the horizontal center % of a piano key within the keyboard
 export function keyCenterPct(midiNote: number, layout?: KeyLayout): number {
-  const l = layout ?? buildKeyLayout(48, 84)
+  const l = layout ?? buildKeyLayout(36, 84)
   if (!isBlackKey(midiNote)) {
     const idx = l.whiteKeyIndex.get(midiNote) ?? 0
     return idx * l.wPct + l.wPct / 2

@@ -12,7 +12,7 @@ interface PianoKeyboardProps {
   onToggle?: (midiNote: number) => void
 }
 
-export default function PianoKeyboard({ highlightedNotes, noteColors = {}, startNote = 48, endNote = 84, height = 110, onToggle }: PianoKeyboardProps) {
+export default function PianoKeyboard({ highlightedNotes, noteColors = {}, startNote = 36, endNote = 84, height = 110, onToggle }: PianoKeyboardProps) {
   const highlightSet = new Set(highlightedNotes)
   const layout = buildKeyLayout(startNote, endNote)
   const { whiteKeys, wPct, bPct, blackKeys } = layout
@@ -40,6 +40,27 @@ export default function PianoKeyboard({ highlightedNotes, noteColors = {}, start
             }}
             onClick={onToggle ? () => onToggle(note) : undefined}
           />
+        )
+      })}
+
+      {/* Octave labels on C keys */}
+      {whiteKeys.filter(note => note % 12 === 0).map((note, _, arr) => {
+        const i = whiteKeys.indexOf(note)
+        const octave = Math.floor(note / 12) - 1
+        return (
+          <span
+            key={`label-${note}`}
+            className="absolute text-gray-400 font-medium pointer-events-none select-none"
+            style={{
+              left: `${i * wPct + wPct / 2}%`,
+              bottom: 2,
+              transform: 'translateX(-50%)',
+              fontSize: height < 80 ? 8 : 9,
+              zIndex: 3,
+            }}
+          >
+            C{octave}
+          </span>
         )
       })}
 

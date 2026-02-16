@@ -48,7 +48,7 @@ interface KeySetCardProps {
 }
 
 
-const defaultLayout = buildKeyLayout(48, 84)
+const defaultLayout = buildKeyLayout(36, 84)
 
 function CommonToneLines({ above, below, padX = 24, compact = false, visible = true }: { above: KeySet; below: KeySet; padX?: number; compact?: boolean; visible?: boolean }) {
   const aboveNotes = new Set(above.keyPresses.map(kp => kp.midiNote))
