@@ -6,7 +6,7 @@ import SongAnalysis from '@/components/SongAnalysis'
 import EditableTitle from '@/components/EditableTitle'
 import YouTubeLink from '@/components/YouTubeLink'
 import { useRouter } from 'next/navigation'
-import { saveKeySets, refreshAlbumArt } from '@/app/song/[id]/actions'
+import { saveKeySets, refreshAlbumArt, updateCompactView } from '@/app/song/[id]/actions'
 import { analyzeSong } from '@/app/song/[id]/analyze'
 import { identifyChord } from '@/lib/chordId'
 import { midiToNoteName } from '@/lib/midi'
@@ -35,15 +35,16 @@ interface SongViewProps {
   llmProvider: string
   cachedAnalysis: string | null
   cachedAnalysisUpdatedAt: string | null
+  initialCompact: boolean
   onSaveTitle: (title: string) => Promise<void>
   onSaveYoutubeUrl: (url: string | null) => Promise<void>
 }
 
 let nextTempId = -1
 
-export default function SongView({ songId, keySets: serverKeySets, initialTitle, imageUrl: initialImageUrl, initialYoutubeUrl, llmProvider, cachedAnalysis, cachedAnalysisUpdatedAt, onSaveTitle, onSaveYoutubeUrl }: SongViewProps) {
+export default function SongView({ songId, keySets: serverKeySets, initialTitle, imageUrl: initialImageUrl, initialYoutubeUrl, llmProvider, cachedAnalysis, cachedAnalysisUpdatedAt, initialCompact, onSaveTitle, onSaveYoutubeUrl }: SongViewProps) {
   const router = useRouter()
-  const [mode, setMode] = useState<'full' | 'compact'>('full')
+  const [mode, setMode] = useState<'full' | 'compact'>(initialCompact ? 'compact' : 'full')
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(initialImageUrl)
   const [showCommonTones, setShowCommonTones] = useState(true)
   const [keySets, setKeySets] = useState(serverKeySets)
@@ -291,7 +292,11 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
             </div>
           </div>
           <div className="flex flex-col items-end gap-2 shrink-0">
-            <ToggleSwitch label="Compact" enabled={mode === 'compact'} onToggle={() => setMode(mode === 'compact' ? 'full' : 'compact')} />
+            <ToggleSwitch label="Compact" enabled={mode === 'compact'} onToggle={() => {
+              const newMode = mode === 'compact' ? 'full' : 'compact'
+              setMode(newMode)
+              updateCompactView(songId, newMode === 'compact').catch(() => {})
+            }} />
             {/* Guides toggle hidden but functionality preserved */}
           </div>
         </div>
