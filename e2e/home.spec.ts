@@ -21,6 +21,12 @@ test.describe('Home Page', () => {
     await expect(page.getByText('CM').first()).toBeVisible()
   })
 
+  test('song cards show key when set', async ({ page }) => {
+    await page.goto('/')
+    // Song 4 has songKey "C major" — should display title-cased
+    await expect(page.getByText('C Major').first()).toBeVisible()
+  })
+
   test('songs with no key sets show placeholder', async ({ page }) => {
     await page.goto('/')
     await expect(page.getByText('No key sets yet').first()).toBeVisible()

@@ -9,6 +9,7 @@ interface Song {
   id: number
   title: string
   imageUrl: string | null
+  songKey: string | null
   keySets: KeySet[]
 }
 
@@ -78,16 +79,19 @@ export default function SongList({ songs }: { songs: Song[] }) {
           {song.keySets.length === 0 ? (
             <p className="text-xs text-gray-400">No key sets yet</p>
           ) : (
-            <div className="flex gap-1 items-center">
-              {song.keySets.slice(0, 4).map((keySet) => (
-                <span key={keySet.id} className={`shrink-0 text-[11px] font-medium px-1.5 py-0.5 rounded-full ${keySet.type === 'flourish' ? 'bg-amber-50 text-amber-600 italic' : 'bg-blue-50 text-blue-700'}`}>
-                  {keySet.type === 'flourish'
-                    ? '♪'
-                    : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map(kp => kp.midiNote)) : '—'}
-                </span>
-              ))}
-              {song.keySets.length > 4 && <span className="text-[11px] text-gray-400">…</span>}
-            </div>
+            <>
+              <div className="flex gap-1 items-center">
+                {song.keySets.slice(0, 4).map((keySet) => (
+                  <span key={keySet.id} className={`shrink-0 text-[11px] font-medium px-1.5 py-0.5 rounded-full ${keySet.type === 'flourish' ? 'bg-amber-50 text-amber-600 italic' : 'bg-blue-50 text-blue-700'}`}>
+                    {keySet.type === 'flourish'
+                      ? '♪'
+                      : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map(kp => kp.midiNote), song.songKey) : '—'}
+                  </span>
+                ))}
+                {song.keySets.length > 4 && <span className="text-[11px] text-gray-400">…</span>}
+              </div>
+              {song.songKey && <p className="text-[11px] text-gray-400 mt-0.5">{song.songKey.split(' ').map(w => w[0].toUpperCase() + w.slice(1)).join(' ')}</p>}
+            </>
           )}
           </div>
         </Link>
