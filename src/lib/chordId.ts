@@ -4,7 +4,8 @@ import { Midi } from 'tonal'
 export function identifyChord(midiNotes: number[]): string {
   if (midiNotes.length === 0) return ''
 
-  const noteNames = midiNotes.map((n) => Midi.midiToNoteName(n, { sharps: true }))
+  const sorted = [...midiNotes].sort((a, b) => a - b)
+  const noteNames = sorted.map((n) => Midi.midiToNoteName(n, { sharps: true }))
 
   if (midiNotes.length === 1) {
     // Single note — just return the pitch class without octave

@@ -315,6 +315,38 @@ test.describe('Song Page', () => {
     await clickSave(page)
   })
 
+  test('chord label is stable after toggling a note off and back on', async ({ page }) => {
+    await page.goto('/song/4')
+    const firstCard = page.getByTestId('keyset-card').first()
+    const chordLabel = firstCard.getByTestId('chord-label')
+    const labelBefore = await chordLabel.textContent()
+
+    // Find a highlighted key in the first piano and toggle it off
+    const piano = firstCard.getByTestId('piano-keyboard')
+    const highlightedKey = piano.locator('[data-note]').filter({ hasNot: page.locator(':scope') }).first()
+    // Use the first key that has a non-white background (highlighted)
+    const keys = piano.locator('[data-note]')
+    const keyCount = await keys.count()
+    let targetKey = keys.first()
+    for (let i = 0; i < keyCount; i++) {
+      const bg = await keys.nth(i).evaluate((el) => getComputedStyle(el).backgroundColor)
+      if (bg !== 'rgb(255, 255, 255)' && bg !== 'rgb(0, 0, 0)') {
+        targetKey = keys.nth(i)
+        break
+      }
+    }
+
+    // Toggle off
+    await targetKey.click()
+    // Toggle back on
+    await targetKey.click()
+
+    // Chord label should be the same as before
+    await expect(chordLabel).toHaveText(labelBefore!)
+
+    // Reset: toggle off and back on to restore, no save needed since we didn't save
+  })
+
   test('color picker selects blue and persists', async ({ page }) => {
     await page.goto('/song/4')
     const firstCard = page.getByTestId('keyset-card').first()
