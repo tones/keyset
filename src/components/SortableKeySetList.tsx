@@ -29,16 +29,18 @@ import type { KeySet } from '@/types'
 
 const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'] as const
 
-function formatDegreeLabel(chordName: string, degree: number, songKey?: string | null): string {
+function formatNumeral(degree: number, songKey?: string | null): string {
   const numeral = ROMAN_NUMERALS[degree - 1]
   const parsed = parseSongKey(songKey ?? null)
-  let formatted: string = numeral
-  if (parsed) {
-    const quality = getTriadQuality(parsed.root, parsed.mode, degree)
-    if (quality === 'minor' || quality === 'diminished') formatted = numeral.toLowerCase()
-    if (quality === 'diminished') formatted += '°'
-  }
-  return `${chordName} (${formatted})`
+  if (!parsed) return numeral
+  const quality = getTriadQuality(parsed.root, parsed.mode, degree)
+  let formatted: string = (quality === 'minor' || quality === 'diminished') ? numeral.toLowerCase() : numeral
+  if (quality === 'diminished') formatted += '°'
+  return formatted
+}
+
+function formatDegreeLabel(chordName: string, degree: number, songKey?: string | null): string {
+  return `${chordName} (${formatNumeral(degree, songKey)})`
 }
 
 interface SortableKeySetListProps {
@@ -232,22 +234,23 @@ function SortableKeySetCard({ keySet, songKey, inKeyPitchClasses, triadPitchClas
                   }
                 }}
                 className={`w-7 h-7 flex items-center justify-center cursor-pointer transition-colors ${keySet.scaleDegree ? 'text-blue-500 hover:text-blue-700' : 'text-gray-400 hover:text-blue-500'}`}
-                title={keySet.scaleDegree ? `Scale Degree: ${ROMAN_NUMERALS[keySet.scaleDegree - 1]} (click to clear)` : 'Scale Degree'}
+                title={keySet.scaleDegree ? `Scale Degree: ${formatNumeral(keySet.scaleDegree, songKey)} (click to clear)` : 'Scale Degree'}
               >
-                <span className="text-xs font-bold">{keySet.scaleDegree ? ROMAN_NUMERALS[keySet.scaleDegree - 1] : '#'}</span>
+                <span className="text-xs font-bold">{keySet.scaleDegree ? formatNumeral(keySet.scaleDegree, songKey) : '#'}</span>
               </button>
               {degreePicker.open && (
                 <div className="absolute right-0 top-8 z-10 bg-white rounded-lg shadow-lg border border-gray-200 p-3">
                   <div className="text-xs font-medium text-gray-500 mb-2">Scale Degree</div>
                   <div className="flex gap-1">
-                    {ROMAN_NUMERALS.map((numeral, i) => {
+                    {ROMAN_NUMERALS.map((_, i) => {
                       const degree = i + 1
+                      const label = formatNumeral(degree, songKey)
                       const isActive = keySet.scaleDegree === degree
                       return (
                         <button key={degree} className={`text-xs px-1.5 py-1 rounded transition-colors cursor-pointer ${isActive ? 'bg-blue-100 text-blue-700 font-semibold' : 'hover:bg-blue-50 hover:text-blue-700'}`} onClick={() => {
                           onSetScaleDegree(keySet.id, degree)
                           setLastDegree(degree)
-                        }}>{numeral}</button>
+                        }}>{label}</button>
                       )
                     })}
                   </div>
