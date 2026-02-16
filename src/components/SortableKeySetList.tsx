@@ -89,7 +89,7 @@ function CompactKeySetCard({ keySet }: { keySet: KeySet }) {
             ? <span className="text-amber-600 italic">Flourish</span>
             : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map((kp) => kp.midiNote)) : '\u00A0'}
         </h2>
-        {keySet.keyPresses.length > 0 && (
+        {keySet.keyPresses.length > 0 && keySet.type !== 'flourish' && (
           <button
             onClick={() => playChord(keySet.keyPresses.map((kp) => kp.midiNote))}
             className="text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
@@ -154,7 +154,7 @@ function SortableKeySetCard({ keySet, onDelete, onDuplicate, onToggleNote, onShi
               ? <span className="text-amber-600 italic">Flourish</span>
               : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map((kp) => kp.midiNote)) : '\u00A0'}
           </h2>
-          {keySet.keyPresses.length > 0 && (
+          {keySet.keyPresses.length > 0 && keySet.type !== 'flourish' && (
             <button
               onClick={() => playChord(keySet.keyPresses.map((kp) => kp.midiNote))}
               className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
