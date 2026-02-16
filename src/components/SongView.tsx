@@ -300,6 +300,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
         >
           ‹ Keysets
         </a>
+        <div className="flex items-center gap-2">
         <div className={`flex items-center gap-2 ${isDirty ? '' : 'invisible'}`} data-testid="save-bar">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
           <span className="text-xs text-gray-400 dark:text-gray-500">Edited</span>
@@ -319,6 +320,8 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
           >
             {saving ? 'Saving…' : 'Save'}
           </button>
+        </div>
+        <ThemeToggle />
         </div>
       </div>
 
@@ -348,7 +351,6 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
             </div>
           </div>
           <div className="flex flex-col items-end gap-2 shrink-0">
-            <ThemeToggle />
             <ToggleSwitch label="Compact" enabled={mode === 'compact'} onToggle={() => {
               const newMode = mode === 'compact' ? 'full' : 'compact'
               setMode(newMode)
