@@ -27,6 +27,18 @@ test.describe('Home Page', () => {
     await expect(page.getByText('C Major').first()).toBeVisible()
   })
 
+  test('dark mode toggle adds dark class to html', async ({ page }) => {
+    await page.goto('/')
+    // Should start in light mode (no dark class)
+    await expect(page.locator('html')).not.toHaveClass(/dark/)
+    // Click theme toggle
+    await page.getByTestId('theme-toggle').click()
+    await expect(page.locator('html')).toHaveClass(/dark/)
+    // Click again to go back to light
+    await page.getByTestId('theme-toggle').click()
+    await expect(page.locator('html')).not.toHaveClass(/dark/)
+  })
+
   test('songs with no key sets show placeholder', async ({ page }) => {
     await page.goto('/')
     await expect(page.getByText('No key sets yet').first()).toBeVisible()
