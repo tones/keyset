@@ -24,7 +24,7 @@ import PianoKeyboard from '@/components/PianoKeyboard'
 import { identifyChord } from '@/lib/chordId'
 import { playChord, preloadPiano } from '@/lib/playChord'
 import { keyCenterPct, buildKeyLayout } from '@/lib/pianoLayout'
-import { parseSongKey, getScalePitchClasses, getTriadPitchClasses, getTriadQuality } from '@/lib/scales'
+import { parseSongKey, getScalePitchClasses, getTriadPitchClasses, getTriadQuality, getTriadName } from '@/lib/scales'
 import type { KeySet } from '@/types'
 
 const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'] as const
@@ -113,7 +113,7 @@ function CompactKeySetCard({ keySet, songKey, commonAbove = [], commonBelow = []
         <h2 className="text-xs font-semibold text-gray-900 truncate max-w-full" data-testid="chord-label">
           {keySet.type === 'flourish'
             ? <span className="text-amber-600 italic">Flourish</span>
-            : keySet.keyPresses.length > 0 ? (() => { const name = identifyChord(keySet.keyPresses.map((kp) => kp.midiNote), songKey); return keySet.scaleDegree ? formatDegreeLabel(name, keySet.scaleDegree, songKey) : name })() : '\u00A0'}
+            : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map((kp) => kp.midiNote), songKey) : '\u00A0'}
         </h2>
         {keySet.keyPresses.length > 0 && keySet.type !== 'flourish' && (
           <button
@@ -203,7 +203,7 @@ function SortableKeySetCard({ keySet, songKey, inKeyPitchClasses, triadPitchClas
           <h2 className="text-xl font-semibold text-gray-900" data-testid="chord-label">
             {keySet.type === 'flourish'
               ? <span className="text-amber-600 italic">Flourish</span>
-              : keySet.keyPresses.length > 0 ? (() => { const name = identifyChord(keySet.keyPresses.map((kp) => kp.midiNote), songKey); return keySet.scaleDegree ? formatDegreeLabel(name, keySet.scaleDegree, songKey) : name })() : '\u00A0'}
+              : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map((kp) => kp.midiNote), songKey) : '\u00A0'}
           </h2>
           {keySet.keyPresses.length > 0 && keySet.type !== 'flourish' && (
             <button
@@ -233,24 +233,26 @@ function SortableKeySetCard({ keySet, songKey, inKeyPitchClasses, triadPitchClas
                     degreePicker.toggle()
                   }
                 }}
-                className={`w-7 h-7 flex items-center justify-center cursor-pointer transition-colors ${keySet.scaleDegree ? 'text-blue-500 hover:text-blue-700' : 'text-gray-400 hover:text-blue-500'}`}
+                className={`h-7 flex items-center justify-center cursor-pointer transition-colors whitespace-nowrap ${keySet.scaleDegree ? 'text-blue-500 hover:text-blue-700' : 'w-7 text-gray-400 hover:text-blue-500'}`}
                 title={keySet.scaleDegree ? `Scale Degree: ${formatNumeral(keySet.scaleDegree, songKey)} (click to clear)` : 'Scale Degree'}
               >
-                <span className="text-xs font-bold">{keySet.scaleDegree ? formatNumeral(keySet.scaleDegree, songKey) : '#'}</span>
+                <span className="text-xs font-bold">{keySet.scaleDegree ? (() => { const parsed = parseSongKey(songKey ?? null); const triadName = parsed ? getTriadName(parsed.root, parsed.mode, keySet.scaleDegree) : null; return `${formatNumeral(keySet.scaleDegree, songKey)}${triadName ? ` (${triadName})` : ''}`; })() : '#'}</span>
               </button>
               {degreePicker.open && (
                 <div className="absolute right-0 top-8 z-10 bg-white rounded-lg shadow-lg border border-gray-200 p-3">
                   <div className="text-xs font-medium text-gray-500 mb-2">Scale Degree</div>
-                  <div className="flex gap-1">
+                  <div className="flex flex-col gap-0.5">
                     {ROMAN_NUMERALS.map((_, i) => {
                       const degree = i + 1
-                      const label = formatNumeral(degree, songKey)
+                      const numeral = formatNumeral(degree, songKey)
+                      const parsed = parseSongKey(songKey ?? null)
+                      const triadName = parsed ? getTriadName(parsed.root, parsed.mode, degree) : null
                       const isActive = keySet.scaleDegree === degree
                       return (
-                        <button key={degree} className={`text-xs px-1.5 py-1 rounded transition-colors cursor-pointer ${isActive ? 'bg-blue-100 text-blue-700 font-semibold' : 'hover:bg-blue-50 hover:text-blue-700'}`} onClick={() => {
+                        <button key={degree} className={`text-xs px-2 py-1 rounded transition-colors cursor-pointer text-left ${isActive ? 'bg-blue-100 text-blue-700 font-semibold' : 'hover:bg-blue-50 hover:text-blue-700'}`} onClick={() => {
                           onSetScaleDegree(keySet.id, degree)
                           setLastDegree(degree)
-                        }}>{label}</button>
+                        }}><span className="inline-block w-6">{numeral}</span>{triadName && <span className="text-gray-400 ml-1">{triadName}</span>}</button>
                       )
                     })}
                   </div>

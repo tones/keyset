@@ -49,6 +49,16 @@ export function isNoteInKey(midiNote: number, root: Root, mode: ModeName): boole
   return getScalePitchClasses(root, mode).has(pitchClass)
 }
 
+/** Get the triad chord name (e.g. 'C', 'Dm', 'Bdim') for a scale degree using tonal's Key data */
+export function getTriadName(root: Root, mode: ModeName, degree: number): string | null {
+  const keyData = mode === 'minor'
+    ? Key.minorKey(root)?.natural
+    : Key.majorKey(root)
+  const triads = keyData?.triads as string[] | undefined
+  if (!triads || degree < 1 || degree > 7) return null
+  return triads[degree - 1]
+}
+
 /** Get the triad quality ('major' | 'minor' | 'diminished') for a scale degree using tonal's Key data */
 export function getTriadQuality(root: Root, mode: ModeName, degree: number): 'major' | 'minor' | 'diminished' {
   const keyData = mode === 'minor'
