@@ -24,16 +24,20 @@ import PianoKeyboard from '@/components/PianoKeyboard'
 import { identifyChord } from '@/lib/chordId'
 import { playChord, preloadPiano } from '@/lib/playChord'
 import { keyCenterPct, buildKeyLayout } from '@/lib/pianoLayout'
-import { parseSongKey, getScalePitchClasses, getTriadPitchClasses } from '@/lib/scales'
+import { parseSongKey, getScalePitchClasses, getTriadPitchClasses, getTriadQuality } from '@/lib/scales'
 import type { KeySet } from '@/types'
 
 const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'] as const
 
-function formatDegreeLabel(chordName: string, degree: number): string {
+function formatDegreeLabel(chordName: string, degree: number, songKey?: string | null): string {
   const numeral = ROMAN_NUMERALS[degree - 1]
-  // Lowercase numeral for minor-ish chords (contains 'm' but not 'maj')
-  const isMinor = /m(?!aj)/i.test(chordName)
-  const formatted = isMinor ? numeral.toLowerCase() : numeral
+  const parsed = parseSongKey(songKey ?? null)
+  let formatted: string = numeral
+  if (parsed) {
+    const quality = getTriadQuality(parsed.root, parsed.mode, degree)
+    if (quality === 'minor' || quality === 'diminished') formatted = numeral.toLowerCase()
+    if (quality === 'diminished') formatted += '°'
+  }
   return `${chordName} (${formatted})`
 }
 
@@ -54,6 +58,7 @@ interface SortableKeySetListProps {
 
 interface KeySetCardProps {
   keySet: KeySet
+  songKey?: string | null
   inKeyPitchClasses?: Set<number>
   triadPitchClasses?: Set<number>
   onDelete: (id: number) => void
@@ -99,14 +104,14 @@ function CommonToneLines({ above, below, padX = 24, padLeft, padRight, compact =
   )
 }
 
-function CompactKeySetCard({ keySet, commonAbove = [], commonBelow = [], showGuides = true, inKeyPitchClasses }: { keySet: KeySet; commonAbove?: number[]; commonBelow?: number[]; showGuides?: boolean; inKeyPitchClasses?: Set<number> }) {
+function CompactKeySetCard({ keySet, songKey, commonAbove = [], commonBelow = [], showGuides = true, inKeyPitchClasses }: { keySet: KeySet; songKey?: string | null; commonAbove?: number[]; commonBelow?: number[]; showGuides?: boolean; inKeyPitchClasses?: Set<number> }) {
   return (
     <div className={`flex items-center gap-2 px-3 py-3 ${keySet.type === 'flourish' ? 'bg-amber-50/50' : ''}`} data-testid="keyset-card">
       <div className="w-16 shrink-0 flex flex-col items-start">
         <h2 className="text-xs font-semibold text-gray-900 truncate max-w-full" data-testid="chord-label">
           {keySet.type === 'flourish'
             ? <span className="text-amber-600 italic">Flourish</span>
-            : keySet.keyPresses.length > 0 ? (() => { const name = identifyChord(keySet.keyPresses.map((kp) => kp.midiNote)); return keySet.scaleDegree ? formatDegreeLabel(name, keySet.scaleDegree) : name })() : '\u00A0'}
+            : keySet.keyPresses.length > 0 ? (() => { const name = identifyChord(keySet.keyPresses.map((kp) => kp.midiNote), songKey); return keySet.scaleDegree ? formatDegreeLabel(name, keySet.scaleDegree, songKey) : name })() : '\u00A0'}
         </h2>
         {keySet.keyPresses.length > 0 && keySet.type !== 'flourish' && (
           <button
@@ -152,7 +157,7 @@ function CompactKeySetCard({ keySet, commonAbove = [], commonBelow = [], showGui
   )
 }
 
-function SortableKeySetCard({ keySet, inKeyPitchClasses, triadPitchClasses, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType, onSetScaleDegree }: KeySetCardProps) {
+function SortableKeySetCard({ keySet, songKey, inKeyPitchClasses, triadPitchClasses, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType, onSetScaleDegree }: KeySetCardProps) {
   const [activeColor, setActiveColor] = useState(DEFAULT_COLOR)
   const [lastDegree, setLastDegree] = useState<number | null>(keySet.scaleDegree)
   const colorPicker = usePopover()
@@ -196,7 +201,7 @@ function SortableKeySetCard({ keySet, inKeyPitchClasses, triadPitchClasses, onDe
           <h2 className="text-xl font-semibold text-gray-900" data-testid="chord-label">
             {keySet.type === 'flourish'
               ? <span className="text-amber-600 italic">Flourish</span>
-              : keySet.keyPresses.length > 0 ? (() => { const name = identifyChord(keySet.keyPresses.map((kp) => kp.midiNote)); return keySet.scaleDegree ? formatDegreeLabel(name, keySet.scaleDegree) : name })() : '\u00A0'}
+              : keySet.keyPresses.length > 0 ? (() => { const name = identifyChord(keySet.keyPresses.map((kp) => kp.midiNote), songKey); return keySet.scaleDegree ? formatDegreeLabel(name, keySet.scaleDegree, songKey) : name })() : '\u00A0'}
           </h2>
           {keySet.keyPresses.length > 0 && keySet.type !== 'flourish' && (
             <button
@@ -402,7 +407,7 @@ export default function SortableKeySetList({ keySets, compact, showCommonTones =
           const commonAbove = aboveNotes.filter(n => myNotes.has(n))
           const commonBelow = belowNotes.filter(n => myNotes.has(n))
           return (
-            <CompactKeySetCard key={keySet.id} keySet={keySet} commonAbove={commonAbove} commonBelow={commonBelow} showGuides={showCommonTones} inKeyPitchClasses={inKeyPitchClasses} />
+            <CompactKeySetCard key={keySet.id} keySet={keySet} songKey={songKey} commonAbove={commonAbove} commonBelow={commonBelow} showGuides={showCommonTones} inKeyPitchClasses={inKeyPitchClasses} />
           )
         })}
       </div>
@@ -417,7 +422,7 @@ export default function SortableKeySetList({ keySets, compact, showCommonTones =
           {keySets.map((keySet, i) => (
             <div key={keySet.id}>
               {i > 0 && <div className="py-3"><CommonToneLines above={keySets[i - 1]} below={keySet} visible={showCommonTones} /></div>}
-              <SortableKeySetCard keySet={keySet} inKeyPitchClasses={inKeyPitchClasses} triadPitchClasses={parsed && keySet.scaleDegree ? getTriadPitchClasses(parsed.root, parsed.mode, keySet.scaleDegree) : undefined} onDelete={onDelete} onDuplicate={onDuplicate} onToggleNote={onToggleNote} onShiftNotes={onShiftNotes} onToggleType={onToggleType} onSetScaleDegree={inKeyPitchClasses ? onSetScaleDegree : undefined} />
+              <SortableKeySetCard keySet={keySet} songKey={songKey} inKeyPitchClasses={inKeyPitchClasses} triadPitchClasses={parsed && keySet.scaleDegree ? getTriadPitchClasses(parsed.root, parsed.mode, keySet.scaleDegree) : undefined} onDelete={onDelete} onDuplicate={onDuplicate} onToggleNote={onToggleNote} onShiftNotes={onShiftNotes} onToggleType={onToggleType} onSetScaleDegree={inKeyPitchClasses ? onSetScaleDegree : undefined} />
             </div>
           ))}
         </div>

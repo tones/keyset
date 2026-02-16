@@ -1,3 +1,5 @@
+import { Key } from 'tonal'
+
 // Scale definitions and utilities for "in key mode"
 
 const ROOTS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'] as const
@@ -45,6 +47,19 @@ export function getScalePitchClasses(root: Root, mode: ModeName): Set<number> {
 export function isNoteInKey(midiNote: number, root: Root, mode: ModeName): boolean {
   const pitchClass = midiNote % 12
   return getScalePitchClasses(root, mode).has(pitchClass)
+}
+
+/** Get the triad quality ('major' | 'minor' | 'diminished') for a scale degree using tonal's Key data */
+export function getTriadQuality(root: Root, mode: ModeName, degree: number): 'major' | 'minor' | 'diminished' {
+  const keyData = mode === 'minor'
+    ? Key.minorKey(root)?.natural
+    : Key.majorKey(root)
+  const triads = keyData?.triads as string[] | undefined
+  if (!triads || degree < 1 || degree > 7) return 'major'
+  const triad = triads[degree - 1]
+  if (triad.endsWith('dim')) return 'diminished'
+  if (triad.endsWith('m')) return 'minor'
+  return 'major'
 }
 
 /** Get the 3 pitch classes (0–11) of the triad built on a scale degree (1–7) in the given key */

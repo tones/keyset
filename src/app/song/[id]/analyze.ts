@@ -8,7 +8,7 @@ async function callOpenAI(prompt: string): Promise<string> {
   const client = new OpenAI()
   const response = await client.chat.completions.create({
     model: 'gpt-4o',
-    max_tokens: 1024,
+    max_tokens: 2048,
     messages: [{ role: 'user', content: prompt }],
   })
   return response.choices[0]?.message?.content ?? 'No analysis available.'
@@ -19,17 +19,27 @@ async function callAnthropic(prompt: string): Promise<string> {
   const client = new Anthropic()
   const message = await client.messages.create({
     model: 'claude-sonnet-4-20250514',
-    max_tokens: 1024,
+    max_tokens: 2048,
     messages: [{ role: 'user', content: prompt }],
   })
   const textBlock = message.content.find((block) => block.type === 'text')
   return textBlock?.text ?? 'No analysis available.'
 }
 
-export async function analyzeSong(songId: number, songTitle: string, chordDetail: string): Promise<{ analysis: string; analysisUpdatedAt: string }> {
+export interface AnalysisResult {
+  analysis: string
+  analysisUpdatedAt: string
+  suggestedKey: string | null       // e.g. "C minor"
+  suggestedDegrees: (number | null)[] // scale degrees (1-7) per keyset, null if uncertain
+}
+
+export async function analyzeSong(songId: number, songTitle: string, chordDetail: string, numKeySets: number): Promise<AnalysisResult> {
   if (!chordDetail.trim()) {
-    return { analysis: 'No chord key sets to analyze.', analysisUpdatedAt: new Date().toISOString() }
+    return { analysis: 'No chord key sets to analyze.', analysisUpdatedAt: new Date().toISOString(), suggestedKey: null, suggestedDegrees: [] }
   }
+
+  const roots = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+  const modes = ['major', 'minor', 'dorian', 'phrygian', 'lydian', 'mixolydian', 'aeolian', 'locrian']
 
   const prompt = `You are a music theory expert. Analyze the following chord progression.
 
@@ -46,11 +56,45 @@ Please provide:
    a. **Original recording:** Stick to facts only — album name, year, label, and musicians who played on it. No editorializing or subjective descriptions.
    b. **Chord accuracy:** Compare the chords provided above with what is generally understood or published about this song's harmony. If the chords I've entered seem wrong, incomplete, or could be improved, point that out with specifics.
 
-Keep the response concise and practical.`
+Keep the response concise and practical.
 
-  const analysisText = LLM_PROVIDER === 'anthropic'
+IMPORTANT: After your analysis, on a new line, output EXACTLY one JSON code block with your suggested key and scale degrees for each chord. The song has ${numKeySets} chord key sets (numbered 1-${numKeySets} above). Use this exact format:
+\`\`\`json
+{"key": "<root> <mode>", "degrees": [<degree_or_null>, ...]}
+\`\`\`
+- "key" must use one of these roots: ${roots.join(', ')} and one of these modes: ${modes.join(', ')}. Use sharps not flats (e.g. "C# minor" not "Db minor").
+- "degrees" is an array of length ${numKeySets}, one per key set in order. Each is an integer 1-7 or null if the chord doesn't fit a simple scale degree.`
+
+  const rawText = LLM_PROVIDER === 'anthropic'
     ? await callAnthropic(prompt)
     : await callOpenAI(prompt)
 
-  return { analysis: analysisText, analysisUpdatedAt: new Date().toISOString() }
+  // Parse structured JSON from the response
+  let suggestedKey: string | null = null
+  let suggestedDegrees: (number | null)[] = []
+  let analysisText = rawText
+
+  const jsonMatch = rawText.match(/```json\s*\n?([\s\S]*?)\n?```/)
+  if (jsonMatch) {
+    try {
+      const parsed = JSON.parse(jsonMatch[1])
+      if (parsed.key && typeof parsed.key === 'string') {
+        const [root, mode] = parsed.key.split(' ')
+        if (roots.includes(root) && modes.includes(mode)) {
+          suggestedKey = parsed.key
+        }
+      }
+      if (Array.isArray(parsed.degrees)) {
+        suggestedDegrees = parsed.degrees.map((d: unknown) =>
+          typeof d === 'number' && d >= 1 && d <= 7 ? d : null
+        )
+      }
+    } catch {
+      // JSON parse failed — ignore, keep analysis text as-is
+    }
+    // Remove the JSON block from the displayed analysis
+    analysisText = rawText.replace(/\n*```json\s*\n?[\s\S]*?\n?```\s*$/, '').trim()
+  }
+
+  return { analysis: analysisText, analysisUpdatedAt: new Date().toISOString(), suggestedKey, suggestedDegrees }
 }

@@ -60,6 +60,8 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
   const [analysisUpdatedAt, setAnalysisUpdatedAt] = useState<string | null>(cachedAnalysisUpdatedAt)
   const [analysisLoading, setAnalysisLoading] = useState(false)
   const [analysisError, setAnalysisError] = useState<string | null>(null)
+  const [suggestedKey, setSuggestedKey] = useState<string | null>(null)
+  const [suggestedDegrees, setSuggestedDegrees] = useState<(number | null)[]>([])
 
   function serialize(ks: KeySet[], a: string | null, aAt: string | null, sk: string | null) {
     return JSON.stringify({
@@ -88,7 +90,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
       .filter(k => k.type !== 'flourish')
       .map((k, i) => {
         const notes = k.keyPresses.map(kp => midiToNoteName(kp.midiNote)).join(', ')
-        const chordName = k.keyPresses.length > 0 ? identifyChord(k.keyPresses.map(kp => kp.midiNote)) : '(empty)'
+        const chordName = k.keyPresses.length > 0 ? identifyChord(k.keyPresses.map(kp => kp.midiNote), songKey) : '(empty)'
         return `${i + 1}. ${chordName} \u2014 notes: ${notes || 'none'}`
       })
       .join('\n')
@@ -98,10 +100,14 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
     setAnalysisLoading(true)
     setAnalysisError(null)
     try {
-      const chordDetail = buildChordDetail(keySetsRef.current)
-      const result = await analyzeSong(songId, initialTitle, chordDetail)
+      const currentKeySets = keySetsRef.current
+      const chordKeySets = currentKeySets.filter(k => k.type !== 'flourish')
+      const chordDetail = buildChordDetail(currentKeySets)
+      const result = await analyzeSong(songId, initialTitle, chordDetail, chordKeySets.length)
       setAnalysis(result.analysis)
       setAnalysisUpdatedAt(result.analysisUpdatedAt)
+      setSuggestedKey(result.suggestedKey)
+      setSuggestedDegrees(result.suggestedDegrees)
     } catch (e) {
       setAnalysisError(e instanceof Error ? e.message : 'Analysis failed')
     } finally {
@@ -112,6 +118,27 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
   function handleClearAnalysis() {
     setAnalysis(null)
     setAnalysisUpdatedAt(null)
+    setSuggestedKey(null)
+    setSuggestedDegrees([])
+  }
+
+  function handleApplyKeyAndDegrees() {
+    if (suggestedKey) {
+      setSongKey(suggestedKey)
+      setLastSongKey(suggestedKey)
+    }
+    if (suggestedDegrees.length > 0) {
+      setKeySets(prev => {
+        // Map degrees to chord keysets only (skip flourishes)
+        let degreeIdx = 0
+        return prev.map(ks => {
+          if (ks.type === 'flourish') return ks
+          const degree = degreeIdx < suggestedDegrees.length ? suggestedDegrees[degreeIdx] : null
+          degreeIdx++
+          return { ...ks, scaleDegree: degree }
+        })
+      })
+    }
   }
 
   // Warn on browser close/refresh with unsaved changes + Ctrl/Cmd+S to save
@@ -396,6 +423,8 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
           analysisUpdatedAt={analysisUpdatedAt}
           onAnalyze={handleAnalyze}
           onClear={handleClearAnalysis}
+          onApplyKeyAndDegrees={suggestedKey || suggestedDegrees.length > 0 ? handleApplyKeyAndDegrees : undefined}
+          suggestedKey={suggestedKey}
           loading={analysisLoading}
           error={analysisError}
         />
