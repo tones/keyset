@@ -113,7 +113,7 @@ function CompactKeySetCard({ keySet, songKey, commonAbove = [], commonBelow = []
         <h2 className="text-xs font-semibold text-gray-900 truncate max-w-full" data-testid="chord-label">
           {keySet.type === 'flourish'
             ? <span className="text-amber-600 italic">Flourish</span>
-            : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map((kp) => kp.midiNote), songKey) : '\u00A0'}
+            : keySet.keyPresses.length > 0 ? (() => { const name = identifyChord(keySet.keyPresses.map((kp) => kp.midiNote), songKey); if (!keySet.scaleDegree) return name; const parsed = parseSongKey(songKey ?? null); const triadName = parsed ? getTriadName(parsed.root, parsed.mode, keySet.scaleDegree) : null; return <><span className="block">{name}</span><span className="text-blue-500 font-normal block">{formatNumeral(keySet.scaleDegree, songKey)}{triadName ? ` (${triadName})` : ''}</span></> })() : '\u00A0'}
         </h2>
         {keySet.keyPresses.length > 0 && keySet.type !== 'flourish' && (
           <button
