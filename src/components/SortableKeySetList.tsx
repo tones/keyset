@@ -211,7 +211,7 @@ function SortableKeySetCard({ keySet, inKeyPitchClasses, triadPitchClasses, onDe
           )}
         </div>
         <div className="flex items-center gap-1 ml-auto">
-          {inKeyPitchClasses && onSetScaleDegree && (
+          {inKeyPitchClasses && onSetScaleDegree && keySet.type !== 'flourish' && (
             <div ref={degreePicker.containerRef} className="relative" onMouseLeave={degreePicker.onMouseLeave} onMouseEnter={() => { degreePicker.onMouseEnter(); if (keySet.scaleDegree) degreePicker.show() }}>
               <button
                 onClick={() => {
