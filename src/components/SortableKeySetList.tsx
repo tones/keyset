@@ -40,10 +40,6 @@ function formatNumeral(degree: number, songKey?: string | null): string {
   return formatted
 }
 
-function formatDegreeLabel(chordName: string, degree: number, songKey?: string | null): string {
-  return `${chordName} (${formatNumeral(degree, songKey)})`
-}
-
 interface SortableKeySetListProps {
   keySets: KeySet[]
   compact?: boolean

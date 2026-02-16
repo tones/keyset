@@ -68,13 +68,6 @@ export async function updateSongTitle(songId: number, title: string) {
   revalidatePath('/')
 }
 
-export async function updateSongKey(songId: number, songKey: string | null) {
-  await prisma.song.update({
-    where: { id: songId },
-    data: { songKey },
-  })
-}
-
 export async function updateCompactView(songId: number, compact: boolean) {
   await prisma.song.update({
     where: { id: songId },

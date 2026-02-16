@@ -1,7 +1,7 @@
 'use client'
 
 import { KEY_COLORS, DEFAULT_COLOR } from '@/lib/colors'
-import { isBlackKey, getNoteName, buildKeyLayout, blackKeyLeftPct } from '@/lib/pianoLayout'
+import { getNoteName, buildKeyLayout, blackKeyLeftPct } from '@/lib/pianoLayout'
 
 interface PianoKeyboardProps {
   highlightedNotes: number[]

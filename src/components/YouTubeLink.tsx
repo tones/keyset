@@ -7,6 +7,15 @@ interface YouTubeLinkProps {
   onSave: (url: string | null) => Promise<void>
 }
 
+function YouTubeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19.13C5.12 19.55 12 19.55 12 19.55s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.42z" />
+      <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
+    </svg>
+  )
+}
+
 export default function YouTubeLink({ initialUrl, onSave }: YouTubeLinkProps) {
   const [url, setUrl] = useState(initialUrl ?? '')
   const [editing, setEditing] = useState(false)
@@ -26,10 +35,7 @@ export default function YouTubeLink({ initialUrl, onSave }: YouTubeLinkProps) {
   if (editing) {
     return (
       <div className="flex items-center gap-2">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500 shrink-0">
-          <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19.13C5.12 19.55 12 19.55 12 19.55s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.42z" />
-          <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
-        </svg>
+        <span className="text-red-500 shrink-0"><YouTubeIcon /></span>
         <input
           type="url"
           value={url}
@@ -58,10 +64,7 @@ export default function YouTubeLink({ initialUrl, onSave }: YouTubeLinkProps) {
           className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-700 transition-colors"
           title="Open in YouTube"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19.13C5.12 19.55 12 19.55 12 19.55s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.42z" />
-            <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
-          </svg>
+          <YouTubeIcon />
           YouTube
         </a>
         <button
@@ -84,10 +87,7 @@ export default function YouTubeLink({ initialUrl, onSave }: YouTubeLinkProps) {
       className="flex items-center gap-1.5 text-sm text-gray-300 hover:text-gray-500 transition-colors cursor-pointer"
       title="Add YouTube link"
     >
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19.13C5.12 19.55 12 19.55 12 19.55s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.42z" />
-        <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
-      </svg>
+      <YouTubeIcon />
       Add YouTube link
     </button>
   )

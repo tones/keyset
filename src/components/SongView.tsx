@@ -366,42 +366,33 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
                   keyPicker.show()
                 }
               }} />
-              {keyPicker.open && songKey !== null && (
+              {keyPicker.open && songKey !== null && (() => {
+                const parsed = parseSongKey(songKey)
+                return (
                 <div className="absolute right-0 top-8 z-10 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3 w-56">
                   <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Root</div>
                   <div className="grid grid-cols-4 gap-1 mb-3">
-                    {ROOTS.map(r => {
-                      const parsed = parseSongKey(songKey)
-                      const isActive = parsed?.root === r
-                      return (
-                        <button key={r} className={`text-xs px-1.5 py-1 rounded transition-colors cursor-pointer ${isActive ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 font-semibold' : 'hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400 dark:text-gray-300'}`} onClick={() => {
-                          const parsed = parseSongKey(songKey)
-                          const mode = parsed?.mode ?? 'major'
-                          const key = formatSongKey(r, mode)
+                    {ROOTS.map(r => (
+                        <button key={r} className={`text-xs px-1.5 py-1 rounded transition-colors cursor-pointer ${parsed?.root === r ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 font-semibold' : 'hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400 dark:text-gray-300'}`} onClick={() => {
+                          const key = formatSongKey(r, parsed?.mode ?? 'major')
                           setSongKey(key)
                           setLastSongKey(key)
                         }}>{r}</button>
-                      )
-                    })}
+                    ))}
                   </div>
                   <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Mode</div>
                   <div className="grid grid-cols-2 gap-1">
-                    {MODE_NAMES.map(m => {
-                      const parsed = parseSongKey(songKey)
-                      const isActive = parsed?.mode === m
-                      return (
-                        <button key={m} className={`text-xs px-1.5 py-1 rounded text-left transition-colors cursor-pointer ${isActive ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 font-semibold' : 'hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400 dark:text-gray-300'}`} onClick={() => {
-                          const parsed = parseSongKey(songKey)
-                          const root = parsed?.root ?? 'C'
-                          const key = formatSongKey(root, m)
+                    {MODE_NAMES.map(m => (
+                        <button key={m} className={`text-xs px-1.5 py-1 rounded text-left transition-colors cursor-pointer ${parsed?.mode === m ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 font-semibold' : 'hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400 dark:text-gray-300'}`} onClick={() => {
+                          const key = formatSongKey(parsed?.root ?? 'C', m)
                           setSongKey(key)
                           setLastSongKey(key)
                         }}>{m.charAt(0).toUpperCase() + m.slice(1)}</button>
-                      )
-                    })}
+                    ))}
                   </div>
                 </div>
-              )}
+                )
+              })()}
             </div>
             {/* Guides toggle hidden but functionality preserved */}
           </div>
