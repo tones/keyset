@@ -21,6 +21,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import PianoKeyboard from '@/components/PianoKeyboard'
+import StaffNotation from '@/components/StaffNotation'
 import { identifyChord } from '@/lib/chordId'
 import { playChord, preloadPiano } from '@/lib/playChord'
 import { keyCenterPct, buildKeyLayout } from '@/lib/pianoLayout'
@@ -156,6 +157,9 @@ function CompactKeySetCard({ keySet, songKey, commonAbove = [], commonBelow = []
           }} />
         ))}
       </div>
+      {songKey && keySet.type !== 'flourish' && keySet.keyPresses.length > 0 && (
+        <StaffNotation midiNotes={keySet.keyPresses.map(kp => kp.midiNote)} songKey={songKey} height={50} />
+      )}
     </div>
   )
 }
@@ -367,13 +371,20 @@ function SortableKeySetCard({ keySet, songKey, inKeyPitchClasses, triadPitchClas
         </div>
       </div>
 
-      <PianoKeyboard
-        highlightedNotes={keySet.keyPresses.map((kp) => kp.midiNote)}
-        noteColors={Object.fromEntries(keySet.keyPresses.map((kp) => [kp.midiNote, kp.color]))}
-        inKeyPitchClasses={inKeyPitchClasses}
-        triadPitchClasses={triadPitchClasses}
-        onToggle={(midiNote) => onToggleNote(keySet.id, midiNote, activeColor)}
-      />
+      <div className="flex items-center gap-2">
+        <div className="flex-1 min-w-0">
+          <PianoKeyboard
+            highlightedNotes={keySet.keyPresses.map((kp) => kp.midiNote)}
+            noteColors={Object.fromEntries(keySet.keyPresses.map((kp) => [kp.midiNote, kp.color]))}
+            inKeyPitchClasses={inKeyPitchClasses}
+            triadPitchClasses={triadPitchClasses}
+            onToggle={(midiNote) => onToggleNote(keySet.id, midiNote, activeColor)}
+          />
+        </div>
+        {songKey && keySet.type !== 'flourish' && keySet.keyPresses.length > 0 && (
+          <StaffNotation midiNotes={keySet.keyPresses.map(kp => kp.midiNote)} songKey={songKey} height={110} />
+        )}
+      </div>
     </div>
   )
 }

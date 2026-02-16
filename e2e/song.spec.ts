@@ -745,6 +745,26 @@ test.describe('Song Page', () => {
     await clickSave(page)
   })
 
+  test('staff notation appears in key mode and hides without it', async ({ page }) => {
+    page.on('dialog', dialog => dialog.accept())
+    await page.goto('/song/2')
+
+    // No staff notation without key mode
+    await expect(page.getByTestId('staff-notation').first()).not.toBeVisible()
+
+    // Enable Key mode
+    await page.getByText('Key', { exact: true }).click()
+    await page.locator('h1').click()
+    await page.waitForTimeout(600)
+
+    // Staff notation should appear for chord keysets
+    await expect(page.getByTestId('staff-notation').first()).toBeVisible()
+
+    // Turn off Key mode
+    await page.getByText('C Major').click()
+    await expect(page.getByTestId('staff-notation').first()).not.toBeVisible()
+  })
+
   test('flourish keyset does not show scale degree toggle', async ({ page }) => {
     // Use song 2 — enable Key mode, verify chord has # button, toggle to flourish, verify # gone
     page.on('dialog', dialog => dialog.accept())
