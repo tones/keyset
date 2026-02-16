@@ -33,30 +33,30 @@ export default function SongList({ songs }: { songs: Song[] }) {
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-2 gap-4">
       {songs.map((song) => (
-        <Link key={song.id} href={`/song/${song.id}`} className="flex bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer overflow-hidden">
+        <Link key={song.id} href={`/song/${song.id}`} className="flex bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer overflow-hidden">
           {song.imageUrl ? (
-            <img src={song.imageUrl} alt="" className="w-24 h-24 object-cover shrink-0" />
+            <img src={song.imageUrl} alt="" className="w-20 h-20 object-cover shrink-0" />
           ) : (
-            <div className="w-24 h-24 bg-gray-100 shrink-0 flex items-center justify-center">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300">
+            <div className="w-20 h-20 bg-gray-100 shrink-0 flex items-center justify-center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300">
                 <path d="M9 18V5l12-2v13" />
                 <circle cx="6" cy="18" r="3" />
                 <circle cx="18" cy="16" r="3" />
               </svg>
             </div>
           )}
-          <div className="flex-1 p-4 min-w-0">
-          <div className="flex justify-between items-start mb-2">
-            <h2 className="text-lg font-semibold text-gray-900 truncate">{song.title}</h2>
-            <div className="flex items-center gap-2">
+          <div className="flex-1 p-3 min-w-0">
+          <div className="flex justify-between items-start mb-1">
+            <h2 className="text-sm font-semibold text-gray-900 truncate">{song.title}</h2>
+            <div className="flex items-center gap-1 shrink-0 ml-1">
               <button
                 onClick={(e) => handleDuplicate(e, song.id)}
                 className="text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
                 title="Duplicate Song"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                   <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                 </svg>
@@ -66,7 +66,7 @@ export default function SongList({ songs }: { songs: Song[] }) {
                 className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
                 title="Delete Song"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M3 6h18" />
                   <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
                   <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
@@ -76,11 +76,11 @@ export default function SongList({ songs }: { songs: Song[] }) {
           </div>
           
           {song.keySets.length === 0 ? (
-            <p className="text-sm text-gray-400">No key sets yet</p>
+            <p className="text-xs text-gray-400">No key sets yet</p>
           ) : (
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex gap-1 overflow-hidden">
               {song.keySets.map((keySet) => (
-                <span key={keySet.id} className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${keySet.type === 'flourish' ? 'bg-amber-50 text-amber-600 italic' : 'bg-blue-50 text-blue-700'}`}>
+                <span key={keySet.id} className={`shrink-0 text-[11px] font-medium px-1.5 py-0.5 rounded-full ${keySet.type === 'flourish' ? 'bg-amber-50 text-amber-600 italic' : 'bg-blue-50 text-blue-700'}`}>
                   {keySet.type === 'flourish'
                     ? '♪'
                     : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map(kp => kp.midiNote)) : '—'}
