@@ -113,22 +113,20 @@ function CompactKeySetCard({ keySet, commonAbove = [], commonBelow = [], showGui
           <div key={`above-${note}`} className="absolute pointer-events-none" style={{
             left: `${keyCenterPct(note, defaultLayout)}%`,
             bottom: '100%',
-            width: 2,
+            width: 4,
             height: 12,
-            transform: 'translateX(-1px)',
-            background: 'repeating-linear-gradient(to bottom, #eab308 0px, #eab308 4px, transparent 4px, transparent 7px)',
-            opacity: 0.8,
+            transform: 'translateX(-2px)',
+            background: 'repeating-linear-gradient(to bottom, #f59e0b 0px, #f59e0b 4px, transparent 4px, transparent 7px)',
           }} />
         ))}
         {showGuides && commonBelow.map(note => (
           <div key={`below-${note}`} className="absolute pointer-events-none" style={{
             left: `${keyCenterPct(note, defaultLayout)}%`,
             top: '100%',
-            width: 2,
+            width: 4,
             height: 12,
-            transform: 'translateX(-1px)',
-            background: 'repeating-linear-gradient(to bottom, #eab308 0px, #eab308 4px, transparent 4px, transparent 7px)',
-            opacity: 0.8,
+            transform: 'translateX(-2px)',
+            background: 'repeating-linear-gradient(to bottom, #f59e0b 0px, #f59e0b 4px, transparent 4px, transparent 7px)',
           }} />
         ))}
       </div>
