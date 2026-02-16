@@ -292,7 +292,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
           </div>
           <div className="flex flex-col items-end gap-2 shrink-0">
             <ToggleSwitch label="Compact" enabled={mode === 'compact'} onToggle={() => setMode(mode === 'compact' ? 'full' : 'compact')} />
-            <ToggleSwitch label="Guides" enabled={showCommonTones} onToggle={() => setShowCommonTones(!showCommonTones)} activeColor="bg-yellow-500" />
+            {/* Guides toggle hidden but functionality preserved */}
           </div>
         </div>
       </div>

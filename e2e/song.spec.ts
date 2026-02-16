@@ -547,7 +547,7 @@ test.describe('Song Page', () => {
     await expect(svgs).toHaveCount(2)
   })
 
-  test('common tones toggle hides and shows lines', async ({ page }) => {
+  test.skip('common tones toggle hides and shows lines', async ({ page }) => {
     await page.goto('/song/4')
     const lines = page.locator('svg line[stroke="#eab308"]')
     await expect(lines).toHaveCount(2)
@@ -561,7 +561,7 @@ test.describe('Song Page', () => {
     await expect(lines).toHaveCount(2)
   })
 
-  test('toggling common tones does not shift keyset card positions', async ({ page }) => {
+  test.skip('toggling common tones does not shift keyset card positions', async ({ page }) => {
     await page.goto('/song/4')
     const firstCard = page.getByTestId('keyset-card').first()
     const boxBefore = await firstCard.boundingBox()
@@ -574,7 +574,7 @@ test.describe('Song Page', () => {
     expect(boxBefore!.height).toBe(boxAfter!.height)
   })
 
-  test('common tone guide lines touch both upper and lower keyboards symmetrically', async ({ page }) => {
+  test.skip('common tone guide lines touch both upper and lower keyboards symmetrically', async ({ page }) => {
     await page.goto('/song/4')
     // Get the first two piano keyboards (keysets 1 and 2 share note 72)
     const pianos = page.getByTestId('piano-keyboard')
