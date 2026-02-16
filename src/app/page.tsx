@@ -41,7 +41,7 @@ export default async function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 sm:p-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8 flex items-center justify-between">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Keysets</h1>

@@ -34,7 +34,7 @@ export default function SongList({ songs }: { songs: Song[] }) {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {songs.map((song) => (
         <Link key={song.id} href={`/song/${song.id}`} className="flex bg-white dark:bg-gray-900 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer overflow-hidden">
           {song.imageUrl ? (
@@ -54,7 +54,7 @@ export default function SongList({ songs }: { songs: Song[] }) {
             <div className="flex items-center gap-1 shrink-0 ml-1">
               <button
                 onClick={(e) => handleDuplicate(e, song.id)}
-                className="text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
+                className="p-1 text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
                 title="Duplicate Song"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -64,7 +64,7 @@ export default function SongList({ songs }: { songs: Song[] }) {
               </button>
               <button
                 onClick={(e) => handleDelete(e, song.id)}
-                className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                className="p-1 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
                 title="Delete Song"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

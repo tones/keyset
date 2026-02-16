@@ -296,7 +296,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
             e.preventDefault()
             router.push('/')
           }}
-          className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors py-2"
         >
           ‹ Keysets
         </a>
@@ -307,7 +307,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
           {saveError && <span className="text-xs text-red-500" data-testid="save-error">{saveError}</span>}
           <button
             onClick={handleReset}
-            className="px-2 py-0.5 text-xs font-medium rounded border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors"
+            className="px-3 py-1 text-xs font-medium rounded border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors"
             data-testid="reset-button"
           >
             Reset
@@ -315,7 +315,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-2 py-0.5 text-xs font-medium rounded bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-200 cursor-pointer transition-colors disabled:opacity-50"
+            className="px-3 py-1 text-xs font-medium rounded bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-200 cursor-pointer transition-colors disabled:opacity-50"
             data-testid="save-button"
           >
             {saving ? 'Saving…' : 'Save'}
@@ -325,11 +325,11 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
         </div>
       </div>
 
-      <div className="flex items-start gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row items-start gap-4 mb-6">
         {currentImageUrl ? (
-          <img src={currentImageUrl} alt="" className="w-40 h-40 object-cover rounded-lg shadow shrink-0" data-testid="album-art" />
+          <img src={currentImageUrl} alt="" className="hidden sm:block w-40 h-40 object-cover rounded-lg shadow shrink-0" data-testid="album-art" />
         ) : (
-          <div className="w-40 h-40 bg-gray-200 dark:bg-gray-800 rounded-lg shadow shrink-0 flex items-center justify-center" data-testid="album-art-placeholder">
+          <div className="hidden sm:flex w-40 h-40 bg-gray-200 dark:bg-gray-800 rounded-lg shadow shrink-0 items-center justify-center" data-testid="album-art-placeholder">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
               <path d="M9 18V5l12-2v13" />
               <circle cx="6" cy="18" r="3" />
@@ -373,7 +373,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
                   <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Root</div>
                   <div className="grid grid-cols-4 gap-1 mb-3">
                     {ROOTS.map(r => (
-                        <button key={r} className={`text-xs px-1.5 py-1 rounded transition-colors cursor-pointer ${parsed?.root === r ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 font-semibold' : 'hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400 dark:text-gray-300'}`} onClick={() => {
+                        <button key={r} className={`text-xs px-2 py-1.5 rounded transition-colors cursor-pointer ${parsed?.root === r ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 font-semibold' : 'hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400 dark:text-gray-300'}`} onClick={() => {
                           const key = formatSongKey(r, parsed?.mode ?? 'major')
                           setSongKey(key)
                           setLastSongKey(key)
@@ -383,7 +383,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
                   <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Mode</div>
                   <div className="grid grid-cols-2 gap-1">
                     {MODE_NAMES.map(m => (
-                        <button key={m} className={`text-xs px-1.5 py-1 rounded text-left transition-colors cursor-pointer ${parsed?.mode === m ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 font-semibold' : 'hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400 dark:text-gray-300'}`} onClick={() => {
+                        <button key={m} className={`text-xs px-2 py-1.5 rounded text-left transition-colors cursor-pointer ${parsed?.mode === m ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 font-semibold' : 'hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400 dark:text-gray-300'}`} onClick={() => {
                           const key = formatSongKey(parsed?.root ?? 'C', m)
                           setSongKey(key)
                           setLastSongKey(key)

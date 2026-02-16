@@ -210,7 +210,7 @@ function SortableKeySetCard({ keySet, songKey, inKeyPitchClasses, triadPitchClas
           {keySet.keyPresses.length > 0 && keySet.type !== 'flourish' && (
             <button
               onClick={() => playChord(keySet.keyPresses.map((kp) => kp.midiNote))}
-              className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
+              className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
               title="Play Chord"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -235,13 +235,13 @@ function SortableKeySetCard({ keySet, songKey, inKeyPitchClasses, triadPitchClas
                     degreePicker.toggle()
                   }
                 }}
-                className={`h-7 flex items-center justify-center cursor-pointer transition-colors whitespace-nowrap ${keySet.scaleDegree ? 'text-blue-500 hover:text-blue-700' : 'w-7 text-gray-400 hover:text-blue-500'}`}
+                className={`h-9 flex items-center justify-center cursor-pointer transition-colors whitespace-nowrap ${keySet.scaleDegree ? 'text-blue-500 hover:text-blue-700' : 'w-9 text-gray-400 hover:text-blue-500'}`}
                 title={keySet.scaleDegree ? `Scale Degree: ${formatNumeral(keySet.scaleDegree, songKey)} (click to clear)` : 'Scale Degree'}
               >
                 <span className="text-xs font-bold">{keySet.scaleDegree ? (() => { const parsed = parseSongKey(songKey ?? null); const triadName = parsed ? getTriadName(parsed.root, parsed.mode, keySet.scaleDegree) : null; return `${formatNumeral(keySet.scaleDegree, songKey)}${triadName ? ` (${triadName})` : ''}`; })() : '#'}</span>
               </button>
               {degreePicker.open && (
-                <div className="absolute right-0 top-8 z-10 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3">
+                <div className="absolute right-0 top-10 z-10 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3">
                   <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Scale Degree</div>
                   <div className="flex flex-col gap-0.5">
                     {ROMAN_NUMERALS.map((_, i) => {
@@ -264,7 +264,7 @@ function SortableKeySetCard({ keySet, songKey, inKeyPitchClasses, triadPitchClas
           )}
           <button
             onClick={() => onToggleType(keySet.id)}
-            className={`w-7 h-7 flex items-center justify-center cursor-pointer transition-colors ${keySet.type === 'flourish' ? 'text-amber-500 hover:text-amber-700' : 'text-gray-400 hover:text-gray-600'}`}
+            className={`w-9 h-9 flex items-center justify-center cursor-pointer transition-colors ${keySet.type === 'flourish' ? 'text-amber-500 hover:text-amber-700' : 'text-gray-400 hover:text-gray-600'}`}
             title={keySet.type === 'flourish' ? 'Switch to Chord' : 'Switch to Flourish'}
             data-testid="type-toggle"
           >
@@ -277,7 +277,7 @@ function SortableKeySetCard({ keySet, songKey, inKeyPitchClasses, triadPitchClas
           <div ref={colorPicker.containerRef} className="relative" onMouseLeave={colorPicker.onMouseLeave} onMouseEnter={colorPicker.onMouseEnter}>
             <button
               onClick={colorPicker.toggle}
-              className="w-7 h-7 flex items-center justify-center cursor-pointer transition-colors text-gray-400 hover:text-gray-600"
+              className="w-9 h-9 flex items-center justify-center cursor-pointer transition-colors text-gray-400 hover:text-gray-600"
               title={`Brush: ${KEY_COLORS[activeColor].label}`}
               data-testid="color-toggle"
             >
@@ -293,7 +293,7 @@ function SortableKeySetCard({ keySet, songKey, inKeyPitchClasses, triadPitchClas
               </svg>
             </button>
             {colorPicker.open && (
-              <div className="absolute right-0 top-8 z-10 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3" data-testid="color-popover">
+              <div className="absolute right-0 top-10 z-10 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3" data-testid="color-popover">
                 <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Brush Color</div>
                 <div className="flex gap-1.5">
                   {COLOR_NAMES.map((color) => (
@@ -313,7 +313,7 @@ function SortableKeySetCard({ keySet, songKey, inKeyPitchClasses, triadPitchClas
             <div ref={transposePicker.containerRef} className="relative" onMouseLeave={transposePicker.onMouseLeave} onMouseEnter={transposePicker.onMouseEnter}>
                 <button
                   onClick={transposePicker.toggle}
-                  className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
+                  className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
                   title="Transpose"
                   data-testid="transpose-button"
                 >
@@ -324,7 +324,7 @@ function SortableKeySetCard({ keySet, songKey, inKeyPitchClasses, triadPitchClas
                   </svg>
                 </button>
                 {transposePicker.open && (
-                  <div className="absolute right-0 top-8 z-10 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3 min-w-[180px]" data-testid="transpose-popover">
+                  <div className="absolute right-0 top-10 z-10 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3 min-w-[180px]" data-testid="transpose-popover">
                     <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Transpose</div>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-gray-700 dark:text-gray-300">Step</span>
@@ -346,7 +346,7 @@ function SortableKeySetCard({ keySet, songKey, inKeyPitchClasses, triadPitchClas
           )}
           <button
             onClick={() => onDuplicate(keySet.id)}
-            className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
+            className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
             title="Duplicate Key Set"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -356,7 +356,7 @@ function SortableKeySetCard({ keySet, songKey, inKeyPitchClasses, triadPitchClas
           </button>
           <button
             onClick={() => onDelete(keySet.id)}
-            className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+            className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
             title="Delete Key Set"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

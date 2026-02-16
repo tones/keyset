@@ -5,11 +5,23 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --analysis-bg: #F5F5F0;
+  --analysis-border: #DDD9CE;
+  --analysis-heading: #2b2a27;
+  --analysis-body: #393937;
+  --analysis-bold: #1f1e1b;
+  --analysis-bullets: #6b6a68;
 }
 
 .dark {
   --background: #0a0a0a;
   --foreground: #ededed;
+  --analysis-bg: #1c1c1a;
+  --analysis-border: #333330;
+  --analysis-heading: #e5e5e0;
+  --analysis-body: #c8c8c3;
+  --analysis-bold: #f0f0eb;
+  --analysis-bullets: #9a9a95;
 }
 
 @theme inline {

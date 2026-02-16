@@ -36,10 +36,7 @@ export default function SongAnalysis({ songTitle, chordDetail, llmProvider, anal
       <button
         onClick={onAnalyze}
         disabled={loading}
-        className="px-5 py-2.5 rounded-xl font-sans text-base disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-        style={{ backgroundColor: '#1a1a18', color: '#F5F5F0' }}
-        onMouseEnter={(e) => { if (!loading) { e.currentTarget.style.backgroundColor = '#393937' } }}
-        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#1a1a18' }}
+        className="px-5 py-2.5 rounded-xl font-sans text-base disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 bg-[#1a1a18] dark:bg-gray-200 text-[#F5F5F0] dark:text-gray-900 hover:bg-[#393937] dark:hover:bg-gray-300"
       >
         {loading ? (
           <span className="flex items-center gap-2">
@@ -56,7 +53,7 @@ export default function SongAnalysis({ songTitle, chordDetail, llmProvider, anal
       )}
 
       {analysis && (
-        <div className="mt-4 p-6 rounded-lg shadow border font-serif" style={{ backgroundColor: '#F5F5F0', borderColor: '#DDD9CE', visibility: loading ? 'hidden' : 'visible' }}>
+        <div className={`mt-4 p-6 rounded-lg shadow border font-serif ${loading ? 'invisible' : 'visible'}`} style={{ backgroundColor: 'var(--analysis-bg)', borderColor: 'var(--analysis-border)' }}>
           <div className="float-right flex items-center gap-2 ml-4">
             {onApplyKeyAndDegrees && (
               <button
@@ -105,7 +102,7 @@ export default function SongAnalysis({ songTitle, chordDetail, llmProvider, anal
               </svg>
             </button>
           </div>
-          <div className="prose prose-sm max-w-none" style={{ '--tw-prose-headings': '#2b2a27', '--tw-prose-body': '#393937', '--tw-prose-bold': '#1f1e1b', '--tw-prose-bullets': '#6b6a68' } as React.CSSProperties}>
+          <div className="prose prose-sm max-w-none" style={{ '--tw-prose-headings': 'var(--analysis-heading)', '--tw-prose-body': 'var(--analysis-body)', '--tw-prose-bold': 'var(--analysis-bold)', '--tw-prose-bullets': 'var(--analysis-bullets)' } as React.CSSProperties}>
             <ReactMarkdown>{analysis}</ReactMarkdown>
           </div>
           {analysisUpdatedAt && (
