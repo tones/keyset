@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 
-export async function saveKeySets(songId: number, keySets: { type: string; keyPresses: { midiNote: number; color: string }[] }[], analysis?: { text: string | null; updatedAt: string | null }) {
+export async function saveKeySets(songId: number, keySets: { type: string; keyPresses: { midiNote: number; color: string }[] }[], analysis?: { text: string | null; updatedAt: string | null }, songKey?: string | null) {
   await prisma.$transaction(async (tx) => {
     // Delete all existing key sets (cascade deletes key presses)
     await tx.keySet.deleteMany({ where: { songId } })
@@ -25,14 +25,19 @@ export async function saveKeySets(songId: number, keySets: { type: string; keyPr
       })
     }
 
-    // Persist analysis if provided
+    // Persist analysis and songKey if provided
+    const songUpdate: Record<string, unknown> = {}
     if (analysis !== undefined) {
+      songUpdate.analysis = analysis.text
+      songUpdate.analysisUpdatedAt = analysis.updatedAt ? new Date(analysis.updatedAt) : null
+    }
+    if (songKey !== undefined) {
+      songUpdate.songKey = songKey
+    }
+    if (Object.keys(songUpdate).length > 0) {
       await tx.song.update({
         where: { id: songId },
-        data: {
-          analysis: analysis.text,
-          analysisUpdatedAt: analysis.updatedAt ? new Date(analysis.updatedAt) : null,
-        },
+        data: songUpdate,
       })
     }
   })
@@ -60,6 +65,13 @@ export async function updateSongTitle(songId: number, title: string) {
 
   revalidatePath(`/song/${songId}`)
   revalidatePath('/')
+}
+
+export async function updateSongKey(songId: number, songKey: string | null) {
+  await prisma.song.update({
+    where: { id: songId },
+    data: { songKey },
+  })
 }
 
 export async function updateCompactView(songId: number, compact: boolean) {

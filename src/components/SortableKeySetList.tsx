@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { usePopover } from '@/hooks/usePopover'
 import { KEY_COLORS, COLOR_NAMES, DEFAULT_COLOR } from '@/lib/colors'
 import {
   DndContext,
@@ -23,12 +24,14 @@ import PianoKeyboard from '@/components/PianoKeyboard'
 import { identifyChord } from '@/lib/chordId'
 import { playChord, preloadPiano } from '@/lib/playChord'
 import { keyCenterPct, buildKeyLayout } from '@/lib/pianoLayout'
+import { parseSongKey, getScalePitchClasses } from '@/lib/scales'
 import type { KeySet } from '@/types'
 
 interface SortableKeySetListProps {
   keySets: KeySet[]
   compact?: boolean
   showCommonTones?: boolean
+  songKey?: string | null
   onAdd: () => void
   onDelete: (id: number) => void
   onDuplicate: (id: number) => void
@@ -40,6 +43,7 @@ interface SortableKeySetListProps {
 
 interface KeySetCardProps {
   keySet: KeySet
+  inKeyPitchClasses?: Set<number>
   onDelete: (id: number) => void
   onDuplicate: (id: number) => void
   onToggleNote: (keySetId: number, midiNote: number, color: string) => void
@@ -82,7 +86,7 @@ function CommonToneLines({ above, below, padX = 24, padLeft, padRight, compact =
   )
 }
 
-function CompactKeySetCard({ keySet, commonAbove = [], commonBelow = [], showGuides = true }: { keySet: KeySet; commonAbove?: number[]; commonBelow?: number[]; showGuides?: boolean }) {
+function CompactKeySetCard({ keySet, commonAbove = [], commonBelow = [], showGuides = true, inKeyPitchClasses }: { keySet: KeySet; commonAbove?: number[]; commonBelow?: number[]; showGuides?: boolean; inKeyPitchClasses?: Set<number> }) {
   return (
     <div className={`flex items-center gap-2 px-3 py-3 ${keySet.type === 'flourish' ? 'bg-amber-50/50' : ''}`} data-testid="keyset-card">
       <div className="w-16 shrink-0 flex flex-col items-start">
@@ -107,6 +111,7 @@ function CompactKeySetCard({ keySet, commonAbove = [], commonBelow = [], showGui
         <PianoKeyboard
           highlightedNotes={keySet.keyPresses.map((kp) => kp.midiNote)}
           noteColors={Object.fromEntries(keySet.keyPresses.map((kp) => [kp.midiNote, kp.color]))}
+          inKeyPitchClasses={inKeyPitchClasses}
           height={50}
         />
         {showGuides && commonAbove.map(note => (
@@ -134,10 +139,10 @@ function CompactKeySetCard({ keySet, commonAbove = [], commonBelow = [], showGui
   )
 }
 
-function SortableKeySetCard({ keySet, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType }: KeySetCardProps) {
+function SortableKeySetCard({ keySet, inKeyPitchClasses, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType }: KeySetCardProps) {
   const [activeColor, setActiveColor] = useState(DEFAULT_COLOR)
-  const [showTranspose, setShowTranspose] = useState(false)
-  const [showColorPicker, setShowColorPicker] = useState(false)
+  const colorPicker = usePopover()
+  const transposePicker = usePopover()
 
   const {
     attributes,
@@ -203,9 +208,9 @@ function SortableKeySetCard({ keySet, onDelete, onDuplicate, onToggleNote, onShi
               <circle cx="18" cy="16" r="3" />
             </svg>
           </button>
-          <div className="relative">
+          <div ref={colorPicker.containerRef} className="relative" onMouseLeave={colorPicker.onMouseLeave} onMouseEnter={colorPicker.onMouseEnter}>
             <button
-              onClick={() => setShowColorPicker(!showColorPicker)}
+              onClick={colorPicker.toggle}
               className="w-7 h-7 flex items-center justify-center cursor-pointer transition-colors text-gray-400 hover:text-gray-600"
               title={`Brush: ${KEY_COLORS[activeColor].label}`}
               data-testid="color-toggle"
@@ -221,8 +226,8 @@ function SortableKeySetCard({ keySet, onDelete, onDuplicate, onToggleNote, onShi
                 <circle cx="4" cy="4" r="4" fill={KEY_COLORS[activeColor].white} />
               </svg>
             </button>
-            {showColorPicker && (
-              <div className="absolute right-0 top-8 z-10 bg-white rounded-lg shadow-lg border border-gray-200 p-3" data-testid="color-popover" onMouseLeave={() => setShowColorPicker(false)}>
+            {colorPicker.open && (
+              <div className="absolute right-0 top-8 z-10 bg-white rounded-lg shadow-lg border border-gray-200 p-3" data-testid="color-popover">
                 <div className="text-xs font-medium text-gray-500 mb-2">Brush Color</div>
                 <div className="flex gap-1.5">
                   {COLOR_NAMES.map((color) => (
@@ -239,9 +244,9 @@ function SortableKeySetCard({ keySet, onDelete, onDuplicate, onToggleNote, onShi
             )}
           </div>
           {keySet.keyPresses.length > 0 && (
-            <div className="relative">
+            <div ref={transposePicker.containerRef} className="relative" onMouseLeave={transposePicker.onMouseLeave} onMouseEnter={transposePicker.onMouseEnter}>
                 <button
-                  onClick={() => setShowTranspose(!showTranspose)}
+                  onClick={transposePicker.toggle}
                   className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
                   title="Transpose"
                   data-testid="transpose-button"
@@ -252,8 +257,8 @@ function SortableKeySetCard({ keySet, onDelete, onDuplicate, onToggleNote, onShi
                     <path d="M3 12h18" />
                   </svg>
                 </button>
-                {showTranspose && (
-                  <div className="absolute right-0 top-8 z-10 bg-white rounded-lg shadow-lg border border-gray-200 p-3 min-w-[180px]" data-testid="transpose-popover" onMouseLeave={() => setShowTranspose(false)}>
+                {transposePicker.open && (
+                  <div className="absolute right-0 top-8 z-10 bg-white rounded-lg shadow-lg border border-gray-200 p-3 min-w-[180px]" data-testid="transpose-popover">
                     <div className="text-xs font-medium text-gray-500 mb-2">Transpose</div>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-gray-700">Step</span>
@@ -300,13 +305,17 @@ function SortableKeySetCard({ keySet, onDelete, onDuplicate, onToggleNote, onShi
       <PianoKeyboard
         highlightedNotes={keySet.keyPresses.map((kp) => kp.midiNote)}
         noteColors={Object.fromEntries(keySet.keyPresses.map((kp) => [kp.midiNote, kp.color]))}
+        inKeyPitchClasses={inKeyPitchClasses}
         onToggle={(midiNote) => onToggleNote(keySet.id, midiNote, activeColor)}
       />
     </div>
   )
 }
 
-export default function SortableKeySetList({ keySets, compact, showCommonTones = true, onAdd, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType, onReorder }: SortableKeySetListProps) {
+export default function SortableKeySetList({ keySets, compact, showCommonTones = true, songKey, onAdd, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType, onReorder }: SortableKeySetListProps) {
+  const parsed = parseSongKey(songKey ?? null)
+  const inKeyPitchClasses = parsed ? getScalePitchClasses(parsed.root, parsed.mode) : undefined
+
   useEffect(() => {
     preloadPiano()
   }, [])
@@ -338,7 +347,7 @@ export default function SortableKeySetList({ keySets, compact, showCommonTones =
           const commonAbove = aboveNotes.filter(n => myNotes.has(n))
           const commonBelow = belowNotes.filter(n => myNotes.has(n))
           return (
-            <CompactKeySetCard key={keySet.id} keySet={keySet} commonAbove={commonAbove} commonBelow={commonBelow} showGuides={showCommonTones} />
+            <CompactKeySetCard key={keySet.id} keySet={keySet} commonAbove={commonAbove} commonBelow={commonBelow} showGuides={showCommonTones} inKeyPitchClasses={inKeyPitchClasses} />
           )
         })}
       </div>
@@ -353,7 +362,7 @@ export default function SortableKeySetList({ keySets, compact, showCommonTones =
           {keySets.map((keySet, i) => (
             <div key={keySet.id}>
               {i > 0 && <div className="py-3"><CommonToneLines above={keySets[i - 1]} below={keySet} visible={showCommonTones} /></div>}
-              <SortableKeySetCard keySet={keySet} onDelete={onDelete} onDuplicate={onDuplicate} onToggleNote={onToggleNote} onShiftNotes={onShiftNotes} onToggleType={onToggleType} />
+              <SortableKeySetCard keySet={keySet} inKeyPitchClasses={inKeyPitchClasses} onDelete={onDelete} onDuplicate={onDuplicate} onToggleNote={onToggleNote} onShiftNotes={onShiftNotes} onToggleType={onToggleType} />
             </div>
           ))}
         </div>

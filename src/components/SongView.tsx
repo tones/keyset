@@ -7,6 +7,8 @@ import EditableTitle from '@/components/EditableTitle'
 import YouTubeLink from '@/components/YouTubeLink'
 import { useRouter } from 'next/navigation'
 import { saveKeySets, refreshAlbumArt, updateCompactView } from '@/app/song/[id]/actions'
+import { usePopover } from '@/hooks/usePopover'
+import { ROOTS, MODE_NAMES, parseSongKey, formatSongKey, type Root, type ModeName } from '@/lib/scales'
 import { analyzeSong } from '@/app/song/[id]/analyze'
 import { identifyChord } from '@/lib/chordId'
 import { midiToNoteName } from '@/lib/midi'
@@ -36,17 +38,21 @@ interface SongViewProps {
   cachedAnalysis: string | null
   cachedAnalysisUpdatedAt: string | null
   initialCompact: boolean
+  initialSongKey: string | null
   onSaveTitle: (title: string) => Promise<void>
   onSaveYoutubeUrl: (url: string | null) => Promise<void>
 }
 
 let nextTempId = -1
 
-export default function SongView({ songId, keySets: serverKeySets, initialTitle, imageUrl: initialImageUrl, initialYoutubeUrl, llmProvider, cachedAnalysis, cachedAnalysisUpdatedAt, initialCompact, onSaveTitle, onSaveYoutubeUrl }: SongViewProps) {
+export default function SongView({ songId, keySets: serverKeySets, initialTitle, imageUrl: initialImageUrl, initialYoutubeUrl, llmProvider, cachedAnalysis, cachedAnalysisUpdatedAt, initialCompact, initialSongKey, onSaveTitle, onSaveYoutubeUrl }: SongViewProps) {
   const router = useRouter()
   const [mode, setMode] = useState<'full' | 'compact'>(initialCompact ? 'compact' : 'full')
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(initialImageUrl)
   const [showCommonTones, setShowCommonTones] = useState(true)
+  const [songKey, setSongKey] = useState<string | null>(initialSongKey)
+  const [lastSongKey, setLastSongKey] = useState<string>(initialSongKey ?? 'C major')
+  const keyPicker = usePopover()
   const [keySets, setKeySets] = useState(serverKeySets)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -55,10 +61,10 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
   const [analysisLoading, setAnalysisLoading] = useState(false)
   const [analysisError, setAnalysisError] = useState<string | null>(null)
 
-  function serialize(ks: KeySet[], a: string | null, aAt: string | null) {
+  function serialize(ks: KeySet[], a: string | null, aAt: string | null, sk: string | null) {
     return JSON.stringify({
       ks: ks.map(k => ({ t: k.type, kp: k.keyPresses.map(p => [p.midiNote, p.color]) })),
-      a, aAt,
+      a, aAt, sk,
     })
   }
 
@@ -69,8 +75,11 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
   const analysisUpdatedAtRef = useRef(analysisUpdatedAt)
   analysisUpdatedAtRef.current = analysisUpdatedAt
 
-  const savedRef = useRef(serialize(serverKeySets, cachedAnalysis, cachedAnalysisUpdatedAt))
-  const isDirty = serialize(keySets, analysis, analysisUpdatedAt) !== savedRef.current
+  const songKeyRef = useRef(songKey)
+  songKeyRef.current = songKey
+
+  const savedRef = useRef(serialize(serverKeySets, cachedAnalysis, cachedAnalysisUpdatedAt, initialSongKey))
+  const isDirty = serialize(keySets, analysis, analysisUpdatedAt, songKey) !== savedRef.current
 
   const handleSaveRef = useRef<() => void>(() => {})
 
@@ -108,7 +117,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
   // Warn on browser close/refresh with unsaved changes + Ctrl/Cmd+S to save
   useEffect(() => {
     function handleBeforeUnload(e: BeforeUnloadEvent) {
-      if (serialize(keySets, analysis, analysisUpdatedAt) !== savedRef.current) {
+      if (serialize(keySets, analysis, analysisUpdatedAt, songKey) !== savedRef.current) {
         e.preventDefault()
       }
     }
@@ -124,7 +133,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
       window.removeEventListener('beforeunload', handleBeforeUnload)
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [keySets, analysis, analysisUpdatedAt])
+  }, [keySets, analysis, analysisUpdatedAt, songKey])
 
   async function handleSave() {
     setSaving(true)
@@ -132,12 +141,13 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
     const current = keySetsRef.current
     const currentAnalysis = analysisRef.current
     const currentAnalysisUpdatedAt = analysisUpdatedAtRef.current
+    const currentSongKey = songKeyRef.current
     try {
       await saveKeySets(songId, current.map(ks => ({
         type: ks.type,
         keyPresses: ks.keyPresses.map(kp => ({ midiNote: kp.midiNote, color: kp.color })),
-      })), { text: currentAnalysis, updatedAt: currentAnalysisUpdatedAt })
-      savedRef.current = serialize(current, currentAnalysis, currentAnalysisUpdatedAt)
+      })), { text: currentAnalysis, updatedAt: currentAnalysisUpdatedAt }, currentSongKey)
+      savedRef.current = serialize(current, currentAnalysis, currentAnalysisUpdatedAt, currentSongKey)
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : String(err))
     } finally {
@@ -151,7 +161,9 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
     setKeySets(serverKeySets)
     setAnalysis(cachedAnalysis)
     setAnalysisUpdatedAt(cachedAnalysisUpdatedAt)
-    savedRef.current = serialize(serverKeySets, cachedAnalysis, cachedAnalysisUpdatedAt)
+    setSongKey(initialSongKey)
+    if (initialSongKey) setLastSongKey(initialSongKey)
+    savedRef.current = serialize(serverKeySets, cachedAnalysis, cachedAnalysisUpdatedAt, initialSongKey)
   }
 
   // --- Key set mutation handlers (all local state only) ---
@@ -297,6 +309,53 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
               setMode(newMode)
               updateCompactView(songId, newMode === 'compact').catch(() => {})
             }} />
+            <div ref={keyPicker.containerRef} className="relative" onMouseLeave={keyPicker.onMouseLeave} onMouseEnter={() => { keyPicker.onMouseEnter(); if (songKey) keyPicker.show() }}>
+              <ToggleSwitch label={songKey ? (() => { const p = parseSongKey(songKey); return p ? `${p.root} ${p.mode.charAt(0).toUpperCase() + p.mode.slice(1)}` : 'Key' })() : 'Key'} enabled={songKey !== null} onToggle={() => {
+                if (songKey !== null) {
+                  setSongKey(null)
+                  keyPicker.hide()
+                } else {
+                  setSongKey(lastSongKey)
+                  keyPicker.show()
+                }
+              }} />
+              {keyPicker.open && songKey !== null && (
+                <div className="absolute right-0 top-8 z-10 bg-white rounded-lg shadow-lg border border-gray-200 p-3 w-56">
+                  <div className="text-xs font-medium text-gray-500 mb-2">Root</div>
+                  <div className="grid grid-cols-4 gap-1 mb-3">
+                    {ROOTS.map(r => {
+                      const parsed = parseSongKey(songKey)
+                      const isActive = parsed?.root === r
+                      return (
+                        <button key={r} className={`text-xs px-1.5 py-1 rounded transition-colors cursor-pointer ${isActive ? 'bg-blue-100 text-blue-700 font-semibold' : 'hover:bg-blue-50 hover:text-blue-700'}`} onClick={() => {
+                          const parsed = parseSongKey(songKey)
+                          const mode = parsed?.mode ?? 'major'
+                          const key = formatSongKey(r, mode)
+                          setSongKey(key)
+                          setLastSongKey(key)
+                        }}>{r}</button>
+                      )
+                    })}
+                  </div>
+                  <div className="text-xs font-medium text-gray-500 mb-2">Mode</div>
+                  <div className="grid grid-cols-2 gap-1">
+                    {MODE_NAMES.map(m => {
+                      const parsed = parseSongKey(songKey)
+                      const isActive = parsed?.mode === m
+                      return (
+                        <button key={m} className={`text-xs px-1.5 py-1 rounded text-left transition-colors cursor-pointer ${isActive ? 'bg-blue-100 text-blue-700 font-semibold' : 'hover:bg-blue-50 hover:text-blue-700'}`} onClick={() => {
+                          const parsed = parseSongKey(songKey)
+                          const root = parsed?.root ?? 'C'
+                          const key = formatSongKey(root, m)
+                          setSongKey(key)
+                          setLastSongKey(key)
+                        }}>{m.charAt(0).toUpperCase() + m.slice(1)}</button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
             {/* Guides toggle hidden but functionality preserved */}
           </div>
         </div>
@@ -306,6 +365,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
         keySets={keySets}
         compact={mode === 'compact'}
         showCommonTones={showCommonTones}
+        songKey={songKey}
         onAdd={handleAdd}
         onDelete={handleDelete}
         onDuplicate={handleDuplicate}

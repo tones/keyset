@@ -6,13 +6,14 @@ import { isBlackKey, getNoteName, buildKeyLayout, blackKeyLeftPct } from '@/lib/
 interface PianoKeyboardProps {
   highlightedNotes: number[]
   noteColors?: Record<number, string>  // midiNote -> color name
+  inKeyPitchClasses?: Set<number>  // pitch classes (0-11) that are in the selected key
   startNote?: number
   endNote?: number
   height?: number  // px, default 110
   onToggle?: (midiNote: number) => void
 }
 
-export default function PianoKeyboard({ highlightedNotes, noteColors = {}, startNote = 36, endNote = 84, height = 110, onToggle }: PianoKeyboardProps) {
+export default function PianoKeyboard({ highlightedNotes, noteColors = {}, inKeyPitchClasses, startNote = 36, endNote = 84, height = 110, onToggle }: PianoKeyboardProps) {
   const highlightSet = new Set(highlightedNotes)
   const layout = buildKeyLayout(startNote, endNote)
   const { whiteKeys, wPct, bPct, blackKeys } = layout
@@ -25,6 +26,13 @@ export default function PianoKeyboard({ highlightedNotes, noteColors = {}, start
         const isHighlighted = highlightSet.has(note)
         const colorName = noteColors[note] ?? DEFAULT_COLOR
         const color = KEY_COLORS[colorName] ?? KEY_COLORS[DEFAULT_COLOR]
+        const inKey = inKeyPitchClasses?.has(note % 12)
+        let bg: string
+        if (isHighlighted) {
+          bg = inKeyPitchClasses ? (inKey ? color.white : color.mutedWhite) : color.white
+        } else {
+          bg = inKeyPitchClasses ? (inKey ? '#ffffff' : '#e5e7eb') : '#ffffff'
+        }
         return (
           <div
             key={note}
@@ -35,7 +43,7 @@ export default function PianoKeyboard({ highlightedNotes, noteColors = {}, start
               left: `${i * wPct}%`,
               width: `${wPct}%`,
               height: '100%',
-              backgroundColor: isHighlighted ? color.white : '#ffffff',
+              backgroundColor: bg,
               zIndex: 1,
             }}
             onClick={onToggle ? () => onToggle(note) : undefined}
@@ -69,6 +77,13 @@ export default function PianoKeyboard({ highlightedNotes, noteColors = {}, start
         const isHighlighted = highlightSet.has(note)
         const colorName = noteColors[note] ?? DEFAULT_COLOR
         const color = KEY_COLORS[colorName] ?? KEY_COLORS[DEFAULT_COLOR]
+        const inKey = inKeyPitchClasses?.has(note % 12)
+        let bg: string
+        if (isHighlighted) {
+          bg = inKeyPitchClasses ? (inKey ? color.black : color.mutedBlack) : color.black
+        } else {
+          bg = inKeyPitchClasses ? (inKey ? '#000000' : '#6b7280') : '#1a1a1a'
+        }
         return (
           <div
             key={note}
@@ -79,7 +94,7 @@ export default function PianoKeyboard({ highlightedNotes, noteColors = {}, start
               left: `${blackKeyLeftPct(note, layout)}%`,
               width: `${bPct}%`,
               height: `${BLACK_KEY_HEIGHT}%`,
-              backgroundColor: isHighlighted ? color.black : '#1a1a1a',
+              backgroundColor: bg,
               zIndex: 2,
             }}
             onClick={onToggle ? () => onToggle(note) : undefined}
