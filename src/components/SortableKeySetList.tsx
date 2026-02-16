@@ -24,7 +24,7 @@ import PianoKeyboard from '@/components/PianoKeyboard'
 import { identifyChord } from '@/lib/chordId'
 import { playChord, preloadPiano } from '@/lib/playChord'
 import { keyCenterPct, buildKeyLayout } from '@/lib/pianoLayout'
-import { parseSongKey, getScalePitchClasses } from '@/lib/scales'
+import { parseSongKey, getScalePitchClasses, getTriadPitchClasses } from '@/lib/scales'
 import type { KeySet } from '@/types'
 
 const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'] as const
@@ -55,6 +55,7 @@ interface SortableKeySetListProps {
 interface KeySetCardProps {
   keySet: KeySet
   inKeyPitchClasses?: Set<number>
+  triadPitchClasses?: Set<number>
   onDelete: (id: number) => void
   onDuplicate: (id: number) => void
   onToggleNote: (keySetId: number, midiNote: number, color: string) => void
@@ -151,7 +152,7 @@ function CompactKeySetCard({ keySet, commonAbove = [], commonBelow = [], showGui
   )
 }
 
-function SortableKeySetCard({ keySet, inKeyPitchClasses, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType, onSetScaleDegree }: KeySetCardProps) {
+function SortableKeySetCard({ keySet, inKeyPitchClasses, triadPitchClasses, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType, onSetScaleDegree }: KeySetCardProps) {
   const [activeColor, setActiveColor] = useState(DEFAULT_COLOR)
   const [lastDegree, setLastDegree] = useState<number | null>(keySet.scaleDegree)
   const colorPicker = usePopover()
@@ -359,6 +360,7 @@ function SortableKeySetCard({ keySet, inKeyPitchClasses, onDelete, onDuplicate, 
         highlightedNotes={keySet.keyPresses.map((kp) => kp.midiNote)}
         noteColors={Object.fromEntries(keySet.keyPresses.map((kp) => [kp.midiNote, kp.color]))}
         inKeyPitchClasses={inKeyPitchClasses}
+        triadPitchClasses={triadPitchClasses}
         onToggle={(midiNote) => onToggleNote(keySet.id, midiNote, activeColor)}
       />
     </div>
@@ -415,7 +417,7 @@ export default function SortableKeySetList({ keySets, compact, showCommonTones =
           {keySets.map((keySet, i) => (
             <div key={keySet.id}>
               {i > 0 && <div className="py-3"><CommonToneLines above={keySets[i - 1]} below={keySet} visible={showCommonTones} /></div>}
-              <SortableKeySetCard keySet={keySet} inKeyPitchClasses={inKeyPitchClasses} onDelete={onDelete} onDuplicate={onDuplicate} onToggleNote={onToggleNote} onShiftNotes={onShiftNotes} onToggleType={onToggleType} onSetScaleDegree={inKeyPitchClasses ? onSetScaleDegree : undefined} />
+              <SortableKeySetCard keySet={keySet} inKeyPitchClasses={inKeyPitchClasses} triadPitchClasses={parsed && keySet.scaleDegree ? getTriadPitchClasses(parsed.root, parsed.mode, keySet.scaleDegree) : undefined} onDelete={onDelete} onDuplicate={onDuplicate} onToggleNote={onToggleNote} onShiftNotes={onShiftNotes} onToggleType={onToggleType} onSetScaleDegree={inKeyPitchClasses ? onSetScaleDegree : undefined} />
             </div>
           ))}
         </div>

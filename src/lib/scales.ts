@@ -46,3 +46,12 @@ export function isNoteInKey(midiNote: number, root: Root, mode: ModeName): boole
   const pitchClass = midiNote % 12
   return getScalePitchClasses(root, mode).has(pitchClass)
 }
+
+/** Get the 3 pitch classes (0–11) of the triad built on a scale degree (1–7) in the given key */
+export function getTriadPitchClasses(root: Root, mode: ModeName, degree: number): Set<number> {
+  const rootIndex = ROOTS.indexOf(root)
+  const intervals = MODES[mode]
+  // Degrees are 1-indexed; triad = scale degrees [degree, degree+2, degree+4] (1-indexed, wrapping)
+  const d = degree - 1 // 0-indexed
+  return new Set([0, 2, 4].map(offset => (rootIndex + intervals[(d + offset) % 7]) % 12))
+}

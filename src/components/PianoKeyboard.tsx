@@ -7,13 +7,14 @@ interface PianoKeyboardProps {
   highlightedNotes: number[]
   noteColors?: Record<number, string>  // midiNote -> color name
   inKeyPitchClasses?: Set<number>  // pitch classes (0-11) that are in the selected key
+  triadPitchClasses?: Set<number>  // pitch classes (0-11) of the scale degree triad to outline
   startNote?: number
   endNote?: number
   height?: number  // px, default 110
   onToggle?: (midiNote: number) => void
 }
 
-export default function PianoKeyboard({ highlightedNotes, noteColors = {}, inKeyPitchClasses, startNote = 36, endNote = 84, height = 110, onToggle }: PianoKeyboardProps) {
+export default function PianoKeyboard({ highlightedNotes, noteColors = {}, inKeyPitchClasses, triadPitchClasses, startNote = 36, endNote = 84, height = 110, onToggle }: PianoKeyboardProps) {
   const highlightSet = new Set(highlightedNotes)
   const layout = buildKeyLayout(startNote, endNote)
   const { whiteKeys, wPct, bPct, blackKeys } = layout
@@ -45,6 +46,7 @@ export default function PianoKeyboard({ highlightedNotes, noteColors = {}, inKey
               height: '100%',
               backgroundColor: bg,
               zIndex: 1,
+              ...(triadPitchClasses?.has(note % 12) ? { boxShadow: 'inset 0 0 0 2px #f59e0b' } : {}),
             }}
             onClick={onToggle ? () => onToggle(note) : undefined}
           />
@@ -96,6 +98,7 @@ export default function PianoKeyboard({ highlightedNotes, noteColors = {}, inKey
               height: `${BLACK_KEY_HEIGHT}%`,
               backgroundColor: bg,
               zIndex: 2,
+              ...(triadPitchClasses?.has(note % 12) ? { boxShadow: 'inset 0 0 0 2px #f59e0b' } : {}),
             }}
             onClick={onToggle ? () => onToggle(note) : undefined}
           />
