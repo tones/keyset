@@ -12,12 +12,13 @@ import { ROOTS, MODE_NAMES, parseSongKey, formatSongKey, type Root, type ModeNam
 import { analyzeSong } from '@/app/song/[id]/analyze'
 import { identifyChord } from '@/lib/chordId'
 import { midiToNoteName } from '@/lib/midi'
+import ThemeToggle from '@/components/ThemeToggle'
 import type { KeySet } from '@/types'
 
 function ToggleSwitch({ label, enabled, onToggle, activeColor = 'bg-gray-900' }: { label: string; enabled: boolean; onToggle: () => void; activeColor?: string }) {
   return (
     <label className="flex items-center gap-1.5 cursor-pointer select-none">
-      <span className="text-xs font-medium text-gray-500">{label}</span>
+      <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{label}</span>
       <button
         onClick={onToggle}
         className={`relative w-9 h-5 rounded-full transition-colors ${enabled ? activeColor : 'bg-gray-300'}`}
@@ -295,17 +296,17 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
             e.preventDefault()
             router.push('/')
           }}
-          className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+          className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
         >
           ‹ Keysets
         </a>
         <div className={`flex items-center gap-2 ${isDirty ? '' : 'invisible'}`} data-testid="save-bar">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
-          <span className="text-xs text-gray-400">Edited</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">Edited</span>
           {saveError && <span className="text-xs text-red-500" data-testid="save-error">{saveError}</span>}
           <button
             onClick={handleReset}
-            className="px-2 py-0.5 text-xs font-medium rounded border border-gray-300 text-gray-500 hover:bg-gray-100 cursor-pointer transition-colors"
+            className="px-2 py-0.5 text-xs font-medium rounded border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors"
             data-testid="reset-button"
           >
             Reset
@@ -313,7 +314,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-2 py-0.5 text-xs font-medium rounded bg-gray-900 text-white hover:bg-gray-800 cursor-pointer transition-colors disabled:opacity-50"
+            className="px-2 py-0.5 text-xs font-medium rounded bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-200 cursor-pointer transition-colors disabled:opacity-50"
             data-testid="save-button"
           >
             {saving ? 'Saving…' : 'Save'}
@@ -325,7 +326,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
         {currentImageUrl ? (
           <img src={currentImageUrl} alt="" className="w-40 h-40 object-cover rounded-lg shadow shrink-0" data-testid="album-art" />
         ) : (
-          <div className="w-40 h-40 bg-gray-200 rounded-lg shadow shrink-0 flex items-center justify-center" data-testid="album-art-placeholder">
+          <div className="w-40 h-40 bg-gray-200 dark:bg-gray-800 rounded-lg shadow shrink-0 flex items-center justify-center" data-testid="album-art-placeholder">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
               <path d="M9 18V5l12-2v13" />
               <circle cx="6" cy="18" r="3" />
@@ -347,6 +348,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
             </div>
           </div>
           <div className="flex flex-col items-end gap-2 shrink-0">
+            <ThemeToggle />
             <ToggleSwitch label="Compact" enabled={mode === 'compact'} onToggle={() => {
               const newMode = mode === 'compact' ? 'full' : 'compact'
               setMode(newMode)
@@ -363,14 +365,14 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
                 }
               }} />
               {keyPicker.open && songKey !== null && (
-                <div className="absolute right-0 top-8 z-10 bg-white rounded-lg shadow-lg border border-gray-200 p-3 w-56">
-                  <div className="text-xs font-medium text-gray-500 mb-2">Root</div>
+                <div className="absolute right-0 top-8 z-10 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3 w-56">
+                  <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Root</div>
                   <div className="grid grid-cols-4 gap-1 mb-3">
                     {ROOTS.map(r => {
                       const parsed = parseSongKey(songKey)
                       const isActive = parsed?.root === r
                       return (
-                        <button key={r} className={`text-xs px-1.5 py-1 rounded transition-colors cursor-pointer ${isActive ? 'bg-blue-100 text-blue-700 font-semibold' : 'hover:bg-blue-50 hover:text-blue-700'}`} onClick={() => {
+                        <button key={r} className={`text-xs px-1.5 py-1 rounded transition-colors cursor-pointer ${isActive ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 font-semibold' : 'hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400 dark:text-gray-300'}`} onClick={() => {
                           const parsed = parseSongKey(songKey)
                           const mode = parsed?.mode ?? 'major'
                           const key = formatSongKey(r, mode)
@@ -380,13 +382,13 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
                       )
                     })}
                   </div>
-                  <div className="text-xs font-medium text-gray-500 mb-2">Mode</div>
+                  <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Mode</div>
                   <div className="grid grid-cols-2 gap-1">
                     {MODE_NAMES.map(m => {
                       const parsed = parseSongKey(songKey)
                       const isActive = parsed?.mode === m
                       return (
-                        <button key={m} className={`text-xs px-1.5 py-1 rounded text-left transition-colors cursor-pointer ${isActive ? 'bg-blue-100 text-blue-700 font-semibold' : 'hover:bg-blue-50 hover:text-blue-700'}`} onClick={() => {
+                        <button key={m} className={`text-xs px-1.5 py-1 rounded text-left transition-colors cursor-pointer ${isActive ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 font-semibold' : 'hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400 dark:text-gray-300'}`} onClick={() => {
                           const parsed = parseSongKey(songKey)
                           const root = parsed?.root ?? 'C'
                           const key = formatSongKey(root, m)

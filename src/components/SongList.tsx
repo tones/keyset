@@ -27,8 +27,8 @@ export default function SongList({ songs }: { songs: Song[] }) {
 
   if (songs.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow p-8 text-center">
-        <p className="text-gray-600">No songs yet. Create your first song!</p>
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-8 text-center">
+        <p className="text-gray-600 dark:text-gray-400">No songs yet. Create your first song!</p>
       </div>
     )
   }
@@ -36,11 +36,11 @@ export default function SongList({ songs }: { songs: Song[] }) {
   return (
     <div className="grid grid-cols-2 gap-4">
       {songs.map((song) => (
-        <Link key={song.id} href={`/song/${song.id}`} className="flex bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer overflow-hidden">
+        <Link key={song.id} href={`/song/${song.id}`} className="flex bg-white dark:bg-gray-900 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer overflow-hidden">
           {song.imageUrl ? (
             <img src={song.imageUrl} alt="" className="w-20 h-20 object-cover shrink-0" />
           ) : (
-            <div className="w-20 h-20 bg-gray-100 shrink-0 flex items-center justify-center">
+            <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 shrink-0 flex items-center justify-center">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300">
                 <path d="M9 18V5l12-2v13" />
                 <circle cx="6" cy="18" r="3" />
@@ -50,7 +50,7 @@ export default function SongList({ songs }: { songs: Song[] }) {
           )}
           <div className="flex-1 p-3 min-w-0">
           <div className="flex justify-between items-start mb-1">
-            <h2 className="text-sm font-semibold text-gray-900 truncate">{song.title}</h2>
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{song.title}</h2>
             <div className="flex items-center gap-1 shrink-0 ml-1">
               <button
                 onClick={(e) => handleDuplicate(e, song.id)}
@@ -82,7 +82,7 @@ export default function SongList({ songs }: { songs: Song[] }) {
             <>
               <div className="flex gap-1 items-center">
                 {song.keySets.slice(0, 4).map((keySet) => (
-                  <span key={keySet.id} className={`shrink-0 text-[11px] font-medium px-1.5 py-0.5 rounded-full ${keySet.type === 'flourish' ? 'bg-amber-50 text-amber-600 italic' : 'bg-blue-50 text-blue-700'}`}>
+                  <span key={keySet.id} className={`shrink-0 text-[11px] font-medium px-1.5 py-0.5 rounded-full ${keySet.type === 'flourish' ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 italic' : 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}`}>
                     {keySet.type === 'flourish'
                       ? '♪'
                       : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map(kp => kp.midiNote), song.songKey) : '—'}

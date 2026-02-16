@@ -62,7 +62,7 @@ export default function EditableTitle({ initialTitle, onSave, className, inputCl
           onKeyDown={handleKeyDown}
           onBlur={handleSave}
           disabled={saving}
-          className={inputClassName ?? "text-3xl font-bold bg-white border border-blue-400 rounded px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500 w-full"}
+          className={inputClassName ?? "text-3xl font-bold bg-white dark:bg-gray-800 dark:text-gray-100 border border-blue-400 rounded px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500 w-full"}
         />
       </div>
     )
@@ -70,7 +70,7 @@ export default function EditableTitle({ initialTitle, onSave, className, inputCl
 
   return (
     <Tag
-      className={className ?? "text-3xl font-bold text-gray-900 cursor-pointer hover:text-gray-700 transition-colors"}
+      className={className ?? "text-3xl font-bold text-gray-900 dark:text-gray-100 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300 transition-colors"}
       onClick={() => setIsEditing(true)}
       title="Click to edit title"
     >

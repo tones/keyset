@@ -39,7 +39,7 @@ export default function YouTubeLink({ initialUrl, onSave }: YouTubeLinkProps) {
             if (e.key === 'Escape') handleCancel()
           }}
           placeholder="Paste YouTube URL..."
-          className="flex-1 text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:border-blue-400"
+          className="flex-1 text-sm px-2 py-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded focus:outline-none focus:border-blue-400"
           autoFocus
         />
         <button onClick={handleSave} className="text-sm text-blue-500 hover:text-blue-700 cursor-pointer">Save</button>

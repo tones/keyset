@@ -50,7 +50,7 @@ export default function SongAnalysis({ songTitle, chordDetail, llmProvider, anal
       </button>
 
       {error && (
-        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+        <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400">
           {error}
         </div>
       )}
@@ -95,7 +95,7 @@ export default function SongAnalysis({ songTitle, chordDetail, llmProvider, anal
                 if (!confirm('Delete this analysis?')) return
                 onClear()
               }}
-              className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+              className="text-gray-400 dark:text-gray-500 hover:text-red-500 transition-colors cursor-pointer"
               title="Delete Analysis"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -31,7 +31,7 @@ export default async function SongPage({ params }: { params: Promise<{ id: strin
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-8">
       <div className="max-w-4xl mx-auto">
         <SongView
           songId={song.id}

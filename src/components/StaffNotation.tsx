@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { Key } from 'tonal'
 import { Midi } from 'tonal'
 
@@ -88,7 +89,21 @@ interface StaffNotationProps {
 }
 
 export default function StaffNotation({ midiNotes, songKey, height = 50 }: StaffNotationProps) {
+  const [isDark, setIsDark] = useState(false)
+  useEffect(() => {
+    const check = () => setIsDark(document.documentElement.classList.contains('dark'))
+    check()
+    const observer = new MutationObserver(check)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
   if (midiNotes.length === 0) return null
+
+  const lineColor = isDark ? '#4b5563' : '#d1d5db'
+  const clefColor = isDark ? '#6b7280' : '#9ca3af'
+  const noteColor = isDark ? '#d1d5db' : '#374151'
+  const keySigColor = isDark ? '#6b7280' : '#9ca3af'
 
   const scale = getKeyScale(songKey)
   const useSharps = !scale.some(n => n.includes('b'))
@@ -177,17 +192,17 @@ export default function StaffNotation({ midiNotes, songKey, height = 50 }: Staff
     >
       {/* Treble staff lines */}
       {[0, 1, 2, 3, 4].map(i => (
-        <line key={`t${i}`} x1={0} y1={TREBLE_TOP + i * LINE_SPACING} x2={svgWidth} y2={TREBLE_TOP + i * LINE_SPACING} stroke="#d1d5db" strokeWidth={0.5} />
+        <line key={`t${i}`} x1={0} y1={TREBLE_TOP + i * LINE_SPACING} x2={svgWidth} y2={TREBLE_TOP + i * LINE_SPACING} stroke={lineColor} strokeWidth={0.5} />
       ))}
       {/* Bass staff lines */}
       {[0, 1, 2, 3, 4].map(i => (
-        <line key={`b${i}`} x1={0} y1={bassTopY + i * LINE_SPACING} x2={svgWidth} y2={bassTopY + i * LINE_SPACING} stroke="#d1d5db" strokeWidth={0.5} />
+        <line key={`b${i}`} x1={0} y1={bassTopY + i * LINE_SPACING} x2={svgWidth} y2={bassTopY + i * LINE_SPACING} stroke={lineColor} strokeWidth={0.5} />
       ))}
 
       {/* Treble clef - simplified */}
-      <text x={1} y={trebleBottomY - LINE_SPACING} fontSize={18} fill="#9ca3af" fontFamily="serif" dominantBaseline="central">𝄞</text>
+      <text x={1} y={trebleBottomY - LINE_SPACING} fontSize={18} fill={clefColor} fontFamily="serif" dominantBaseline="central">𝄞</text>
       {/* Bass clef - simplified */}
-      <text x={1} y={bassTopY + LINE_SPACING * 1.5} fontSize={14} fill="#9ca3af" fontFamily="serif" dominantBaseline="central">𝄢</text>
+      <text x={1} y={bassTopY + LINE_SPACING * 1.5} fontSize={14} fill={clefColor} fontFamily="serif" dominantBaseline="central">𝄢</text>
 
       {/* Key signature */}
       {keyAccidentals.map((ka, i) => {
@@ -197,8 +212,8 @@ export default function StaffNotation({ midiNotes, songKey, height = 50 }: Staff
         const xOff = 14 + i * 5
         return (
           <g key={`ks${i}`}>
-            <text x={xOff} y={posToY(treblePos)} fontSize={6} fill="#9ca3af" textAnchor="middle" dominantBaseline="central">{symbol}</text>
-            <text x={xOff} y={posToY(bassPos)} fontSize={6} fill="#9ca3af" textAnchor="middle" dominantBaseline="central">{symbol}</text>
+            <text x={xOff} y={posToY(treblePos)} fontSize={6} fill={keySigColor} textAnchor="middle" dominantBaseline="central">{symbol}</text>
+            <text x={xOff} y={posToY(bassPos)} fontSize={6} fill={keySigColor} textAnchor="middle" dominantBaseline="central">{symbol}</text>
           </g>
         )
       })}
@@ -222,18 +237,18 @@ export default function StaffNotation({ midiNotes, songKey, height = 50 }: Staff
           <g key={note.midi}>
             {/* Ledger lines */}
             {ledgerLines.map(lp => (
-              <line key={`l${lp}`} x1={NOTE_COL_X - 5} y1={posToY(lp)} x2={NOTE_COL_X + 5} y2={posToY(lp)} stroke="#d1d5db" strokeWidth={0.5} />
+              <line key={`l${lp}`} x1={NOTE_COL_X - 5} y1={posToY(lp)} x2={NOTE_COL_X + 5} y2={posToY(lp)} stroke={lineColor} strokeWidth={0.5} />
             ))}
             {/* Note head (filled ellipse) */}
-            <ellipse cx={x} cy={y} rx={2.8} ry={2} fill="#374151" transform={`rotate(-15 ${x} ${y})`} />
+            <ellipse cx={x} cy={y} rx={2.8} ry={2} fill={noteColor} transform={`rotate(-15 ${x} ${y})`} />
             {/* Accidental */}
             {note.showAccidental && (
-              <text x={x - 4.5} y={y} fontSize={5} fill="#374151" textAnchor="end" dominantBaseline="central">
+              <text x={x - 4.5} y={y} fontSize={5} fill={noteColor} textAnchor="end" dominantBaseline="central">
                 {note.accidental === '#' ? '♯' : note.accidental === 'b' ? '♭' : note.accidental === '##' ? '𝄪' : '♭♭'}
               </text>
             )}
             {note.needsNatural && (
-              <text x={x - 4.5} y={y} fontSize={5} fill="#374151" textAnchor="end" dominantBaseline="central">♮</text>
+              <text x={x - 4.5} y={y} fontSize={5} fill={noteColor} textAnchor="end" dominantBaseline="central">♮</text>
             )}
           </g>
         )

@@ -109,9 +109,9 @@ function CommonToneLines({ above, below, padX = 24, padLeft, padRight, compact =
 
 function CompactKeySetCard({ keySet, songKey, commonAbove = [], commonBelow = [], showGuides = true, inKeyPitchClasses, triadPitchClasses }: { keySet: KeySet; songKey?: string | null; commonAbove?: number[]; commonBelow?: number[]; showGuides?: boolean; inKeyPitchClasses?: Set<number>; triadPitchClasses?: Set<number> }) {
   return (
-    <div className={`flex items-center gap-2 px-3 py-3 ${keySet.type === 'flourish' ? 'bg-amber-50/50' : ''}`} data-testid="keyset-card">
+    <div className={`flex items-center gap-2 px-3 py-3 ${keySet.type === 'flourish' ? 'bg-amber-50/50 dark:bg-amber-900/20' : ''}`} data-testid="keyset-card">
       <div className="w-16 shrink-0 flex flex-col items-start">
-        <h2 className="text-xs font-semibold text-gray-900 truncate max-w-full" data-testid="chord-label">
+        <h2 className="text-xs font-semibold text-gray-900 dark:text-gray-100 truncate max-w-full" data-testid="chord-label">
           {keySet.type === 'flourish'
             ? <span className="text-amber-600 italic">Flourish</span>
             : keySet.keyPresses.length > 0 ? (() => { const name = identifyChord(keySet.keyPresses.map((kp) => kp.midiNote), songKey); if (!keySet.scaleDegree) return name; const parsed = parseSongKey(songKey ?? null); const triadName = parsed ? getTriadName(parsed.root, parsed.mode, keySet.scaleDegree) : null; return <><span className="block">{name}</span><span className="text-blue-500 font-normal block">{formatNumeral(keySet.scaleDegree, songKey)}{triadName ? ` (${triadName})` : ''}</span></> })() : '\u00A0'}
@@ -187,7 +187,7 @@ function SortableKeySetCard({ keySet, songKey, inKeyPitchClasses, triadPitchClas
   }
 
   return (
-    <div ref={setNodeRef} style={style} className={`rounded-lg shadow p-6 border ${keySet.type === 'flourish' ? 'bg-amber-50 border-amber-200' : 'bg-white border-transparent'}`} data-testid="keyset-card">
+    <div ref={setNodeRef} style={style} className={`rounded-lg shadow p-6 border ${keySet.type === 'flourish' ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800' : 'bg-white dark:bg-gray-900 border-transparent'}`} data-testid="keyset-card">
       <div className="flex items-center mb-4">
         <div className="flex items-center gap-3">
           <button
@@ -205,7 +205,7 @@ function SortableKeySetCard({ keySet, songKey, inKeyPitchClasses, triadPitchClas
               <circle cx="13" cy="16" r="1.5" />
             </svg>
           </button>
-          <h2 className="text-xl font-semibold text-gray-900" data-testid="chord-label">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100" data-testid="chord-label">
             {keySet.type === 'flourish'
               ? <span className="text-amber-600 italic">Flourish</span>
               : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map((kp) => kp.midiNote), songKey) : '\u00A0'}
@@ -244,8 +244,8 @@ function SortableKeySetCard({ keySet, songKey, inKeyPitchClasses, triadPitchClas
                 <span className="text-xs font-bold">{keySet.scaleDegree ? (() => { const parsed = parseSongKey(songKey ?? null); const triadName = parsed ? getTriadName(parsed.root, parsed.mode, keySet.scaleDegree) : null; return `${formatNumeral(keySet.scaleDegree, songKey)}${triadName ? ` (${triadName})` : ''}`; })() : '#'}</span>
               </button>
               {degreePicker.open && (
-                <div className="absolute right-0 top-8 z-10 bg-white rounded-lg shadow-lg border border-gray-200 p-3">
-                  <div className="text-xs font-medium text-gray-500 mb-2">Scale Degree</div>
+                <div className="absolute right-0 top-8 z-10 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3">
+                  <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Scale Degree</div>
                   <div className="flex flex-col gap-0.5">
                     {ROMAN_NUMERALS.map((_, i) => {
                       const degree = i + 1
@@ -254,10 +254,10 @@ function SortableKeySetCard({ keySet, songKey, inKeyPitchClasses, triadPitchClas
                       const triadName = parsed ? getTriadName(parsed.root, parsed.mode, degree) : null
                       const isActive = keySet.scaleDegree === degree
                       return (
-                        <button key={degree} className={`text-xs px-2 py-1 rounded transition-colors cursor-pointer text-left ${isActive ? 'bg-blue-100 text-blue-700 font-semibold' : 'hover:bg-blue-50 hover:text-blue-700'}`} onClick={() => {
+                        <button key={degree} className={`text-xs px-2 py-1 rounded transition-colors cursor-pointer text-left ${isActive ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 font-semibold' : 'hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400 dark:text-gray-300'}`} onClick={() => {
                           onSetScaleDegree(keySet.id, degree)
                           setLastDegree(degree)
-                        }}><span className="inline-block w-6">{numeral}</span>{triadName && <span className="text-gray-400 ml-1">{triadName}</span>}</button>
+                        }}><span className="inline-block w-6">{numeral}</span>{triadName && <span className="text-gray-400 dark:text-gray-500 ml-1">{triadName}</span>}</button>
                       )
                     })}
                   </div>
@@ -296,8 +296,8 @@ function SortableKeySetCard({ keySet, songKey, inKeyPitchClasses, triadPitchClas
               </svg>
             </button>
             {colorPicker.open && (
-              <div className="absolute right-0 top-8 z-10 bg-white rounded-lg shadow-lg border border-gray-200 p-3" data-testid="color-popover">
-                <div className="text-xs font-medium text-gray-500 mb-2">Brush Color</div>
+              <div className="absolute right-0 top-8 z-10 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3" data-testid="color-popover">
+                <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Brush Color</div>
                 <div className="flex gap-1.5">
                   {COLOR_NAMES.map((color) => (
                     <button
@@ -327,20 +327,20 @@ function SortableKeySetCard({ keySet, songKey, inKeyPitchClasses, triadPitchClas
                   </svg>
                 </button>
                 {transposePicker.open && (
-                  <div className="absolute right-0 top-8 z-10 bg-white rounded-lg shadow-lg border border-gray-200 p-3 min-w-[180px]" data-testid="transpose-popover">
-                    <div className="text-xs font-medium text-gray-500 mb-2">Transpose</div>
+                  <div className="absolute right-0 top-8 z-10 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3 min-w-[180px]" data-testid="transpose-popover">
+                    <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Transpose</div>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-gray-700">Step</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Step</span>
                       <div className="flex gap-1">
-                        <button onClick={() => onShiftNotes(keySet.id, -1)} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded cursor-pointer transition-colors" title="Step Down">← 1</button>
-                        <button onClick={() => onShiftNotes(keySet.id, 1)} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded cursor-pointer transition-colors" title="Step Up">1 →</button>
+                        <button onClick={() => onShiftNotes(keySet.id, -1)} className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded cursor-pointer transition-colors" title="Step Down">← 1</button>
+                        <button onClick={() => onShiftNotes(keySet.id, 1)} className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded cursor-pointer transition-colors" title="Step Up">1 →</button>
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-700">Octave</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Octave</span>
                       <div className="flex gap-1">
-                        <button onClick={() => onShiftNotes(keySet.id, -12)} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded cursor-pointer transition-colors" title="Octave Down">← 12</button>
-                        <button onClick={() => onShiftNotes(keySet.id, 12)} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded cursor-pointer transition-colors" title="Octave Up">12 →</button>
+                        <button onClick={() => onShiftNotes(keySet.id, -12)} className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded cursor-pointer transition-colors" title="Octave Down">← 12</button>
+                        <button onClick={() => onShiftNotes(keySet.id, 12)} className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded cursor-pointer transition-colors" title="Octave Up">12 →</button>
                       </div>
                     </div>
                   </div>
@@ -416,7 +416,7 @@ export default function SortableKeySetList({ keySets, compact, showCommonTones =
 
   if (compact) {
     return (
-      <div className="bg-white rounded-lg shadow overflow-hidden divide-y divide-gray-200">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden divide-y divide-gray-200 dark:divide-gray-800">
         {keySets.map((keySet, i) => {
           const aboveNotes = i > 0 ? keySets[i - 1].keyPresses.map(kp => kp.midiNote) : []
           const belowNotes = i < keySets.length - 1 ? keySets[i + 1].keyPresses.map(kp => kp.midiNote) : []
@@ -448,7 +448,7 @@ export default function SortableKeySetList({ keySets, compact, showCommonTones =
 
     <button
       onClick={onAdd}
-      className="w-full mt-6 border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center text-gray-400 hover:text-blue-500 hover:border-blue-400 transition-colors cursor-pointer"
+      className="w-full mt-6 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-4 flex items-center justify-center text-gray-400 hover:text-blue-500 hover:border-blue-400 transition-colors cursor-pointer"
       title="Add Key Set"
     >
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
