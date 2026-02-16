@@ -62,6 +62,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
   const [analysisError, setAnalysisError] = useState<string | null>(null)
   const [suggestedKey, setSuggestedKey] = useState<string | null>(null)
   const [suggestedDegrees, setSuggestedDegrees] = useState<(number | null)[]>([])
+  const [confidence, setConfidence] = useState<number | null>(null)
 
   function serialize(ks: KeySet[], a: string | null, aAt: string | null, sk: string | null) {
     return JSON.stringify({
@@ -110,6 +111,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
       setAnalysisUpdatedAt(result.analysisUpdatedAt)
       setSuggestedKey(result.suggestedKey)
       setSuggestedDegrees(result.suggestedDegrees)
+      setConfidence(result.confidence)
     } catch (e) {
       setAnalysisError(e instanceof Error ? e.message : 'Analysis failed')
     } finally {
@@ -122,6 +124,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
     setAnalysisUpdatedAt(null)
     setSuggestedKey(null)
     setSuggestedDegrees([])
+    setConfidence(null)
   }
 
   function handleApplyKeyAndDegrees() {
@@ -427,6 +430,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
           onClear={handleClearAnalysis}
           onApplyKeyAndDegrees={suggestedKey || suggestedDegrees.length > 0 ? handleApplyKeyAndDegrees : undefined}
           suggestedKey={suggestedKey}
+          confidence={confidence}
           loading={analysisLoading}
           error={analysisError}
         />

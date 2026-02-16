@@ -31,11 +31,12 @@ export interface AnalysisResult {
   analysisUpdatedAt: string
   suggestedKey: string | null       // e.g. "C minor"
   suggestedDegrees: (number | null)[] // scale degrees (1-7) per keyset, null if uncertain
+  confidence: number | null         // 0-100, LLM's self-assessed confidence in key & degrees
 }
 
 export async function analyzeSong(songId: number, songTitle: string, chordDetail: string, numKeySets: number): Promise<AnalysisResult> {
   if (!chordDetail.trim()) {
-    return { analysis: 'No chord key sets to analyze.', analysisUpdatedAt: new Date().toISOString(), suggestedKey: null, suggestedDegrees: [] }
+    return { analysis: 'No chord key sets to analyze.', analysisUpdatedAt: new Date().toISOString(), suggestedKey: null, suggestedDegrees: [], confidence: null }
   }
 
   const roots = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
@@ -60,10 +61,11 @@ Keep the response concise and practical.
 
 IMPORTANT: After your analysis, on a new line, output EXACTLY one JSON code block with your suggested key and scale degrees for each chord. The song has ${numKeySets} chord key sets (numbered 1-${numKeySets} above). Use this exact format:
 \`\`\`json
-{"key": "<root> <mode>", "degrees": [<degree_or_null>, ...]}
+{"key": "<root> <mode>", "degrees": [<degree_or_null>, ...], "confidence": <0-100>}
 \`\`\`
 - "key" must use one of these roots: ${roots.join(', ')} and one of these modes: ${modes.join(', ')}. Use sharps not flats (e.g. "C# minor" not "Db minor").
-- "degrees" is an array of length ${numKeySets}, one per key set in order. Each is an integer 1-7 or null if the chord doesn't fit a simple scale degree.`
+- "degrees" is an array of length ${numKeySets}, one per key set in order. Each is an integer 1-7 or null if the chord doesn't fit a simple scale degree.
+- "confidence" is your confidence (0-100) in the key and degree assignments being correct.`
 
   const rawText = LLM_PROVIDER === 'anthropic'
     ? await callAnthropic(prompt)
@@ -72,6 +74,7 @@ IMPORTANT: After your analysis, on a new line, output EXACTLY one JSON code bloc
   // Parse structured JSON from the response
   let suggestedKey: string | null = null
   let suggestedDegrees: (number | null)[] = []
+  let confidence: number | null = null
   let analysisText = rawText
 
   const jsonMatch = rawText.match(/```json\s*\n?([\s\S]*?)\n?```/)
@@ -89,6 +92,9 @@ IMPORTANT: After your analysis, on a new line, output EXACTLY one JSON code bloc
           typeof d === 'number' && d >= 1 && d <= 7 ? d : null
         )
       }
+      if (typeof parsed.confidence === 'number' && parsed.confidence >= 0 && parsed.confidence <= 100) {
+        confidence = Math.round(parsed.confidence)
+      }
     } catch {
       // JSON parse failed — ignore, keep analysis text as-is
     }
@@ -96,5 +102,5 @@ IMPORTANT: After your analysis, on a new line, output EXACTLY one JSON code bloc
     analysisText = rawText.replace(/\n*```json\s*\n?[\s\S]*?\n?```\s*$/, '').trim()
   }
 
-  return { analysis: analysisText, analysisUpdatedAt: new Date().toISOString(), suggestedKey, suggestedDegrees }
+  return { analysis: analysisText, analysisUpdatedAt: new Date().toISOString(), suggestedKey, suggestedDegrees, confidence }
 }

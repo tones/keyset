@@ -12,6 +12,7 @@ interface SongAnalysisProps {
   onClear: () => void
   onApplyKeyAndDegrees?: () => void
   suggestedKey?: string | null
+  confidence?: number | null
   loading: boolean
   error: string | null
 }
@@ -28,7 +29,7 @@ function formatTimestamp(iso: string): string {
   })
 }
 
-export default function SongAnalysis({ songTitle, chordDetail, llmProvider, analysis, analysisUpdatedAt, onAnalyze, onClear, onApplyKeyAndDegrees, suggestedKey, loading, error }: SongAnalysisProps) {
+export default function SongAnalysis({ songTitle, chordDetail, llmProvider, analysis, analysisUpdatedAt, onAnalyze, onClear, onApplyKeyAndDegrees, suggestedKey, confidence, loading, error }: SongAnalysisProps) {
 
   return (
     <div className="mt-8">
@@ -60,18 +61,19 @@ export default function SongAnalysis({ songTitle, chordDetail, llmProvider, anal
             {onApplyKeyAndDegrees && (
               <button
                 onClick={() => {
-                  if (!confirm(`Apply suggested key${suggestedKey ? ` (${suggestedKey})` : ''} and scale degrees to your key sets?`)) return
+                  if (!confirm(`Apply suggested key${suggestedKey ? ` (${suggestedKey})` : ''} and scale degrees to your key sets?${confidence != null ? ` (${confidence}% confidence)` : ''}`)) return
                   onApplyKeyAndDegrees()
                 }}
-                className="transition-colors cursor-pointer" style={{ color: '#9a9893' }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#f59e0b'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#9a9893'}
+                className="flex items-center gap-1 transition-colors cursor-pointer group"
                 title={`Apply Key${suggestedKey ? ` (${suggestedKey})` : ''} & Scale Degrees`}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="group-hover:text-amber-500" style={{ color: '#9a9893' }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M2 18v3c0 .6.4 1 1 1h4v-3h3v-3h2l1.4-1.4a6.5 6.5 0 1 0-4-4Z" />
                   <circle cx="16.5" cy="7.5" r=".5" fill="currentColor" />
                 </svg>
+                {confidence != null && (
+                  <span className="text-xs font-sans font-medium group-hover:text-amber-600" style={{ color: confidence >= 80 ? '#16a34a' : confidence >= 50 ? '#d97706' : '#dc2626' }}>{confidence}%</span>
+                )}
               </button>
             )}
             <button
