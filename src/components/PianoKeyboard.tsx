@@ -8,13 +8,14 @@ interface PianoKeyboardProps {
   noteColors?: Record<number, string>  // midiNote -> color name
   inKeyPitchClasses?: Set<number>  // pitch classes (0-11) that are in the selected key
   triadPitchClasses?: Set<number>  // pitch classes (0-11) of the scale degree triad to outline
+  showTriadSuggestions?: boolean  // whether to outline unselected triad keys as suggestions (default true)
   startNote?: number
   endNote?: number
   height?: number  // px, default 110
   onToggle?: (midiNote: number) => void
 }
 
-export default function PianoKeyboard({ highlightedNotes, noteColors = {}, inKeyPitchClasses, triadPitchClasses, startNote = 36, endNote = 84, height = 110, onToggle }: PianoKeyboardProps) {
+export default function PianoKeyboard({ highlightedNotes, noteColors = {}, inKeyPitchClasses, triadPitchClasses, showTriadSuggestions = true, startNote = 36, endNote = 84, height = 110, onToggle }: PianoKeyboardProps) {
   const highlightSet = new Set(highlightedNotes)
   const highlightedPCs = new Set(highlightedNotes.map(n => n % 12))
   const layout = buildKeyLayout(startNote, endNote)
@@ -28,7 +29,7 @@ export default function PianoKeyboard({ highlightedNotes, noteColors = {}, inKey
   function showTriadOutline(note: number): boolean {
     if (!triadPitchClasses?.has(note % 12)) return false
     if (highlightedPCs.has(note % 12)) return highlightSet.has(note)
-    return true
+    return showTriadSuggestions
   }
 
   return (

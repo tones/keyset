@@ -134,6 +134,7 @@ function CompactKeySetCard({ keySet, songKey, commonAbove = [], commonBelow = []
           noteColors={Object.fromEntries(keySet.keyPresses.map((kp) => [kp.midiNote, kp.color]))}
           inKeyPitchClasses={inKeyPitchClasses}
           triadPitchClasses={triadPitchClasses}
+          showTriadSuggestions={false}
           height={50}
         />
         {showGuides && commonAbove.map(note => (

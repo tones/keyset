@@ -765,6 +765,36 @@ test.describe('Song Page', () => {
     await expect(page.getByTestId('staff-notation').first()).not.toBeVisible()
   })
 
+  test('compact mode hides triad suggestion outlines on unselected keys', async ({ page }) => {
+    // Song 4 has key C major. Keyset 2 has F,A,C,F. Set degree ii (Dm = D,F,A).
+    // D keys are unselected triad members — should get outlines in full mode but not compact.
+    page.on('dialog', dialog => dialog.accept())
+    await page.goto('/song/4')
+
+    // Set scale degree ii on keyset 2
+    const secondCard = page.getByTestId('keyset-card').nth(1)
+    await secondCard.getByText('#').click()
+    await secondCard.getByRole('button', { name: 'ii Dm' }).click()
+
+    // Full mode: D3 (MIDI 50) is an unselected triad member — should have yellow outline
+    const d3Key = secondCard.locator('[data-note="50"]')
+    const fullStyle = await d3Key.evaluate(el => (el as HTMLElement).style.boxShadow)
+    expect(fullStyle).toContain('rgb(245, 158, 11)')
+
+    // Switch to compact mode
+    await page.getByText('Compact').click()
+
+    // Compact mode: D3 should NOT have yellow outline
+    const compactSecondCard = page.getByTestId('keyset-card').nth(1)
+    const d3KeyCompact = compactSecondCard.locator('[data-note="50"]')
+    const compactStyle = await d3KeyCompact.evaluate(el => (el as HTMLElement).style.boxShadow)
+    expect(compactStyle).not.toContain('rgb(245, 158, 11)')
+
+    // Clean up: switch back to full, clear degree, save not needed
+    await page.getByText('Compact').click()
+    await secondCard.getByText('ii (Dm)').click()
+  })
+
   test('flourish keyset does not show scale degree toggle', async ({ page }) => {
     // Use song 2 — enable Key mode, verify chord has # button, toggle to flourish, verify # gone
     page.on('dialog', dialog => dialog.accept())
