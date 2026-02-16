@@ -708,4 +708,63 @@ test.describe('Song Page', () => {
     expect(boxBefore!.y).toBe(boxAfter!.y)
     expect(boxBefore!.height).toBe(boxAfter!.height)
   })
+
+  test('scale degree popover shows degrees with chord names, setting persists', async ({ page }) => {
+    // Use song 2 (Blue Bossa) — enable Key mode with C major
+    page.on('dialog', dialog => dialog.accept())
+    await page.goto('/song/2')
+    // Toggle Key on
+    await page.getByText('Key', { exact: true }).click()
+    // Close the key picker by clicking the title
+    await page.locator('h1').click()
+    await page.waitForTimeout(600)
+
+    // Open degree popover on first chord card
+    const firstCard = page.getByTestId('keyset-card').first()
+    await firstCard.getByText('#').click()
+    // Should see "Scale Degree" label and all 7 degrees for C major
+    await expect(firstCard.getByText('Scale Degree')).toBeVisible()
+    await expect(firstCard.getByRole('button', { name: 'I C' })).toBeVisible()
+    await expect(firstCard.getByRole('button', { name: 'ii Dm' })).toBeVisible()
+    await expect(firstCard.getByRole('button', { name: 'IV F' })).toBeVisible()
+    await expect(firstCard.getByRole('button', { name: /vii°\s*Bdim/ })).toBeVisible()
+
+    // Select degree IV
+    await firstCard.getByRole('button', { name: 'IV F' }).click()
+    // Should now show "IV (F)" on the card
+    await expect(firstCard.getByText('IV (F)')).toBeVisible()
+
+    // Save and reload — degree should persist
+    await clickSave(page)
+    await page.reload()
+    await expect(page.getByTestId('keyset-card').first().getByText('IV (F)')).toBeVisible()
+
+    // Clean up: click to clear the degree, turn off Key mode, save
+    await page.getByTestId('keyset-card').first().getByText('IV (F)').click()
+    await page.getByText('C Major').click()
+    await clickSave(page)
+  })
+
+  test('flourish keyset does not show scale degree toggle', async ({ page }) => {
+    // Use song 2 — enable Key mode, verify chord has # button, toggle to flourish, verify # gone
+    page.on('dialog', dialog => dialog.accept())
+    await page.goto('/song/2')
+    await page.getByText('Key', { exact: true }).click()
+    await page.locator('h1').click()
+    await page.waitForTimeout(600)
+
+    const firstCard = page.getByTestId('keyset-card').first()
+    // Chord card should have # button
+    await expect(firstCard.getByText('#')).toBeVisible()
+
+    // Toggle to flourish
+    await firstCard.getByTestId('type-toggle').click()
+    await expect(firstCard.getByText('Flourish')).toBeVisible()
+    // # button should be gone
+    await expect(firstCard.getByText('#')).not.toBeVisible()
+
+    // Clean up: toggle back to chord, turn off Key, save not needed (no save was done)
+    await firstCard.getByTestId('type-toggle').click()
+    await page.getByText('C Major').click()
+  })
 })

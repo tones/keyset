@@ -31,6 +31,7 @@ async function main() {
   const song4 = await prisma.song.create({ data: {
     title: "Tim's Beautiful Song",
     youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    songKey: "C major",
     analysis: "Key: C major\n\n1. \"Verse 1 - C Major\" (C4, E4, G4, C5) — C major triad\n2. \"Verse 2 - F Major\" (F4, A4, C5, F5) — F major triad\n3. \"Bridge - G Major\" (G4, B4, D5, G5) — G major triad\n\nThis is a classic I-IV-V progression in C major.",
     analysisUpdatedAt: new Date('2026-01-15T10:30:00Z'),
   } })
@@ -50,7 +51,7 @@ async function main() {
 
   // Key sets for song 4 (ids 7–10)
   const testKeySets = [
-    { songId: song4.id, position: 1, type: 'chord' as const, midiNotes: [60, 64, 67, 72] },
+    { songId: song4.id, position: 1, type: 'chord' as const, scaleDegree: 1, midiNotes: [60, 64, 67, 72] },
     { songId: song4.id, position: 2, type: 'chord' as const, midiNotes: [65, 69, 72, 77] },
     { songId: song4.id, position: 3, type: 'chord' as const, midiNotes: [67, 71, 74, 79] },
     { songId: song4.id, position: 4, type: 'flourish' as const, midiNotes: [60, 62, 64, 65, 67] },
@@ -62,7 +63,7 @@ async function main() {
   const createdKeySets = []
   for (const spec of allSpecs) {
     const ks = await prisma.keySet.create({
-      data: { position: spec.position, type: spec.type, songId: spec.songId },
+      data: { position: spec.position, type: spec.type, scaleDegree: (spec as { scaleDegree?: number }).scaleDegree ?? null, songId: spec.songId },
     })
     createdKeySets.push(ks)
   }
