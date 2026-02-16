@@ -62,3 +62,14 @@ export async function updateSongTitle(songId: number, title: string) {
   revalidatePath('/')
 }
 
+export async function refreshAlbumArt(songId: number, title: string): Promise<string | null> {
+  const { fetchAlbumArt } = await import('@/lib/albumArt')
+  const url = await fetchAlbumArt(title)
+  if (url) {
+    await prisma.song.update({ where: { id: songId }, data: { imageUrl: url } })
+    revalidatePath(`/song/${songId}`)
+    revalidatePath('/')
+  }
+  return url
+}
+

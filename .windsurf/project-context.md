@@ -89,7 +89,7 @@ All icon buttons in the key set control bar follow a consistent pattern:
 ## Server Actions
 
 - `src/app/actions.ts` — `createSong` (creates "Untitled Song", redirects to it), `deleteSong` (deletes song with cascade, revalidates home), `duplicateSong` (copies song with all keysets/keypresses, appends "(copy)" to title, stays on home page)
-- `src/app/song/[id]/actions.ts` — `saveKeySets` (atomic full-replace: deletes all key sets for a song then recreates from draft state in a single transaction), `updateYoutubeUrl`, `updateSongTitle`
+- `src/app/song/[id]/actions.ts` — `saveKeySets` (atomic full-replace: deletes all key sets for a song then recreates from draft state in a single transaction), `updateYoutubeUrl`, `updateSongTitle`, `refreshAlbumArt(songId, title)` (fetches album art via Spotify, persists URL, returns it — called by `SongView` after title save for real-time image update)
 - `src/app/song/[id]/analyze.ts` — `analyzeSong(songId, songTitle, chordDetail)` (calls OpenAI or Anthropic based on `LLM_PROVIDER` env var, returns analysis text without persisting — analysis is draft state saved via `saveKeySets`). No `clearAnalysis` — clearing is a local state change in `SongView`.
 
 ## Deployment (Fly.io)

@@ -127,6 +127,36 @@ test.describe('Song Page', () => {
     await expect(heading).toHaveText(originalTitle!)
   })
 
+  test('rename song refreshes album art in real time', async ({ page }) => {
+    await page.goto('/song/4')
+    const heading = page.locator('h1')
+    const originalTitle = await heading.textContent()
+
+    // Should start with an image (song 4 has album art)
+    await expect(page.getByTestId('album-art')).toBeVisible()
+
+    // Rename to a different known song
+    await heading.click()
+    const input = page.locator('input[type="text"]').first()
+    await input.fill('Yesterday Beatles')
+    await input.press('Enter')
+
+    // Image should briefly show placeholder then load new art from Spotify
+    await expect(page.getByTestId('album-art')).toBeVisible({ timeout: 10000 })
+
+    // Verify it's a different image URL than before
+    const newSrc = await page.getByTestId('album-art').getAttribute('src')
+    expect(newSrc).toBeTruthy()
+
+    // Restore original title
+    await heading.click()
+    const restoreInput = page.locator('input[type="text"]').first()
+    await restoreInput.fill(originalTitle!)
+    await restoreInput.press('Enter')
+    // Wait for art to refresh back
+    await expect(page.getByTestId('album-art')).toBeVisible({ timeout: 10000 })
+  })
+
   test('rename song — cancel with Escape', async ({ page }) => {
     await page.goto('/song/4')
     const heading = page.locator('h1')

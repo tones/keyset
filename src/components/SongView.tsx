@@ -6,7 +6,7 @@ import SongAnalysis from '@/components/SongAnalysis'
 import EditableTitle from '@/components/EditableTitle'
 import YouTubeLink from '@/components/YouTubeLink'
 import { useRouter } from 'next/navigation'
-import { saveKeySets } from '@/app/song/[id]/actions'
+import { saveKeySets, refreshAlbumArt } from '@/app/song/[id]/actions'
 import { analyzeSong } from '@/app/song/[id]/analyze'
 import { identifyChord } from '@/lib/chordId'
 import { midiToNoteName } from '@/lib/midi'
@@ -41,9 +41,10 @@ interface SongViewProps {
 
 let nextTempId = -1
 
-export default function SongView({ songId, keySets: serverKeySets, initialTitle, imageUrl, initialYoutubeUrl, llmProvider, cachedAnalysis, cachedAnalysisUpdatedAt, onSaveTitle, onSaveYoutubeUrl }: SongViewProps) {
+export default function SongView({ songId, keySets: serverKeySets, initialTitle, imageUrl: initialImageUrl, initialYoutubeUrl, llmProvider, cachedAnalysis, cachedAnalysisUpdatedAt, onSaveTitle, onSaveYoutubeUrl }: SongViewProps) {
   const router = useRouter()
   const [mode, setMode] = useState<'full' | 'compact'>('full')
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(initialImageUrl)
   const [showCommonTones, setShowCommonTones] = useState(true)
   const [keySets, setKeySets] = useState(serverKeySets)
   const [saving, setSaving] = useState(false)
@@ -265,10 +266,10 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
       </div>
 
       <div className="flex items-start gap-4 mb-6">
-        {imageUrl ? (
-          <img src={imageUrl} alt="" className="w-40 h-40 object-cover rounded-lg shadow shrink-0" />
+        {currentImageUrl ? (
+          <img src={currentImageUrl} alt="" className="w-40 h-40 object-cover rounded-lg shadow shrink-0" data-testid="album-art" />
         ) : (
-          <div className="w-40 h-40 bg-gray-200 rounded-lg shadow shrink-0 flex items-center justify-center">
+          <div className="w-40 h-40 bg-gray-200 rounded-lg shadow shrink-0 flex items-center justify-center" data-testid="album-art-placeholder">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
               <path d="M9 18V5l12-2v13" />
               <circle cx="6" cy="18" r="3" />
@@ -278,7 +279,13 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
         )}
         <div className="flex-1 min-w-0 flex justify-between gap-3 pt-1">
           <div className="min-w-0">
-            <EditableTitle initialTitle={initialTitle} onSave={onSaveTitle} />
+            <EditableTitle initialTitle={initialTitle} onSave={async (title) => {
+              await onSaveTitle(title)
+              setCurrentImageUrl(null)
+              refreshAlbumArt(songId, title).then((url) => {
+                if (url) setCurrentImageUrl(url)
+              }).catch(() => {})
+            }} />
             <div className="mt-1">
               <YouTubeLink initialUrl={initialYoutubeUrl} onSave={onSaveYoutubeUrl} />
             </div>
