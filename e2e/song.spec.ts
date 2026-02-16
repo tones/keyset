@@ -599,6 +599,65 @@ test.describe('Song Page', () => {
     expect(Math.abs(overlapAbove - overlapBelow)).toBeLessThan(20)
   })
 
+  test('compact mode renders chord labels and keyboards side by side', async ({ page }) => {
+    await page.goto('/song/1')
+    // Toggle compact
+    await page.getByText('Compact').click()
+
+    const cards = page.getByTestId('keyset-card')
+    await expect(cards).toHaveCount(2)
+
+    // Chord labels still visible
+    await expect(cards.nth(0).getByTestId('chord-label')).toBeVisible()
+
+    // Keyboards still visible
+    await expect(page.getByTestId('piano-keyboard')).toHaveCount(2)
+
+    // Chord keyset should have a play button
+    await expect(cards.nth(0).locator('button[title="Play Chord"]')).toHaveCount(1)
+
+    // Analysis section should be hidden in compact mode
+    await expect(page.getByText(/Analyze|Re-analyze/)).not.toBeVisible()
+
+    // Toggle back to full
+    await page.getByText('Compact').click()
+    await expect(page.getByText(/Analyze|Re-analyze/)).toBeVisible()
+  })
+
+  test('compact view persists across reload', async ({ page }) => {
+    await page.goto('/song/2')
+    // Should start in full mode (default)
+    await expect(page.getByTestId('keyset-card').first().getByTestId('type-toggle')).toBeVisible()
+
+    // Toggle compact
+    await page.getByText('Compact').click()
+    // Type toggle should be hidden in compact mode
+    await expect(page.getByTestId('keyset-card').first().getByTestId('type-toggle')).not.toBeVisible()
+
+    // Reload and verify still compact
+    await page.reload()
+    await expect(page.getByTestId('keyset-card').first().getByTestId('type-toggle')).not.toBeVisible()
+
+    // Restore to full mode for other tests
+    await page.getByText('Compact').click()
+    await page.reload()
+    await expect(page.getByTestId('keyset-card').first().getByTestId('type-toggle')).toBeVisible()
+  })
+
+  test('compact mode guide lines appear between keysets sharing notes', async ({ page }) => {
+    await page.goto('/song/1')
+    await page.getByText('Compact').click()
+
+    // Song 1 keysets share note 69 — guide divs should appear
+    // First card should have a "below" guide for the shared note
+    const firstCard = page.getByTestId('keyset-card').nth(0)
+    const belowGuides = firstCard.locator('div[class*="pointer-events-none"]')
+    await expect(belowGuides).toHaveCount(1)
+
+    // Toggle back to full
+    await page.getByText('Compact').click()
+  })
+
   test('save bar appearing does not shift header position', async ({ page }) => {
     await page.goto('/song/4')
     // Get the album art position (first element of the header area)
