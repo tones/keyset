@@ -85,8 +85,8 @@ function CommonToneLines({ above, below, padX = 24, padLeft, padRight, compact =
 function CompactKeySetCard({ keySet, commonAbove = [], commonBelow = [], showGuides = true }: { keySet: KeySet; commonAbove?: number[]; commonBelow?: number[]; showGuides?: boolean }) {
   return (
     <div className={`flex items-center gap-2 px-3 py-3 ${keySet.type === 'flourish' ? 'bg-amber-50/50' : ''}`} data-testid="keyset-card">
-      <div className="w-16 shrink-0 flex items-center gap-1">
-        <h2 className="text-xs font-semibold text-gray-900 truncate" data-testid="chord-label">
+      <div className="w-16 shrink-0 flex flex-col items-start">
+        <h2 className="text-xs font-semibold text-gray-900 truncate max-w-full" data-testid="chord-label">
           {keySet.type === 'flourish'
             ? <span className="text-amber-600 italic">Flourish</span>
             : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map((kp) => kp.midiNote)) : '\u00A0'}
@@ -94,11 +94,11 @@ function CompactKeySetCard({ keySet, commonAbove = [], commonBelow = [], showGui
         {keySet.keyPresses.length > 0 && keySet.type !== 'flourish' && (
           <button
             onClick={() => playChord(keySet.keyPresses.map((kp) => kp.midiNote))}
-            className="text-gray-400 hover:text-blue-500 transition-colors cursor-pointer shrink-0"
+            className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-blue-500 transition-colors cursor-pointer mt-0.5"
             title="Play Chord"
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M8 5v14l11-7z" />
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="5 3 19 12 5 21 5 3" />
             </svg>
           </button>
         )}
