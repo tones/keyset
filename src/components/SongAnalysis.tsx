@@ -40,7 +40,12 @@ export default function SongAnalysis({ songTitle, chordDetail, llmProvider, anal
         onMouseEnter={(e) => { if (!loading) { e.currentTarget.style.backgroundColor = '#393937' } }}
         onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#1a1a18' }}
       >
-        {loading ? 'Analyzing...' : `${analysis ? 'Re-analyze' : 'Analyze'} with ${llmProvider === 'anthropic' ? 'Claude' : 'ChatGPT'}`}
+        {loading ? (
+          <span className="flex items-center gap-2">
+            <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+            Analyzing…
+          </span>
+        ) : `${analysis ? 'Re-analyze' : 'Analyze'} with ${llmProvider === 'anthropic' ? 'Claude' : 'ChatGPT'}`}
       </button>
 
       {error && (
@@ -50,7 +55,7 @@ export default function SongAnalysis({ songTitle, chordDetail, llmProvider, anal
       )}
 
       {analysis && (
-        <div className="mt-4 p-6 rounded-lg shadow border font-serif" style={{ backgroundColor: '#F5F5F0', borderColor: '#DDD9CE' }}>
+        <div className="mt-4 p-6 rounded-lg shadow border font-serif" style={{ backgroundColor: '#F5F5F0', borderColor: '#DDD9CE', visibility: loading ? 'hidden' : 'visible' }}>
           <div className="float-right flex items-center gap-2 ml-4">
             {onApplyKeyAndDegrees && (
               <button

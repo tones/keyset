@@ -99,6 +99,8 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
   async function handleAnalyze() {
     setAnalysisLoading(true)
     setAnalysisError(null)
+    setSuggestedKey(null)
+    setSuggestedDegrees([])
     try {
       const currentKeySets = keySetsRef.current
       const chordKeySets = currentKeySets.filter(k => k.type !== 'flourish')
