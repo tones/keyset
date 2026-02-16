@@ -106,7 +106,7 @@ function CommonToneLines({ above, below, padX = 24, padLeft, padRight, compact =
   )
 }
 
-function CompactKeySetCard({ keySet, songKey, commonAbove = [], commonBelow = [], showGuides = true, inKeyPitchClasses }: { keySet: KeySet; songKey?: string | null; commonAbove?: number[]; commonBelow?: number[]; showGuides?: boolean; inKeyPitchClasses?: Set<number> }) {
+function CompactKeySetCard({ keySet, songKey, commonAbove = [], commonBelow = [], showGuides = true, inKeyPitchClasses, triadPitchClasses }: { keySet: KeySet; songKey?: string | null; commonAbove?: number[]; commonBelow?: number[]; showGuides?: boolean; inKeyPitchClasses?: Set<number>; triadPitchClasses?: Set<number> }) {
   return (
     <div className={`flex items-center gap-2 px-3 py-3 ${keySet.type === 'flourish' ? 'bg-amber-50/50' : ''}`} data-testid="keyset-card">
       <div className="w-16 shrink-0 flex flex-col items-start">
@@ -132,6 +132,7 @@ function CompactKeySetCard({ keySet, songKey, commonAbove = [], commonBelow = []
           highlightedNotes={keySet.keyPresses.map((kp) => kp.midiNote)}
           noteColors={Object.fromEntries(keySet.keyPresses.map((kp) => [kp.midiNote, kp.color]))}
           inKeyPitchClasses={inKeyPitchClasses}
+          triadPitchClasses={triadPitchClasses}
           height={50}
         />
         {showGuides && commonAbove.map(note => (
@@ -412,7 +413,7 @@ export default function SortableKeySetList({ keySets, compact, showCommonTones =
           const commonAbove = aboveNotes.filter(n => myNotes.has(n))
           const commonBelow = belowNotes.filter(n => myNotes.has(n))
           return (
-            <CompactKeySetCard key={keySet.id} keySet={keySet} songKey={songKey} commonAbove={commonAbove} commonBelow={commonBelow} showGuides={showCommonTones} inKeyPitchClasses={inKeyPitchClasses} />
+            <CompactKeySetCard key={keySet.id} keySet={keySet} songKey={songKey} commonAbove={commonAbove} commonBelow={commonBelow} showGuides={showCommonTones} inKeyPitchClasses={inKeyPitchClasses} triadPitchClasses={parsed && keySet.scaleDegree ? getTriadPitchClasses(parsed.root, parsed.mode, keySet.scaleDegree) : undefined} />
           )
         })}
       </div>
