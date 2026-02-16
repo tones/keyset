@@ -21,7 +21,7 @@ function ToggleSwitch({ label, enabled, onToggle, activeColor = 'bg-gray-900' }:
       <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{label}</span>
       <button
         onClick={onToggle}
-        className={`relative w-9 h-5 rounded-full transition-colors ${enabled ? `${activeColor} dark:bg-blue-500` : 'bg-gray-300 dark:bg-gray-600'}`}
+        className={`relative w-9 h-5 rounded-full transition-colors cursor-pointer ${enabled ? `${activeColor} dark:bg-blue-500` : 'bg-gray-300 dark:bg-gray-600'}`}
       >
         <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${enabled ? 'translate-x-4' : ''}`} />
       </button>
