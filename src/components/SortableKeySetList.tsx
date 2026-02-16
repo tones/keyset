@@ -50,15 +50,17 @@ interface KeySetCardProps {
 
 const defaultLayout = buildKeyLayout(36, 84)
 
-function CommonToneLines({ above, below, padX = 24, compact = false, visible = true }: { above: KeySet; below: KeySet; padX?: number; compact?: boolean; visible?: boolean }) {
+function CommonToneLines({ above, below, padX = 24, padLeft, padRight, compact = false, visible = true }: { above: KeySet; below: KeySet; padX?: number; padLeft?: number; padRight?: number; compact?: boolean; visible?: boolean }) {
   const aboveNotes = new Set(above.keyPresses.map(kp => kp.midiNote))
   const common = below.keyPresses.filter(kp => aboveNotes.has(kp.midiNote)).map(kp => kp.midiNote)
 
-  const h = compact ? 45 : 120
-  const overlap = compact ? 12 : 38
-  const bottomOverlap = compact ? 14 : 55
+  const h = compact ? 25 : 120
+  const overlap = compact ? 0 : 38
+  const bottomOverlap = compact ? 0 : 55
+  const pl = padLeft ?? padX
+  const pr = padRight ?? padX
   return (
-    <div className="relative w-full pointer-events-none" style={{ height: h - overlap - bottomOverlap, paddingLeft: padX, paddingRight: padX, marginTop: -overlap, marginBottom: -bottomOverlap, zIndex: 3 }}>
+    <div className="relative w-full pointer-events-none" style={{ height: h - overlap - bottomOverlap, paddingLeft: pl, paddingRight: pr, marginTop: -overlap, marginBottom: -bottomOverlap, zIndex: 3 }}>
       {visible && common.length > 0 && (
         <svg className="w-full" style={{ height: h, marginTop: -overlap }} viewBox={`0 0 1000 ${h}`} preserveAspectRatio="none">
           {common.map(note => {
@@ -80,11 +82,11 @@ function CommonToneLines({ above, below, padX = 24, compact = false, visible = t
   )
 }
 
-function CompactKeySetCard({ keySet }: { keySet: KeySet }) {
+function CompactKeySetCard({ keySet, commonAbove = [], commonBelow = [], showGuides = true }: { keySet: KeySet; commonAbove?: number[]; commonBelow?: number[]; showGuides?: boolean }) {
   return (
-    <div className={`p-3 ${keySet.type === 'flourish' ? 'bg-amber-50' : ''}`} data-testid="keyset-card">
-      <div className="flex items-center gap-2 mb-2">
-        <h2 className="text-sm font-semibold text-gray-900" data-testid="chord-label">
+    <div className={`flex items-center gap-2 px-3 py-3 ${keySet.type === 'flourish' ? 'bg-amber-50/50' : ''}`} data-testid="keyset-card">
+      <div className="w-16 shrink-0 flex items-center gap-1">
+        <h2 className="text-xs font-semibold text-gray-900 truncate" data-testid="chord-label">
           {keySet.type === 'flourish'
             ? <span className="text-amber-600 italic">Flourish</span>
             : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map((kp) => kp.midiNote)) : '\u00A0'}
@@ -92,20 +94,44 @@ function CompactKeySetCard({ keySet }: { keySet: KeySet }) {
         {keySet.keyPresses.length > 0 && keySet.type !== 'flourish' && (
           <button
             onClick={() => playChord(keySet.keyPresses.map((kp) => kp.midiNote))}
-            className="text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
+            className="text-gray-400 hover:text-blue-500 transition-colors cursor-pointer shrink-0"
             title="Play Chord"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8 5v14l11-7z" />
             </svg>
           </button>
         )}
       </div>
-      <PianoKeyboard
-        highlightedNotes={keySet.keyPresses.map((kp) => kp.midiNote)}
-        noteColors={Object.fromEntries(keySet.keyPresses.map((kp) => [kp.midiNote, kp.color]))}
-        height={70}
-      />
+      <div className="flex-1 min-w-0 relative">
+        <PianoKeyboard
+          highlightedNotes={keySet.keyPresses.map((kp) => kp.midiNote)}
+          noteColors={Object.fromEntries(keySet.keyPresses.map((kp) => [kp.midiNote, kp.color]))}
+          height={50}
+        />
+        {showGuides && commonAbove.map(note => (
+          <div key={`above-${note}`} className="absolute pointer-events-none" style={{
+            left: `${keyCenterPct(note, defaultLayout)}%`,
+            bottom: '100%',
+            width: 2,
+            height: 12,
+            transform: 'translateX(-1px)',
+            background: 'repeating-linear-gradient(to bottom, #eab308 0px, #eab308 4px, transparent 4px, transparent 7px)',
+            opacity: 0.8,
+          }} />
+        ))}
+        {showGuides && commonBelow.map(note => (
+          <div key={`below-${note}`} className="absolute pointer-events-none" style={{
+            left: `${keyCenterPct(note, defaultLayout)}%`,
+            top: '100%',
+            width: 2,
+            height: 12,
+            transform: 'translateX(-1px)',
+            background: 'repeating-linear-gradient(to bottom, #eab308 0px, #eab308 4px, transparent 4px, transparent 7px)',
+            opacity: 0.8,
+          }} />
+        ))}
+      </div>
     </div>
   )
 }
@@ -306,13 +332,17 @@ export default function SortableKeySetList({ keySets, compact, showCommonTones =
 
   if (compact) {
     return (
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        {keySets.map((keySet, i) => (
-          <div key={keySet.id}>
-            {i > 0 && <CommonToneLines above={keySets[i - 1]} below={keySet} padX={12} compact visible={showCommonTones} />}
-            <CompactKeySetCard keySet={keySet} />
-          </div>
-        ))}
+      <div className="bg-white rounded-lg shadow overflow-hidden divide-y divide-gray-200">
+        {keySets.map((keySet, i) => {
+          const aboveNotes = i > 0 ? keySets[i - 1].keyPresses.map(kp => kp.midiNote) : []
+          const belowNotes = i < keySets.length - 1 ? keySets[i + 1].keyPresses.map(kp => kp.midiNote) : []
+          const myNotes = new Set(keySet.keyPresses.map(kp => kp.midiNote))
+          const commonAbove = aboveNotes.filter(n => myNotes.has(n))
+          const commonBelow = belowNotes.filter(n => myNotes.has(n))
+          return (
+            <CompactKeySetCard key={keySet.id} keySet={keySet} commonAbove={commonAbove} commonBelow={commonBelow} showGuides={showCommonTones} />
+          )
+        })}
       </div>
     )
   }

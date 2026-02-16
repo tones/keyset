@@ -31,9 +31,9 @@ test.describe('Song Page', () => {
     await expect(chordLabels.nth(1)).toHaveText('FM')
     await expect(chordLabels.nth(2)).toHaveText('GM')
     await expect(chordLabels.nth(3)).toHaveText('Flourish')
-    // Each key set with notes should have a play button
+    // Each chord key set (not flourish) should have a play button
     const playButtons = page.locator('button[title="Play Chord"]')
-    await expect(playButtons).toHaveCount(4)
+    await expect(playButtons).toHaveCount(3)
   })
 
   test('save bar appears on change and disappears after save', async ({ page }) => {

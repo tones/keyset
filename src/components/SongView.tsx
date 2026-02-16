@@ -310,17 +310,19 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
         onReorder={handleReorder}
       />
 
-      <SongAnalysis
-        songTitle={initialTitle}
-        chordDetail={buildChordDetail(keySets)}
-        llmProvider={llmProvider}
-        analysis={analysis}
-        analysisUpdatedAt={analysisUpdatedAt}
-        onAnalyze={handleAnalyze}
-        onClear={handleClearAnalysis}
-        loading={analysisLoading}
-        error={analysisError}
-      />
+      {mode !== 'compact' && (
+        <SongAnalysis
+          songTitle={initialTitle}
+          chordDetail={buildChordDetail(keySets)}
+          llmProvider={llmProvider}
+          analysis={analysis}
+          analysisUpdatedAt={analysisUpdatedAt}
+          onAnalyze={handleAnalyze}
+          onClear={handleClearAnalysis}
+          loading={analysisLoading}
+          error={analysisError}
+        />
+      )}
     </>
   )
 }
