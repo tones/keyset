@@ -16,9 +16,20 @@ interface PianoKeyboardProps {
 
 export default function PianoKeyboard({ highlightedNotes, noteColors = {}, inKeyPitchClasses, triadPitchClasses, startNote = 36, endNote = 84, height = 110, onToggle }: PianoKeyboardProps) {
   const highlightSet = new Set(highlightedNotes)
+  const highlightedPCs = new Set(highlightedNotes.map(n => n % 12))
   const layout = buildKeyLayout(startNote, endNote)
   const { whiteKeys, wPct, bPct, blackKeys } = layout
   const BLACK_KEY_HEIGHT = 62              // % of container height
+
+  // Should this key get a triad outline?
+  // - If the pitch class is in the triad and no key of that PC is pressed: outline (suggestion)
+  // - If the pitch class is in the triad and this specific key IS pressed: outline (clarification)
+  // - Otherwise: no outline
+  function showTriadOutline(note: number): boolean {
+    if (!triadPitchClasses?.has(note % 12)) return false
+    if (highlightedPCs.has(note % 12)) return highlightSet.has(note)
+    return true
+  }
 
   return (
     <div data-testid="piano-keyboard" className="relative w-full overflow-hidden rounded-lg border border-gray-200 bg-gray-100" style={{ height: `${height}px` }}>
@@ -46,7 +57,7 @@ export default function PianoKeyboard({ highlightedNotes, noteColors = {}, inKey
               height: '100%',
               backgroundColor: bg,
               zIndex: 1,
-              ...(triadPitchClasses?.has(note % 12) ? { boxShadow: 'inset 0 0 0 2px #f59e0b' } : {}),
+              ...(showTriadOutline(note) ? { boxShadow: 'inset 0 0 0 2px #f59e0b' } : {}),
             }}
             onClick={onToggle ? () => onToggle(note) : undefined}
           />
@@ -98,7 +109,7 @@ export default function PianoKeyboard({ highlightedNotes, noteColors = {}, inKey
               height: `${BLACK_KEY_HEIGHT}%`,
               backgroundColor: bg,
               zIndex: 2,
-              ...(triadPitchClasses?.has(note % 12) ? { boxShadow: 'inset 0 0 0 2px #f59e0b' } : {}),
+              ...(showTriadOutline(note) ? { boxShadow: 'inset 0 0 0 2px #f59e0b' } : {}),
             }}
             onClick={onToggle ? () => onToggle(note) : undefined}
           />
