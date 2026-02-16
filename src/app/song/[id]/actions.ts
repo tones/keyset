@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 
-export async function saveKeySets(songId: number, keySets: { type: string; keyPresses: { midiNote: number; color: string }[] }[], analysis?: { text: string | null; updatedAt: string | null }, songKey?: string | null) {
+export async function saveKeySets(songId: number, keySets: { type: string; scaleDegree?: number | null; keyPresses: { midiNote: number; color: string }[] }[], analysis?: { text: string | null; updatedAt: string | null }, songKey?: string | null) {
   await prisma.$transaction(async (tx) => {
     // Delete all existing key sets (cascade deletes key presses)
     await tx.keySet.deleteMany({ where: { songId } })
@@ -15,6 +15,7 @@ export async function saveKeySets(songId: number, keySets: { type: string; keyPr
           songId,
           position: i + 1,
           type: keySets[i].type,
+          scaleDegree: keySets[i].scaleDegree ?? null,
           keyPresses: {
             create: keySets[i].keyPresses.map((kp) => ({
               midiNote: kp.midiNote,

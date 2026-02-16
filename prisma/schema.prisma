@@ -33,6 +33,7 @@ model KeySet {
   id          Int      @id @default(autoincrement())
   position    Int      // Position in the ordered list
   type        String   @default("chord") // "chord" or "flourish"
+  scaleDegree Int?     // 1-7 Roman numeral scale degree (only used in key mode)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   

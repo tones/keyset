@@ -63,7 +63,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
 
   function serialize(ks: KeySet[], a: string | null, aAt: string | null, sk: string | null) {
     return JSON.stringify({
-      ks: ks.map(k => ({ t: k.type, kp: k.keyPresses.map(p => [p.midiNote, p.color]) })),
+      ks: ks.map(k => ({ t: k.type, sd: k.scaleDegree, kp: k.keyPresses.map(p => [p.midiNote, p.color]) })),
       a, aAt, sk,
     })
   }
@@ -145,6 +145,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
     try {
       await saveKeySets(songId, current.map(ks => ({
         type: ks.type,
+        scaleDegree: ks.scaleDegree,
         keyPresses: ks.keyPresses.map(kp => ({ midiNote: kp.midiNote, color: kp.color })),
       })), { text: currentAnalysis, updatedAt: currentAnalysisUpdatedAt }, currentSongKey)
       savedRef.current = serialize(current, currentAnalysis, currentAnalysisUpdatedAt, currentSongKey)
@@ -170,7 +171,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
 
   const handleAdd = useCallback(() => {
     const tempId = nextTempId--
-    setKeySets(prev => [...prev, { id: tempId, position: prev.length + 1, type: 'chord', keyPresses: [] }])
+    setKeySets(prev => [...prev, { id: tempId, position: prev.length + 1, type: 'chord', scaleDegree: null, keyPresses: [] }])
   }, [])
 
   const handleDuplicate = useCallback((keySetId: number) => {
@@ -183,6 +184,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
         id: tempId,
         position: original.position + 1,
         type: original.type,
+        scaleDegree: original.scaleDegree,
         keyPresses: original.keyPresses.map(kp => ({ ...kp, id: nextTempId-- })),
       }
       const updated = [...prev]
@@ -231,6 +233,15 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
       prev.map(ks => {
         if (ks.id !== keySetId) return ks
         return { ...ks, type: ks.type === 'flourish' ? 'chord' : 'flourish' }
+      })
+    )
+  }, [])
+
+  const handleSetScaleDegree = useCallback((keySetId: number, degree: number | null) => {
+    setKeySets(prev =>
+      prev.map(ks => {
+        if (ks.id !== keySetId) return ks
+        return { ...ks, scaleDegree: degree }
       })
     )
   }, [])
@@ -372,6 +383,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
         onToggleNote={handleToggleNote}
         onShiftNotes={handleShiftNotes}
         onToggleType={handleToggleType}
+        onSetScaleDegree={handleSetScaleDegree}
         onReorder={handleReorder}
       />
 

@@ -27,6 +27,16 @@ import { keyCenterPct, buildKeyLayout } from '@/lib/pianoLayout'
 import { parseSongKey, getScalePitchClasses } from '@/lib/scales'
 import type { KeySet } from '@/types'
 
+const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'] as const
+
+function formatDegreeLabel(chordName: string, degree: number): string {
+  const numeral = ROMAN_NUMERALS[degree - 1]
+  // Lowercase numeral for minor-ish chords (contains 'm' but not 'maj')
+  const isMinor = /m(?!aj)/i.test(chordName)
+  const formatted = isMinor ? numeral.toLowerCase() : numeral
+  return `${chordName} (${formatted})`
+}
+
 interface SortableKeySetListProps {
   keySets: KeySet[]
   compact?: boolean
@@ -38,6 +48,7 @@ interface SortableKeySetListProps {
   onToggleNote: (keySetId: number, midiNote: number, color: string) => void
   onShiftNotes: (keySetId: number, delta: number) => void
   onToggleType: (keySetId: number) => void
+  onSetScaleDegree: (keySetId: number, degree: number | null) => void
   onReorder: (keySets: KeySet[]) => void
 }
 
@@ -49,6 +60,7 @@ interface KeySetCardProps {
   onToggleNote: (keySetId: number, midiNote: number, color: string) => void
   onShiftNotes: (keySetId: number, delta: number) => void
   onToggleType: (keySetId: number) => void
+  onSetScaleDegree?: (keySetId: number, degree: number | null) => void
 }
 
 
@@ -93,7 +105,7 @@ function CompactKeySetCard({ keySet, commonAbove = [], commonBelow = [], showGui
         <h2 className="text-xs font-semibold text-gray-900 truncate max-w-full" data-testid="chord-label">
           {keySet.type === 'flourish'
             ? <span className="text-amber-600 italic">Flourish</span>
-            : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map((kp) => kp.midiNote)) : '\u00A0'}
+            : keySet.keyPresses.length > 0 ? (() => { const name = identifyChord(keySet.keyPresses.map((kp) => kp.midiNote)); return keySet.scaleDegree ? formatDegreeLabel(name, keySet.scaleDegree) : name })() : '\u00A0'}
         </h2>
         {keySet.keyPresses.length > 0 && keySet.type !== 'flourish' && (
           <button
@@ -139,10 +151,12 @@ function CompactKeySetCard({ keySet, commonAbove = [], commonBelow = [], showGui
   )
 }
 
-function SortableKeySetCard({ keySet, inKeyPitchClasses, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType }: KeySetCardProps) {
+function SortableKeySetCard({ keySet, inKeyPitchClasses, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType, onSetScaleDegree }: KeySetCardProps) {
   const [activeColor, setActiveColor] = useState(DEFAULT_COLOR)
+  const [lastDegree, setLastDegree] = useState<number | null>(keySet.scaleDegree)
   const colorPicker = usePopover()
   const transposePicker = usePopover()
+  const degreePicker = usePopover()
 
   const {
     attributes,
@@ -181,7 +195,7 @@ function SortableKeySetCard({ keySet, inKeyPitchClasses, onDelete, onDuplicate, 
           <h2 className="text-xl font-semibold text-gray-900" data-testid="chord-label">
             {keySet.type === 'flourish'
               ? <span className="text-amber-600 italic">Flourish</span>
-              : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map((kp) => kp.midiNote)) : '\u00A0'}
+              : keySet.keyPresses.length > 0 ? (() => { const name = identifyChord(keySet.keyPresses.map((kp) => kp.midiNote)); return keySet.scaleDegree ? formatDegreeLabel(name, keySet.scaleDegree) : name })() : '\u00A0'}
           </h2>
           {keySet.keyPresses.length > 0 && keySet.type !== 'flourish' && (
             <button
@@ -196,6 +210,45 @@ function SortableKeySetCard({ keySet, inKeyPitchClasses, onDelete, onDuplicate, 
           )}
         </div>
         <div className="flex items-center gap-1 ml-auto">
+          {inKeyPitchClasses && onSetScaleDegree && (
+            <div ref={degreePicker.containerRef} className="relative" onMouseLeave={degreePicker.onMouseLeave} onMouseEnter={() => { degreePicker.onMouseEnter(); if (keySet.scaleDegree) degreePicker.show() }}>
+              <button
+                onClick={() => {
+                  if (keySet.scaleDegree) {
+                    setLastDegree(keySet.scaleDegree)
+                    onSetScaleDegree(keySet.id, null)
+                    degreePicker.hide()
+                  } else if (lastDegree) {
+                    onSetScaleDegree(keySet.id, lastDegree)
+                    degreePicker.show()
+                  } else {
+                    degreePicker.toggle()
+                  }
+                }}
+                className={`w-7 h-7 flex items-center justify-center cursor-pointer transition-colors ${keySet.scaleDegree ? 'text-blue-500 hover:text-blue-700' : 'text-gray-400 hover:text-blue-500'}`}
+                title={keySet.scaleDegree ? `Scale Degree: ${ROMAN_NUMERALS[keySet.scaleDegree - 1]} (click to clear)` : 'Scale Degree'}
+              >
+                <span className="text-xs font-bold">{keySet.scaleDegree ? ROMAN_NUMERALS[keySet.scaleDegree - 1] : '#'}</span>
+              </button>
+              {degreePicker.open && (
+                <div className="absolute right-0 top-8 z-10 bg-white rounded-lg shadow-lg border border-gray-200 p-3">
+                  <div className="text-xs font-medium text-gray-500 mb-2">Scale Degree</div>
+                  <div className="flex gap-1">
+                    {ROMAN_NUMERALS.map((numeral, i) => {
+                      const degree = i + 1
+                      const isActive = keySet.scaleDegree === degree
+                      return (
+                        <button key={degree} className={`text-xs px-1.5 py-1 rounded transition-colors cursor-pointer ${isActive ? 'bg-blue-100 text-blue-700 font-semibold' : 'hover:bg-blue-50 hover:text-blue-700'}`} onClick={() => {
+                          onSetScaleDegree(keySet.id, degree)
+                          setLastDegree(degree)
+                        }}>{numeral}</button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           <button
             onClick={() => onToggleType(keySet.id)}
             className={`w-7 h-7 flex items-center justify-center cursor-pointer transition-colors ${keySet.type === 'flourish' ? 'text-amber-500 hover:text-amber-700' : 'text-gray-400 hover:text-gray-600'}`}
@@ -312,7 +365,7 @@ function SortableKeySetCard({ keySet, inKeyPitchClasses, onDelete, onDuplicate, 
   )
 }
 
-export default function SortableKeySetList({ keySets, compact, showCommonTones = true, songKey, onAdd, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType, onReorder }: SortableKeySetListProps) {
+export default function SortableKeySetList({ keySets, compact, showCommonTones = true, songKey, onAdd, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType, onSetScaleDegree, onReorder }: SortableKeySetListProps) {
   const parsed = parseSongKey(songKey ?? null)
   const inKeyPitchClasses = parsed ? getScalePitchClasses(parsed.root, parsed.mode) : undefined
 
@@ -362,7 +415,7 @@ export default function SortableKeySetList({ keySets, compact, showCommonTones =
           {keySets.map((keySet, i) => (
             <div key={keySet.id}>
               {i > 0 && <div className="py-3"><CommonToneLines above={keySets[i - 1]} below={keySet} visible={showCommonTones} /></div>}
-              <SortableKeySetCard keySet={keySet} inKeyPitchClasses={inKeyPitchClasses} onDelete={onDelete} onDuplicate={onDuplicate} onToggleNote={onToggleNote} onShiftNotes={onShiftNotes} onToggleType={onToggleType} />
+              <SortableKeySetCard keySet={keySet} inKeyPitchClasses={inKeyPitchClasses} onDelete={onDelete} onDuplicate={onDuplicate} onToggleNote={onToggleNote} onShiftNotes={onShiftNotes} onToggleType={onToggleType} onSetScaleDegree={inKeyPitchClasses ? onSetScaleDegree : undefined} />
             </div>
           ))}
         </div>
