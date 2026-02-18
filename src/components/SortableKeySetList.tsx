@@ -105,7 +105,7 @@ function CommonToneLines({ above, below, padX = 24, padLeft, padRight, compact =
   )
 }
 
-function CompactKeySetCard({ keySet, songKey, commonAbove = [], commonBelow = [], showGuides = true, showStaff = true, inKeyPitchClasses, triadPitchClasses }: { keySet: KeySet; songKey?: string | null; commonAbove?: number[]; commonBelow?: number[]; showGuides?: boolean; showStaff?: boolean; inKeyPitchClasses?: Set<number>; triadPitchClasses?: Set<number> }) {
+function CompactKeySetCard({ keySet, songKey, commonBelow = [], showGuides = true, showStaff = true, inKeyPitchClasses, triadPitchClasses, isFirst = false, isLast = false }: { keySet: KeySet; songKey?: string | null; commonBelow?: number[]; showGuides?: boolean; showStaff?: boolean; inKeyPitchClasses?: Set<number>; triadPitchClasses?: Set<number>; isFirst?: boolean; isLast?: boolean }) {
   return (
     <div className={`flex items-center gap-2 px-3 py-3 ${keySet.type === 'flourish' ? 'bg-amber-50/50 dark:bg-amber-900/20' : ''}`} data-testid="keyset-card">
       <div className="w-16 shrink-0 flex flex-col items-start">
@@ -135,23 +135,14 @@ function CompactKeySetCard({ keySet, songKey, commonAbove = [], commonBelow = []
           showTriadSuggestions={false}
           height={50}
         />
-        {showGuides && commonAbove.map(note => (
-          <div key={`above-${note}`} className="absolute pointer-events-none" style={{
-            left: `${keyCenterPct(note, defaultLayout)}%`,
-            bottom: '100%',
-            width: 4,
-            height: 12,
-            transform: 'translateX(-2px)',
-            background: 'repeating-linear-gradient(to bottom, #f59e0b 0px, #f59e0b 4px, transparent 4px, transparent 7px)',
-          }} />
-        ))}
         {showGuides && commonBelow.map(note => (
           <div key={`below-${note}`} className="absolute pointer-events-none" style={{
             left: `${keyCenterPct(note, defaultLayout)}%`,
             top: '100%',
             width: 4,
-            height: 12,
+            height: 36,
             transform: 'translateX(-2px)',
+            zIndex: 5,
             background: 'repeating-linear-gradient(to bottom, #f59e0b 0px, #f59e0b 4px, transparent 4px, transparent 7px)',
           }} />
         ))}
@@ -415,15 +406,13 @@ export default function SortableKeySetList({ keySets, compact, showStaff = true,
 
   if (compact) {
     return (
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden divide-y divide-gray-200 dark:divide-gray-800">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow divide-y divide-gray-200 dark:divide-gray-800">
         {keySets.map((keySet, i) => {
-          const aboveNotes = i > 0 ? keySets[i - 1].keyPresses.map(kp => kp.midiNote) : []
           const belowNotes = i < keySets.length - 1 ? keySets[i + 1].keyPresses.map(kp => kp.midiNote) : []
           const myNotes = new Set(keySet.keyPresses.map(kp => kp.midiNote))
-          const commonAbove = aboveNotes.filter(n => myNotes.has(n))
           const commonBelow = belowNotes.filter(n => myNotes.has(n))
           return (
-            <CompactKeySetCard key={keySet.id} keySet={keySet} songKey={songKey} commonAbove={commonAbove} commonBelow={commonBelow} showGuides={showCommonTones} showStaff={showStaff} inKeyPitchClasses={inKeyPitchClasses} triadPitchClasses={parsed && keySet.scaleDegree ? getTriadPitchClasses(parsed.root, parsed.mode, keySet.scaleDegree) : undefined} />
+            <CompactKeySetCard key={keySet.id} keySet={keySet} songKey={songKey} commonBelow={commonBelow} showGuides={showCommonTones} showStaff={showStaff} inKeyPitchClasses={inKeyPitchClasses} triadPitchClasses={parsed && keySet.scaleDegree ? getTriadPitchClasses(parsed.root, parsed.mode, keySet.scaleDegree) : undefined} isFirst={i === 0} isLast={i === keySets.length - 1} />
           )
         })}
       </div>
