@@ -24,6 +24,7 @@ You can pass any Playwright CLI flags after `--`, e.g. `npm run test:e2e -- --gr
 - Run as a **non-blocking** command with `WaitMsBeforeAsync: 10000`, then poll with `command_status` using `WaitDurationSeconds: 45`. If it hasn't finished in ~90 seconds total, assume it hung — kill and retry.
 - **Always reboot the dev server** after running tests: `lsof -ti:3000 | xargs kill -9 2>/dev/null; npm run dev`
 - The test suite normally completes in ~30 seconds.
+- **Cold-compile flakiness:** The first run after `git pull`, `npm install`, or clearing `.next/` may fail due to slow Turbopack compilation on the initial request. Early tests (e.g. album art visibility) can time out waiting for elements that haven't rendered yet. If the first run fails but the error looks timing-related, **re-run the suite once** before investigating — the second run uses cached compilation and is reliable.
 
 ## Convention
 
