@@ -53,7 +53,6 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
   const [showStaff, setShowStaff] = useState(initialShowStaff)
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(initialImageUrl)
   const [showCommonTones, setShowCommonTones] = useState(true)
-  const [simplify, setSimplify] = useState(false)
   const [songKey, setSongKey] = useState<string | null>(initialSongKey)
   const [lastSongKey, setLastSongKey] = useState<string>(initialSongKey ?? 'C major')
   const keyPicker = usePopover()
@@ -366,9 +365,6 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
                 updateShowStaff(songId, next).catch(() => {})
               }} />
             )}
-            {songKey !== null && mode === 'compact' && (
-              <ToggleSwitch label="Simplify" enabled={simplify} onToggle={() => setSimplify(!simplify)} />
-            )}
             <div ref={keyPicker.containerRef} className="relative" onMouseLeave={keyPicker.onMouseLeave} onMouseEnter={() => { keyPicker.onMouseEnter(); if (songKey) keyPicker.show() }}>
               <ToggleSwitch label={songKey ? (() => { const p = parseSongKey(songKey); return p ? `${p.root} ${p.mode.charAt(0).toUpperCase() + p.mode.slice(1)}` : 'Key' })() : 'Key'} enabled={songKey !== null} onToggle={() => {
                 if (songKey !== null) {
@@ -417,7 +413,6 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
         compact={mode === 'compact'}
         showStaff={showStaff}
         showCommonTones={showCommonTones}
-        simplify={simplify && mode === 'compact' && songKey !== null}
         songKey={songKey}
         onAdd={handleAdd}
         onDelete={handleDelete}

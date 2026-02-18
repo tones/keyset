@@ -1,4 +1,4 @@
-import { Key, Chord, Note } from 'tonal'
+import { Key } from 'tonal'
 
 // Scale definitions and utilities for "in key mode"
 
@@ -87,37 +87,3 @@ export function getTriadPitchClasses(root: Root, mode: ModeName, degree: number)
   return new Set([0, 2, 4].map(offset => (rootIndex + intervals[(d + offset) % 7]) % 12))
 }
 
-/** Get the triad pitch classes for a keyset, using scaleDegree if set, otherwise falling back to chord name root.
- *  Returns null if no triad can be determined. */
-export function getSimplifyTriadPitchClasses(
-  chordName: string,
-  songKey: string,
-  scaleDegree: number | null,
-): Set<number> | null {
-  const parsed = parseSongKey(songKey)
-  if (!parsed) return null
-
-  // If scaleDegree is set, use it directly
-  if (scaleDegree) {
-    return getTriadPitchClasses(parsed.root, parsed.mode, scaleDegree)
-  }
-
-  // Fall back: extract root from chord name and find matching scale degree
-  // Chord.get gives us the root note name, e.g. "Dm9" -> root "D"
-  const chordData = Chord.get(chordName)
-  if (chordData.tonic) {
-    const rootPc = Note.chroma(chordData.tonic)
-    if (rootPc !== undefined && rootPc !== null) {
-      // Find which scale degree has this root
-      const keyRootIndex = ROOTS.indexOf(parsed.root)
-      const intervals = MODES[parsed.mode]
-      for (let d = 0; d < 7; d++) {
-        if ((keyRootIndex + intervals[d]) % 12 === rootPc) {
-          return getTriadPitchClasses(parsed.root, parsed.mode, d + 1)
-        }
-      }
-    }
-  }
-
-  return null
-}

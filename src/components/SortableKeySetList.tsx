@@ -25,7 +25,7 @@ import StaffNotation, { staffWidth } from '@/components/StaffNotation'
 import { identifyChord } from '@/lib/chordId'
 import { playChord, preloadPiano } from '@/lib/playChord'
 import { keyCenterPct, buildKeyLayout } from '@/lib/pianoLayout'
-import { parseSongKey, getScalePitchClasses, getTriadPitchClasses, getTriadQuality, getTriadName, getSimplifyTriadPitchClasses } from '@/lib/scales'
+import { parseSongKey, getScalePitchClasses, getTriadPitchClasses, getTriadQuality, getTriadName } from '@/lib/scales'
 import type { KeySet } from '@/types'
 
 const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'] as const
@@ -45,7 +45,6 @@ interface SortableKeySetListProps {
   compact?: boolean
   showStaff?: boolean
   showCommonTones?: boolean
-  simplify?: boolean
   songKey?: string | null
   onAdd: () => void
   onDelete: (id: number) => void
@@ -106,14 +105,11 @@ function CommonToneLines({ above, below, padX = 24, padLeft, padRight, compact =
   )
 }
 
-function CompactKeySetCard({ keySet, songKey, commonBelow = [], showGuides = true, showStaff = true, simplify = false, inKeyPitchClasses, triadPitchClasses }: { keySet: KeySet; songKey?: string | null; commonBelow?: number[]; showGuides?: boolean; showStaff?: boolean; simplify?: boolean; inKeyPitchClasses?: Set<number>; triadPitchClasses?: Set<number> }) {
+function CompactKeySetCard({ keySet, songKey, commonBelow = [], showGuides = true, showStaff = true, inKeyPitchClasses, triadPitchClasses }: { keySet: KeySet; songKey?: string | null; commonBelow?: number[]; showGuides?: boolean; showStaff?: boolean; inKeyPitchClasses?: Set<number>; triadPitchClasses?: Set<number> }) {
   const allNotes = keySet.keyPresses.map((kp) => kp.midiNote)
   const chordName = identifyChord(allNotes, songKey)
-  const simplifyTriad = simplify && songKey && keySet.type !== 'flourish' ? getSimplifyTriadPitchClasses(chordName, songKey, keySet.scaleDegree) : null
-  const displayedNotes = simplifyTriad ? allNotes.filter(n => simplifyTriad.has(n % 12)) : allNotes
-  const displayedColors = simplifyTriad
-    ? Object.fromEntries(keySet.keyPresses.filter(kp => simplifyTriad.has(kp.midiNote % 12)).map(kp => [kp.midiNote, kp.color]))
-    : Object.fromEntries(keySet.keyPresses.map(kp => [kp.midiNote, kp.color]))
+  const displayedNotes = allNotes
+  const displayedColors = Object.fromEntries(keySet.keyPresses.map(kp => [kp.midiNote, kp.color]))
 
   return (
     <div className={`flex items-center gap-2 px-3 py-3 ${keySet.type === 'flourish' ? 'bg-amber-50/50 dark:bg-amber-900/20' : ''}`} data-testid="keyset-card">
@@ -140,7 +136,7 @@ function CompactKeySetCard({ keySet, songKey, commonBelow = [], showGuides = tru
           highlightedNotes={displayedNotes}
           noteColors={displayedColors}
           inKeyPitchClasses={inKeyPitchClasses}
-          triadPitchClasses={simplify ? undefined : triadPitchClasses}
+          triadPitchClasses={triadPitchClasses}
           showTriadSuggestions={false}
           height={50}
         />
@@ -388,7 +384,7 @@ function SortableKeySetCard({ keySet, songKey, showStaff = true, inKeyPitchClass
   )
 }
 
-export default function SortableKeySetList({ keySets, compact, showStaff = true, showCommonTones = true, simplify = false, songKey, onAdd, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType, onSetScaleDegree, onReorder }: SortableKeySetListProps) {
+export default function SortableKeySetList({ keySets, compact, showStaff = true, showCommonTones = true, songKey, onAdd, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType, onSetScaleDegree, onReorder }: SortableKeySetListProps) {
   const parsed = parseSongKey(songKey ?? null)
   const inKeyPitchClasses = parsed ? getScalePitchClasses(parsed.root, parsed.mode) : undefined
 
@@ -421,7 +417,7 @@ export default function SortableKeySetList({ keySets, compact, showStaff = true,
           const myNotes = new Set(keySet.keyPresses.map(kp => kp.midiNote))
           const commonBelow = belowNotes.filter(n => myNotes.has(n))
           return (
-            <CompactKeySetCard key={keySet.id} keySet={keySet} songKey={songKey} commonBelow={commonBelow} showGuides={showCommonTones} showStaff={showStaff} simplify={simplify} inKeyPitchClasses={inKeyPitchClasses} triadPitchClasses={parsed && keySet.scaleDegree ? getTriadPitchClasses(parsed.root, parsed.mode, keySet.scaleDegree) : undefined} />
+            <CompactKeySetCard key={keySet.id} keySet={keySet} songKey={songKey} commonBelow={commonBelow} showGuides={showCommonTones} showStaff={showStaff} inKeyPitchClasses={inKeyPitchClasses} triadPitchClasses={parsed && keySet.scaleDegree ? getTriadPitchClasses(parsed.root, parsed.mode, keySet.scaleDegree) : undefined} />
           )
         })}
       </div>
