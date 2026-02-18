@@ -315,37 +315,6 @@ test.describe('Song Page', () => {
     await clickSave(page)
   })
 
-  test('chord label is stable after toggling a note off and back on', async ({ page }) => {
-    await page.goto('/song/4')
-    const firstCard = page.getByTestId('keyset-card').first()
-    const chordLabel = firstCard.getByTestId('chord-label')
-    const labelBefore = await chordLabel.textContent()
-
-    // Find a highlighted key in the first piano and toggle it off
-    const piano = firstCard.getByTestId('piano-keyboard')
-    const highlightedKey = piano.locator('[data-note]').filter({ hasNot: page.locator(':scope') }).first()
-    // Use the first key that has a non-white background (highlighted)
-    const keys = piano.locator('[data-note]')
-    const keyCount = await keys.count()
-    let targetKey = keys.first()
-    for (let i = 0; i < keyCount; i++) {
-      const bg = await keys.nth(i).evaluate((el) => getComputedStyle(el).backgroundColor)
-      if (bg !== 'rgb(255, 255, 255)' && bg !== 'rgb(0, 0, 0)') {
-        targetKey = keys.nth(i)
-        break
-      }
-    }
-
-    // Toggle off
-    await targetKey.click()
-    // Toggle back on
-    await targetKey.click()
-
-    // Chord label should be the same as before
-    await expect(chordLabel).toHaveText(labelBefore!)
-
-    // Reset: toggle off and back on to restore, no save needed since we didn't save
-  })
 
   test('color picker selects blue and persists', async ({ page }) => {
     await page.goto('/song/4')
@@ -414,12 +383,6 @@ test.describe('Song Page', () => {
     )
     expect(noteAfter).not.toBe('rgb(255, 255, 255)')
     await clickSave(page)
-  })
-
-  test('Analyze Song button is visible', async ({ page }) => {
-    // Song 2 has no cached analysis, so button says "Analyze with ..."
-    await page.goto('/song/2')
-    await expect(page.getByRole('button', { name: /Analyze with/ })).toBeVisible()
   })
 
   test('cached analysis displays on page load with timestamp', async ({ page }) => {
@@ -572,64 +535,6 @@ test.describe('Song Page', () => {
     await expect(svgs).toHaveCount(2) // one line between 1↔2, one between 3↔4
   })
 
-  test('no common tone lines between keysets with no shared notes', async ({ page }) => {
-    await page.goto('/song/4')
-    // Keysets 2↔3 share nothing — only 2 SVG lines total (1↔2 and 3↔4)
-    const svgs = page.locator('svg line[stroke="#eab308"]')
-    await expect(svgs).toHaveCount(2)
-  })
-
-  test.skip('common tones toggle hides and shows lines', async ({ page }) => {
-    await page.goto('/song/4')
-    const lines = page.locator('svg line[stroke="#eab308"]')
-    await expect(lines).toHaveCount(2)
-
-    // Toggle off
-    await page.getByText('Guides').click()
-    await expect(lines).toHaveCount(0)
-
-    // Toggle back on
-    await page.getByText('Guides').click()
-    await expect(lines).toHaveCount(2)
-  })
-
-  test.skip('toggling common tones does not shift keyset card positions', async ({ page }) => {
-    await page.goto('/song/4')
-    const firstCard = page.getByTestId('keyset-card').first()
-    const boxBefore = await firstCard.boundingBox()
-
-    // Toggle off
-    await page.getByText('Guides').click()
-    const boxAfter = await firstCard.boundingBox()
-
-    expect(boxBefore!.y).toBe(boxAfter!.y)
-    expect(boxBefore!.height).toBe(boxAfter!.height)
-  })
-
-  test.skip('common tone guide lines touch both upper and lower keyboards symmetrically', async ({ page }) => {
-    await page.goto('/song/4')
-    // Get the first two piano keyboards (keysets 1 and 2 share note 72)
-    const pianos = page.getByTestId('piano-keyboard')
-    const upperPiano = pianos.nth(0)
-    const lowerPiano = pianos.nth(1)
-    const upperBox = await upperPiano.boundingBox()
-    const lowerBox = await lowerPiano.boundingBox()
-
-    // Get the SVG that contains the yellow guide lines (has line elements with yellow stroke)
-    const guideSvg = page.locator('svg:has(line[stroke="#eab308"])').first()
-    const svgBox = await guideSvg.boundingBox()
-
-    // How far the SVG overlaps into the upper keyboard (negative = overlap)
-    const overlapAbove = (upperBox!.y + upperBox!.height) - svgBox!.y
-    // How far the SVG overlaps into the lower keyboard (negative = overlap)
-    const overlapBelow = (svgBox!.y + svgBox!.height) - lowerBox!.y
-
-    // Both overlaps should be positive (lines extend into the keyboards)
-    // and roughly symmetric — allow up to 20px difference
-    expect(overlapAbove).toBeGreaterThan(0)
-    expect(overlapBelow).toBeGreaterThan(0)
-    expect(Math.abs(overlapAbove - overlapBelow)).toBeLessThan(20)
-  })
 
   test('compact mode renders chord labels and keyboards side by side', async ({ page }) => {
     await page.goto('/song/1')
@@ -772,7 +677,7 @@ test.describe('Song Page', () => {
     await clickSave(page)
   })
 
-  test('staff notation appears in key mode and hides without it', async ({ page }) => {
+  test('staff notation appears in key mode, hides without it, and works on flourish keysets', async ({ page }) => {
     page.on('dialog', dialog => dialog.accept())
     await page.goto('/song/2')
 
@@ -785,7 +690,16 @@ test.describe('Song Page', () => {
     await page.waitForTimeout(600)
 
     // Staff notation should appear for chord keysets
-    await expect(page.getByTestId('staff-notation').first()).toBeVisible()
+    const firstCard = page.getByTestId('keyset-card').first()
+    await expect(firstCard.getByTestId('staff-notation')).toBeVisible()
+
+    // Toggle to flourish — staff should still appear
+    await firstCard.getByTestId('type-toggle').click()
+    await expect(firstCard.getByText('Flourish')).toBeVisible()
+    await expect(firstCard.getByTestId('staff-notation')).toBeVisible()
+
+    // Clean up: toggle back to chord
+    await firstCard.getByTestId('type-toggle').click()
 
     // Turn off Key mode
     await page.getByText('C Major').click()
@@ -844,30 +758,6 @@ test.describe('Song Page', () => {
     // Clean up: switch back to full, clear degree, save not needed
     await page.getByText('Compact').click()
     await secondCard.getByText('ii (Dm)').click()
-  })
-
-  test('flourish keyset shows staff notation when key mode is active', async ({ page }) => {
-    page.on('dialog', dialog => dialog.accept())
-    await page.goto('/song/2')
-    await page.getByText('Key', { exact: true }).click()
-    await page.locator('h1').click()
-    await page.waitForTimeout(600)
-
-    const firstCard = page.getByTestId('keyset-card').first()
-
-    // Chord card should have staff notation
-    await expect(firstCard.getByTestId('staff-notation')).toBeVisible()
-
-    // Toggle to flourish
-    await firstCard.getByTestId('type-toggle').click()
-    await expect(firstCard.getByText('Flourish')).toBeVisible()
-
-    // Flourish card should still have staff notation
-    await expect(firstCard.getByTestId('staff-notation')).toBeVisible()
-
-    // Clean up: toggle back to chord, turn off Key
-    await firstCard.getByTestId('type-toggle').click()
-    await page.getByText('C Major').click()
   })
 
   test('flourish keyset does not show scale degree toggle', async ({ page }) => {

@@ -124,6 +124,11 @@ All icon buttons in the key set control bar follow a consistent pattern:
 - **⚠️ NEVER push local dev DB to production.** This risks overwriting/losing production data. Only pull (prod → local). To modify production data, use the app UI or run targeted SQL via `fly ssh console` with `better-sqlite3` (e.g. `node -e "const Database=require('better-sqlite3'); ..."`).
 - **Backups:** Fly volume snapshots are enabled (5-day retention, automatic daily).
 
+## Pending Test Improvements
+
+- **Phase 2: Unit tests** — Add Vitest for pure function unit tests (`identifyChord`, `staffWidth`, `formatNumeral`, `parseSongKey`, `KEY_COLORS`). Slim down E2E tests that are really testing logic, not integration.
+- **Phase 3: Per-test DB isolation** — Give each test file (or test) its own isolated DB so tests can run in parallel and don't need cleanup sections. Would roughly halve wall time from ~33s to ~15s.
+
 ## Keeping Context and Tests Up to Date
 
 After every feature, refactor, or bug fix — **before committing** — always do the following without waiting for the user to ask:
