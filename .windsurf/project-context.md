@@ -37,7 +37,7 @@ npm run dev
 - **Music theory:** tonal (chord detection from MIDI notes)
 - **Audio:** Tone.js (Sampler with Salamander piano samples for chord playback)
 - **Language:** TypeScript
-- **Testing:** Playwright E2E tests
+- **Testing:** Playwright E2E tests (`e2e/`)
 
 ## Data Model
 
@@ -126,8 +126,7 @@ All icon buttons in the key set control bar follow a consistent pattern:
 
 ## Pending Test Improvements
 
-- **Phase 2: Unit tests** — Add Vitest for pure function unit tests (`identifyChord`, `staffWidth`, `formatNumeral`, `parseSongKey`, `KEY_COLORS`). Slim down E2E tests that are really testing logic, not integration.
-- **Phase 3: Per-test DB isolation** — Give each test file (or test) its own isolated DB so tests can run in parallel and don't need cleanup sections. Would roughly halve wall time from ~33s to ~15s.
+- **Phase 3: Per-test DB isolation** — Give each test file (or test) its own isolated DB so tests can run in parallel and don't need cleanup sections. Would roughly halve E2E wall time from ~30s to ~15s.
 
 ## Keeping Context and Tests Up to Date
 
