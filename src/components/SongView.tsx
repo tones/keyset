@@ -358,13 +358,6 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
               setMode(newMode)
               updateCompactView(songId, newMode === 'compact').catch(() => {})
             }} />
-            {songKey !== null && (
-              <ToggleSwitch label="Staff" enabled={showStaff} onToggle={() => {
-                const next = !showStaff
-                setShowStaff(next)
-                updateShowStaff(songId, next).catch(() => {})
-              }} />
-            )}
             <div ref={keyPicker.containerRef} className="relative" onMouseLeave={keyPicker.onMouseLeave} onMouseEnter={() => { keyPicker.onMouseEnter(); if (songKey) keyPicker.show() }}>
               <ToggleSwitch label={songKey ? (() => { const p = parseSongKey(songKey); return p ? `${p.root} ${p.mode.charAt(0).toUpperCase() + p.mode.slice(1)}` : 'Key' })() : 'Key'} enabled={songKey !== null} onToggle={() => {
                 if (songKey !== null) {
@@ -403,6 +396,13 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
                 )
               })()}
             </div>
+            {songKey !== null && (
+              <ToggleSwitch label="Staff" enabled={showStaff} onToggle={() => {
+                const next = !showStaff
+                setShowStaff(next)
+                updateShowStaff(songId, next).catch(() => {})
+              }} />
+            )}
             {/* Guides toggle hidden but functionality preserved */}
           </div>
         </div>
