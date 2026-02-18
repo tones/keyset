@@ -75,6 +75,13 @@ export async function updateCompactView(songId: number, compact: boolean) {
   })
 }
 
+export async function updateShowStaff(songId: number, showStaff: boolean) {
+  await prisma.song.update({
+    where: { id: songId },
+    data: { showStaff },
+  })
+}
+
 export async function refreshAlbumArt(songId: number, title: string): Promise<string | null> {
   const { fetchAlbumArt } = await import('@/lib/albumArt')
   const url = await fetchAlbumArt(title)

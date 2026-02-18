@@ -690,6 +690,33 @@ test.describe('Song Page', () => {
     await page.getByText('Compact').click()
   })
 
+  test('full mode guide lines align with keyboard when staff is shown', async ({ page }) => {
+    page.on('dialog', dialog => dialog.accept())
+    await page.goto('/song/4')
+
+    // Song 4 has songKey "C major" and staff is on by default.
+    // Keysets 1 (C,E,G,C) and 2 (F,A,C,F) share note C5 (MIDI 72).
+    // The guide line SVG between them should align with the keyboard, not extend into the staff area.
+
+    // Get the keyboard width from the first card
+    const firstKeyboard = page.getByTestId('keyset-card').first().getByTestId('piano-keyboard')
+    const kbBox = await firstKeyboard.boundingBox()
+
+    // Get the guide SVG width via evaluate (the SVG is inside a negative-margin container)
+    const svgWidth = await page.evaluate(() => {
+      const line = document.querySelector('svg line[stroke="#eab308"]')
+      if (!line) return null
+      const svg = line.closest('svg')
+      if (!svg) return null
+      return svg.getBoundingClientRect().width
+    })
+
+    expect(svgWidth).not.toBeNull()
+    // The SVG's width should approximately match the keyboard's width (within 5px tolerance)
+    // If guide lines weren't accounting for staff width, the SVG would be much wider than the keyboard
+    expect(Math.abs(svgWidth! - kbBox!.width)).toBeLessThan(5)
+  })
+
   test('save bar appearing does not shift header position', async ({ page }) => {
     await page.goto('/song/4')
     // Get the album art position (first element of the header area)
@@ -765,6 +792,30 @@ test.describe('Song Page', () => {
     await expect(page.getByTestId('staff-notation').first()).not.toBeVisible()
   })
 
+  test('staff toggle hides and shows staff notation, persists across reload', async ({ page }) => {
+    page.on('dialog', dialog => dialog.accept())
+    await page.goto('/song/4')
+
+    // Song 4 has songKey set — staff notation should be visible by default
+    await expect(page.getByTestId('staff-notation').first()).toBeVisible()
+
+    // Toggle Staff off
+    await page.getByText('Staff').click()
+    await expect(page.getByTestId('staff-notation').first()).not.toBeVisible()
+
+    // Reload — staff should still be hidden (persisted)
+    await page.reload()
+    await expect(page.getByTestId('staff-notation').first()).not.toBeVisible()
+
+    // Toggle Staff back on
+    await page.getByText('Staff').click()
+    await expect(page.getByTestId('staff-notation').first()).toBeVisible()
+
+    // Reload — staff should still be visible (persisted)
+    await page.reload()
+    await expect(page.getByTestId('staff-notation').first()).toBeVisible()
+  })
+
   test('compact mode hides triad suggestion outlines on unselected keys', async ({ page }) => {
     // Song 4 has key C major. Keyset 2 has F,A,C,F. Set degree ii (Dm = D,F,A).
     // D keys are unselected triad members — should get outlines in full mode but not compact.
@@ -793,6 +844,30 @@ test.describe('Song Page', () => {
     // Clean up: switch back to full, clear degree, save not needed
     await page.getByText('Compact').click()
     await secondCard.getByText('ii (Dm)').click()
+  })
+
+  test('flourish keyset shows staff notation when key mode is active', async ({ page }) => {
+    page.on('dialog', dialog => dialog.accept())
+    await page.goto('/song/2')
+    await page.getByText('Key', { exact: true }).click()
+    await page.locator('h1').click()
+    await page.waitForTimeout(600)
+
+    const firstCard = page.getByTestId('keyset-card').first()
+
+    // Chord card should have staff notation
+    await expect(firstCard.getByTestId('staff-notation')).toBeVisible()
+
+    // Toggle to flourish
+    await firstCard.getByTestId('type-toggle').click()
+    await expect(firstCard.getByText('Flourish')).toBeVisible()
+
+    // Flourish card should still have staff notation
+    await expect(firstCard.getByTestId('staff-notation')).toBeVisible()
+
+    // Clean up: toggle back to chord, turn off Key
+    await firstCard.getByTestId('type-toggle').click()
+    await page.getByText('C Major').click()
   })
 
   test('flourish keyset does not show scale degree toggle', async ({ page }) => {

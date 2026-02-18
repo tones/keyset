@@ -43,6 +43,7 @@ export default async function SongPage({ params }: { params: Promise<{ id: strin
           cachedAnalysis={song.analysis ?? null}
           cachedAnalysisUpdatedAt={song.analysisUpdatedAt?.toISOString() ?? null}
           initialCompact={song.compactView}
+          initialShowStaff={song.showStaff}
           initialSongKey={song.songKey ?? null}
           onSaveTitle={async (title) => { 'use server'; const { updateSongTitle } = await import('./actions'); await updateSongTitle(song.id, title); }}
           onSaveYoutubeUrl={async (url) => { 'use server'; const { updateYoutubeUrl } = await import('./actions'); await updateYoutubeUrl(song.id, url); }}

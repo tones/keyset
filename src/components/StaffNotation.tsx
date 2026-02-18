@@ -82,6 +82,20 @@ function isAccidentalInKey(letter: string, accidental: string, keyAccidentals: {
   return keyAccidentals.some(ka => ka.note === letter && ka.accidental === accidental)
 }
 
+/** Compute the rendered pixel width of the staff SVG for a given songKey and height. */
+export function staffWidth(songKey: string, height: number): number {
+  const keyAccidentals = getKeySignatureAccidentals(songKey)
+  const keySigWidth = keyAccidentals.length * 5
+  const svgWidth = 18 + keySigWidth + 8 + 14 // clef + keySig + noteArea + margin
+  const LINE_SPACING = 3.5
+  const TREBLE_TOP = 6
+  const STAFF_HEIGHT = 4 * LINE_SPACING
+  const STAFF_GAP = 14
+  const bassBottomY = TREBLE_TOP + STAFF_HEIGHT + STAFF_GAP + STAFF_HEIGHT
+  const svgHeight = bassBottomY + 8
+  return svgWidth * (height / svgHeight)
+}
+
 interface StaffNotationProps {
   midiNotes: number[]
   songKey: string

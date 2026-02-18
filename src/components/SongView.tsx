@@ -6,7 +6,7 @@ import SongAnalysis from '@/components/SongAnalysis'
 import EditableTitle from '@/components/EditableTitle'
 import YouTubeLink from '@/components/YouTubeLink'
 import { useRouter } from 'next/navigation'
-import { saveKeySets, refreshAlbumArt, updateCompactView } from '@/app/song/[id]/actions'
+import { saveKeySets, refreshAlbumArt, updateCompactView, updateShowStaff } from '@/app/song/[id]/actions'
 import { usePopover } from '@/hooks/usePopover'
 import { ROOTS, MODE_NAMES, parseSongKey, formatSongKey, type Root, type ModeName } from '@/lib/scales'
 import { analyzeSong } from '@/app/song/[id]/analyze'
@@ -39,6 +39,7 @@ interface SongViewProps {
   cachedAnalysis: string | null
   cachedAnalysisUpdatedAt: string | null
   initialCompact: boolean
+  initialShowStaff: boolean
   initialSongKey: string | null
   onSaveTitle: (title: string) => Promise<void>
   onSaveYoutubeUrl: (url: string | null) => Promise<void>
@@ -46,9 +47,10 @@ interface SongViewProps {
 
 let nextTempId = -1
 
-export default function SongView({ songId, keySets: serverKeySets, initialTitle, imageUrl: initialImageUrl, initialYoutubeUrl, llmProvider, cachedAnalysis, cachedAnalysisUpdatedAt, initialCompact, initialSongKey, onSaveTitle, onSaveYoutubeUrl }: SongViewProps) {
+export default function SongView({ songId, keySets: serverKeySets, initialTitle, imageUrl: initialImageUrl, initialYoutubeUrl, llmProvider, cachedAnalysis, cachedAnalysisUpdatedAt, initialCompact, initialShowStaff, initialSongKey, onSaveTitle, onSaveYoutubeUrl }: SongViewProps) {
   const router = useRouter()
   const [mode, setMode] = useState<'full' | 'compact'>(initialCompact ? 'compact' : 'full')
+  const [showStaff, setShowStaff] = useState(initialShowStaff)
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(initialImageUrl)
   const [showCommonTones, setShowCommonTones] = useState(true)
   const [songKey, setSongKey] = useState<string | null>(initialSongKey)
@@ -356,6 +358,11 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
               setMode(newMode)
               updateCompactView(songId, newMode === 'compact').catch(() => {})
             }} />
+            <ToggleSwitch label="Staff" enabled={showStaff} onToggle={() => {
+              const next = !showStaff
+              setShowStaff(next)
+              updateShowStaff(songId, next).catch(() => {})
+            }} />
             <div ref={keyPicker.containerRef} className="relative" onMouseLeave={keyPicker.onMouseLeave} onMouseEnter={() => { keyPicker.onMouseEnter(); if (songKey) keyPicker.show() }}>
               <ToggleSwitch label={songKey ? (() => { const p = parseSongKey(songKey); return p ? `${p.root} ${p.mode.charAt(0).toUpperCase() + p.mode.slice(1)}` : 'Key' })() : 'Key'} enabled={songKey !== null} onToggle={() => {
                 if (songKey !== null) {
@@ -402,6 +409,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
       <SortableKeySetList
         keySets={keySets}
         compact={mode === 'compact'}
+        showStaff={showStaff}
         showCommonTones={showCommonTones}
         songKey={songKey}
         onAdd={handleAdd}

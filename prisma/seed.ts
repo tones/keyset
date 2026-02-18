@@ -31,6 +31,7 @@ async function main() {
   const song4 = await prisma.song.create({ data: {
     title: "Tim's Beautiful Song",
     youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    imageUrl: "https://i.scdn.co/image/ab67616d0000b273placeholder",
     songKey: "C major",
     analysis: "Key: C major\n\n1. \"Verse 1 - C Major\" (C4, E4, G4, C5) — C major triad\n2. \"Verse 2 - F Major\" (F4, A4, C5, F5) — F major triad\n3. \"Bridge - G Major\" (G4, B4, D5, G5) — G major triad\n\nThis is a classic I-IV-V progression in C major.",
     analysisUpdatedAt: new Date('2026-01-15T10:30:00Z'),
