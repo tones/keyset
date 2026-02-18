@@ -114,7 +114,7 @@ All icon buttons in the key set control bar follow a consistent pattern:
 
 - **App:** `keyset-app` → https://keyset-app.fly.dev/
 - **Region:** `sjc` (San Jose)
-- **Auth:** HTTP Basic Auth via `src/proxy.ts` (Next.js 16 "proxy" convention). Only active when `AUTH_PASSWORD` secret is set (production). No auth in local dev.
+- **Auth:** Cookie-based session auth via `src/proxy.ts` (Next.js 16 "proxy" convention) + `/login` page. On first visit, redirects to `/login` form. Successful login sets `auth_session` HttpOnly cookie (30-day expiry, HMAC-signed). Only active when `AUTH_PASSWORD` secret is set (production). No auth in local dev. `min_machines_running = 1` keeps machine always on (~$3/mo) to eliminate cold starts.
 - **Database:** SQLite on a persistent Fly volume mounted at `/data`. `DATABASE_URL=file:/data/keyset.db`.
 - **Secrets:** `AUTH_PASSWORD`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET` (set via `fly secrets set`). `LLM_PROVIDER` defaults to `openai`.
 - **Build:** Multi-stage Dockerfile with `output: "standalone"` in `next.config.ts`. Pages use `force-dynamic` to avoid DB access at build time.
