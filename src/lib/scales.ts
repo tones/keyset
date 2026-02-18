@@ -49,11 +49,16 @@ export function isNoteInKey(midiNote: number, root: Root, mode: ModeName): boole
   return getScalePitchClasses(root, mode).has(pitchClass)
 }
 
+// Map sharp roots to enharmonic flats so tonal doesn't produce double-sharps (e.g. F##dim, C##m)
+const ENHARMONIC_FOR_TONAL: Record<string, string> = { 'D#': 'Eb', 'G#': 'Ab', 'A#': 'Bb' }
+function tonalRoot(root: Root): string { return ENHARMONIC_FOR_TONAL[root] ?? root }
+
 /** Get the triad chord name (e.g. 'C', 'Dm', 'Bdim') for a scale degree using tonal's Key data */
 export function getTriadName(root: Root, mode: ModeName, degree: number): string | null {
+  const r = tonalRoot(root)
   const keyData = mode === 'minor'
-    ? Key.minorKey(root)?.natural
-    : Key.majorKey(root)
+    ? Key.minorKey(r)?.natural
+    : Key.majorKey(r)
   const triads = keyData?.triads as string[] | undefined
   if (!triads || degree < 1 || degree > 7) return null
   return triads[degree - 1]
@@ -61,9 +66,10 @@ export function getTriadName(root: Root, mode: ModeName, degree: number): string
 
 /** Get the triad quality ('major' | 'minor' | 'diminished') for a scale degree using tonal's Key data */
 export function getTriadQuality(root: Root, mode: ModeName, degree: number): 'major' | 'minor' | 'diminished' {
+  const r = tonalRoot(root)
   const keyData = mode === 'minor'
-    ? Key.minorKey(root)?.natural
-    : Key.majorKey(root)
+    ? Key.minorKey(r)?.natural
+    : Key.majorKey(r)
   const triads = keyData?.triads as string[] | undefined
   if (!triads || degree < 1 || degree > 7) return 'major'
   const triad = triads[degree - 1]
