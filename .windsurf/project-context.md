@@ -120,7 +120,7 @@ All icon buttons in the key set control bar follow a consistent pattern:
 - **Build:** Multi-stage Dockerfile with `output: "standalone"` in `next.config.ts`. Pages use `force-dynamic` to avoid DB access at build time.
 - **Startup:** `scripts/start.sh` runs `prisma migrate deploy` then `node server.js`.
 - **Redeploy:** `fly deploy --app keyset-app` from the project root.
-- **Sync prod → local:** `npm run db:pull` (overwrites `dev.db` at project root with production DB, then restart dev server). Requires `fly ssh issue --agent` if SSH cert has expired (certs last 24h).
+- **Sync prod → local:** Always use `npm run db:pull` — it removes the old `dev.db`, pulls from production, and **restarts the dev server** so the new data is picked up. The dev server caches the Prisma/SQLite connection in `globalForPrisma`, so replacing the DB file without restarting will silently serve stale data. Requires `fly ssh issue --agent` if SSH cert has expired (certs last 24h).
 - **⚠️ NEVER push local dev DB to production.** This risks overwriting/losing production data. Only pull (prod → local). To modify production data, use the app UI or run targeted SQL via `fly ssh console` with `better-sqlite3` (e.g. `node -e "const Database=require('better-sqlite3'); ..."`).
 - **Backups:** Fly volume snapshots are enabled (5-day retention, automatic daily).
 
