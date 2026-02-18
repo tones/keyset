@@ -782,4 +782,112 @@ test.describe('Song Page', () => {
     await firstCard.getByTestId('type-toggle').click()
     await page.getByText('C Major').click()
   })
+
+  test('Staff toggle is only visible when Key mode is on', async ({ page }) => {
+    await page.goto('/song/1')
+
+    // Song 1 has no songKey — Staff toggle should not be visible
+    await expect(page.getByText('Staff')).not.toBeVisible()
+
+    // Compact should still be visible
+    await expect(page.getByText('Compact')).toBeVisible()
+  })
+
+  test('Simplify toggle is only visible when both Key and Compact are on', async ({ page }) => {
+    page.on('dialog', dialog => dialog.accept())
+    await page.goto('/song/4')
+
+    // Song 4 has songKey "C major" — Key is on, but Compact is off
+    // Staff should be visible, Simplify should not
+    await expect(page.getByText('Staff')).toBeVisible()
+    await expect(page.getByText('Simplify')).not.toBeVisible()
+
+    // Turn on Compact — Simplify should now appear
+    await page.getByText('Compact').click()
+    await expect(page.getByText('Simplify')).toBeVisible()
+
+    // Turn off Key — both Staff and Simplify should disappear
+    await page.getByText('C Major').click()
+    await expect(page.getByText('Staff')).not.toBeVisible()
+    await expect(page.getByText('Simplify')).not.toBeVisible()
+
+    // Turn Key back on — both should reappear (still in compact)
+    await page.getByText('Key', { exact: true }).click()
+    await page.locator('h1').click()
+    await page.waitForTimeout(600)
+    await expect(page.getByText('Staff')).toBeVisible()
+    await expect(page.getByText('Simplify')).toBeVisible()
+
+    // Turn off Compact — Simplify should disappear, Staff stays
+    await page.getByText('Compact').click()
+    await expect(page.getByText('Staff')).toBeVisible()
+    await expect(page.getByText('Simplify')).not.toBeVisible()
+  })
+
+  test('Simplify mode filters notes to triad only', async ({ page }) => {
+    page.on('dialog', dialog => dialog.accept())
+    // Use song 1 to avoid state contamination from other song 4 tests
+    // Song 1 keyset 1: [57,60,64,69] = A3,C4,E4,A4 (Am chord)
+    await page.goto('/song/1')
+
+    // Enable Key mode — set to A minor via the key picker popover
+    await page.getByText('Key', { exact: true }).click()
+    // Key picker popover should open — select root A and mode Minor
+    const keyPicker = page.locator('.grid.grid-cols-4')
+    await keyPicker.getByText('A', { exact: true }).click()
+    const modePicker = page.locator('.grid.grid-cols-2')
+    await modePicker.getByText('Minor').click()
+    // Close popover
+    await page.locator('h1').click()
+    await page.waitForTimeout(300)
+
+    // Add B3 (MIDI 59) — B is not in A minor triad (A,C,E) but is in A minor scale
+    const firstCard = page.getByTestId('keyset-card').first()
+    const b3 = firstCard.locator('[data-note="59"]')
+    await b3.click()
+    await expect(b3).toHaveAttribute('data-highlighted', 'true')
+
+    // Switch to compact + simplify
+    await page.getByText('Compact').click()
+    await expect(page.getByText('Simplify')).toBeVisible()
+    await page.getByText('Simplify').click()
+
+    // B3 should no longer be highlighted (B is not in A minor triad: A=57, C=60, E=64)
+    const compactB3 = page.getByTestId('keyset-card').first().locator('[data-note="59"]')
+    await expect(compactB3).not.toHaveAttribute('data-highlighted', 'true')
+
+    // A3 (57) should still be highlighted (A is in the triad)
+    const compactA3 = page.getByTestId('keyset-card').first().locator('[data-note="57"]')
+    await expect(compactA3).toHaveAttribute('data-highlighted', 'true')
+
+    // Turn off Simplify — B3 should reappear
+    await page.getByText('Simplify').click()
+    await expect(compactB3).toHaveAttribute('data-highlighted', 'true')
+
+    // Clean up: switch back to full, remove B3, turn off Key
+    await page.getByText('Compact').click()
+    await b3.click()
+    await page.getByText('A Minor', { exact: true }).click()
+  })
+
+  test('Simplify mode does not affect flourish keysets', async ({ page }) => {
+    page.on('dialog', dialog => dialog.accept())
+    await page.goto('/song/4')
+
+    // Switch to compact + simplify
+    await page.getByText('Compact').click()
+    await page.getByText('Simplify').click()
+
+    // Keyset 4 is a flourish with notes [60,62,64,65,67] = C,D,E,F,G
+    // D (62) and F (65) are NOT in C major triad, but flourish should be unaffected
+    const flourishCard = page.getByTestId('keyset-card').nth(3)
+    const d4 = flourishCard.locator('[data-note="62"]')
+    const f4 = flourishCard.locator('[data-note="65"]')
+    await expect(d4).toHaveAttribute('data-highlighted', 'true')
+    await expect(f4).toHaveAttribute('data-highlighted', 'true')
+
+    // Clean up
+    await page.getByText('Simplify').click()
+    await page.getByText('Compact').click()
+  })
 })
