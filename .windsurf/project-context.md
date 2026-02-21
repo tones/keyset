@@ -98,6 +98,22 @@ All icon buttons in the key set control bar follow a consistent pattern:
   - Uses `data-testid` for both the trigger button and the popover div.
 - **When adding a new control:** Follow the same `w-7 h-7` wrapper, 18×18 stroke SVG, and gray-400/blue-500 color scheme. If it needs options, use the popover pattern. Place it in the right group if it edits data, left group if it's read-only.
 
+## Future Ideas (Parked)
+
+### MIDI Controller Input
+**Goal:** Toggle keyset notes using a hardware MIDI keyboard. A MIDI icon button per keyset would "arm" it to receive MIDI input.
+
+**Desktop (Chrome/Edge):** Straightforward via the Web MIDI API (`navigator.requestMIDIAccess()`). Listen for `midimessage` "note on" events, call `onToggleNote` on the armed keyset. ~30 lines of code.
+
+**iPad/Safari:** Not possible in a browser. Apple declined to implement Web MIDI API (privacy/fingerprinting concerns). All iOS browsers use Safari's WebKit engine, so no browser on iPad supports it. No viable polyfill exists.
+
+**Options to enable iPad MIDI support (all require native iOS tooling + Apple Developer account $99/yr):**
+- **Option A: WebView wrapper (~1-2 days)** — Wrap the existing web app in a native iOS WebView (Expo or Capacitor). Bridge CoreMIDI events from native → WebView via `postMessage`. Zero UI rewrite, but the app still depends on the Fly.io server.
+- **Option B: Capacitor (~2-3 days)** — Use [Capacitor](https://capacitorjs.com/) to wrap the web app in a native shell with a custom MIDI plugin using iOS CoreMIDI. Cleanest native-wrapper approach, designed for this use case.
+- **Option C: Full React Native rewrite (weeks-months)** — Rewrite all UI with React Native primitives. Not worth it for one feature.
+
+**Decision (Feb 2026):** Parked. Not worth the native tooling overhead right now. Revisit if iPad MIDI becomes a priority.
+
 ## Important Gotchas
 
 - **Next.js 16 `params` is a Promise** — In dynamic route pages, `params` must be `await`ed before accessing properties. Type as `{ params: Promise<{ id: string }> }`.
