@@ -54,7 +54,7 @@ export default function SongAnalysis({ songTitle, chordDetail, llmProvider, anal
 
       {analysis && (
         <div className={`mt-4 p-6 rounded-lg shadow border font-serif ${loading ? 'invisible' : 'visible'}`} style={{ backgroundColor: 'var(--analysis-bg)', borderColor: 'var(--analysis-border)' }}>
-          <div className="float-right flex items-center gap-2 ml-4">
+          <div className="float-right flex items-center gap-2 ml-4 relative z-10">
             {onApplyKeyAndDegrees && (
               <button
                 onClick={() => {
