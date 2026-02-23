@@ -10,3 +10,6 @@ export const KEY_COLORS: Record<string, { white: string; black: string; mutedWhi
 
 export const COLOR_NAMES = Object.keys(KEY_COLORS)
 export const DEFAULT_COLOR = 'red'
+
+// Primary colors define the chord (RH/LH). Decoration colors (green, purple) are visual only.
+export const PRIMARY_COLORS = new Set(['red', 'blue'])

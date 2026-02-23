@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { deleteSong, duplicateSong } from '@/app/actions'
 import { identifyChord } from '@/lib/chordId'
+import { PRIMARY_COLORS } from '@/lib/colors'
 import type { KeySet } from '@/types'
 
 interface Song {
@@ -85,7 +86,7 @@ export default function SongList({ songs }: { songs: Song[] }) {
                   <span key={keySet.id} className={`shrink-0 text-[11px] font-medium px-1.5 py-0.5 rounded-full ${keySet.type === 'flourish' ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 italic' : 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}`}>
                     {keySet.type === 'flourish'
                       ? '♪'
-                      : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map(kp => kp.midiNote), song.songKey) : '—'}
+                      : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.filter(kp => PRIMARY_COLORS.has(kp.color)).map(kp => kp.midiNote), song.songKey) : '—'}
                   </span>
                 ))}
                 {song.keySets.length > 4 && <span className="text-[11px] text-gray-400">…</span>}

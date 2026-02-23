@@ -12,6 +12,7 @@ import { ROOTS, MODE_NAMES, parseSongKey, formatSongKey, type Root, type ModeNam
 import { analyzeSong } from '@/app/song/[id]/analyze'
 import { identifyChord } from '@/lib/chordId'
 import { midiToNoteName } from '@/lib/midi'
+import { PRIMARY_COLORS } from '@/lib/colors'
 import ThemeToggle from '@/components/ThemeToggle'
 import type { KeySet } from '@/types'
 
@@ -93,8 +94,9 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
     return ks
       .filter(k => k.type !== 'flourish')
       .map((k, i) => {
-        const notes = k.keyPresses.map(kp => midiToNoteName(kp.midiNote)).join(', ')
-        const chordName = k.keyPresses.length > 0 ? identifyChord(k.keyPresses.map(kp => kp.midiNote), songKey) : '(empty)'
+        const primary = k.keyPresses.filter(kp => PRIMARY_COLORS.has(kp.color))
+        const notes = primary.map(kp => midiToNoteName(kp.midiNote)).join(', ')
+        const chordName = primary.length > 0 ? identifyChord(primary.map(kp => kp.midiNote), songKey) : '(empty)'
         return `${i + 1}. ${chordName} \u2014 notes: ${notes || 'none'}`
       })
       .join('\n')

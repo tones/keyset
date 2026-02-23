@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { usePopover } from '@/hooks/usePopover'
-import { KEY_COLORS, COLOR_NAMES, DEFAULT_COLOR } from '@/lib/colors'
+import { KEY_COLORS, COLOR_NAMES, DEFAULT_COLOR, PRIMARY_COLORS } from '@/lib/colors'
 import {
   DndContext,
   closestCenter,
@@ -107,7 +107,9 @@ function CommonToneLines({ above, below, padX = 24, padLeft, padRight, compact =
 
 function CompactKeySetCard({ keySet, songKey, commonBelow = [], showGuides = true, showStaff = true, inKeyPitchClasses, triadPitchClasses }: { keySet: KeySet; songKey?: string | null; commonBelow?: number[]; showGuides?: boolean; showStaff?: boolean; inKeyPitchClasses?: Set<number>; triadPitchClasses?: Set<number> }) {
   const allNotes = keySet.keyPresses.map((kp) => kp.midiNote)
-  const chordName = identifyChord(allNotes, songKey)
+  const primaryPresses = keySet.keyPresses.filter(kp => PRIMARY_COLORS.has(kp.color))
+  const primaryNotes = primaryPresses.map(kp => kp.midiNote)
+  const chordName = identifyChord(primaryNotes, songKey)
   const displayedNotes = allNotes
   const displayedColors = Object.fromEntries(keySet.keyPresses.map(kp => [kp.midiNote, kp.color]))
 
@@ -117,11 +119,11 @@ function CompactKeySetCard({ keySet, songKey, commonBelow = [], showGuides = tru
         <h2 className="text-xs font-semibold text-gray-900 dark:text-gray-100 truncate max-w-full" data-testid="chord-label">
           {keySet.type === 'flourish'
             ? <span className="text-amber-600 italic">Flourish</span>
-            : keySet.keyPresses.length > 0 ? (() => { const name = identifyChord(keySet.keyPresses.map((kp) => kp.midiNote), songKey); if (!keySet.scaleDegree) return name; const parsed = parseSongKey(songKey ?? null); const triadName = parsed ? getTriadName(parsed.root, parsed.mode, keySet.scaleDegree) : null; return <><span className="block">{name}</span><span className="text-blue-500 font-normal block">{formatNumeral(keySet.scaleDegree, songKey)}{triadName ? ` (${triadName})` : ''}</span></> })() : '\u00A0'}
+            : primaryPresses.length > 0 ? (() => { const name = identifyChord(primaryNotes, songKey); if (!keySet.scaleDegree) return name; const parsed = parseSongKey(songKey ?? null); const triadName = parsed ? getTriadName(parsed.root, parsed.mode, keySet.scaleDegree) : null; return <><span className="block">{name}</span><span className="text-blue-500 font-normal block">{formatNumeral(keySet.scaleDegree, songKey)}{triadName ? ` (${triadName})` : ''}</span></> })() : '\u00A0'}
         </h2>
-        {keySet.keyPresses.length > 0 && keySet.type !== 'flourish' && (
+        {primaryPresses.length > 0 && keySet.type !== 'flourish' && (
           <button
-            onClick={() => playChord(keySet.keyPresses.map((kp) => kp.midiNote))}
+            onClick={() => playChord(primaryNotes)}
             className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-blue-500 transition-colors cursor-pointer mt-0.5"
             title="Play Chord"
           >
@@ -203,11 +205,11 @@ function SortableKeySetCard({ keySet, songKey, showStaff = true, inKeyPitchClass
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100" data-testid="chord-label">
             {keySet.type === 'flourish'
               ? <span className="text-amber-600 italic">Flourish</span>
-              : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.map((kp) => kp.midiNote), songKey) : '\u00A0'}
+              : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.filter(kp => PRIMARY_COLORS.has(kp.color)).map(kp => kp.midiNote), songKey) : '\u00A0'}
           </h2>
           {keySet.keyPresses.length > 0 && keySet.type !== 'flourish' && (
             <button
-              onClick={() => playChord(keySet.keyPresses.map((kp) => kp.midiNote))}
+              onClick={() => playChord(keySet.keyPresses.filter(kp => PRIMARY_COLORS.has(kp.color)).map(kp => kp.midiNote))}
               className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-blue-500 transition-colors cursor-pointer"
               title="Play Chord"
             >
@@ -293,16 +295,24 @@ function SortableKeySetCard({ keySet, songKey, showStaff = true, inKeyPitchClass
             {colorPicker.open && (
               <div className="absolute right-0 top-10 z-10 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3" data-testid="color-popover">
                 <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Brush Color</div>
-                <div className="flex gap-1.5">
-                  {COLOR_NAMES.map((color) => (
-                    <button
-                      key={color}
-                      onClick={() => setActiveColor(color)}
-                      className={`w-7 h-7 rounded-full cursor-pointer transition-all ${activeColor === color ? 'ring-2 ring-offset-1 ring-gray-400 scale-110' : 'hover:scale-110'}`}
-                      style={{ backgroundColor: KEY_COLORS[color].white }}
-                      title={KEY_COLORS[color].label}
-                    />
-                  ))}
+                <div className="flex flex-col gap-1">
+                  {COLOR_NAMES.map((color) => {
+                    const handLabel = color === 'red' ? 'Right Hand' : color === 'blue' ? 'Left Hand' : null
+                    const isActive = activeColor === color
+                    return (
+                      <button
+                        key={color}
+                        onClick={() => setActiveColor(color)}
+                        className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer transition-colors whitespace-nowrap ${isActive ? 'bg-gray-100 dark:bg-gray-700' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}
+                        title={KEY_COLORS[color].label}
+                      >
+                        <span className={`w-5 h-5 rounded-full shrink-0 ${isActive ? 'ring-2 ring-offset-1 ring-gray-400' : ''}`} style={{ backgroundColor: KEY_COLORS[color].white }} />
+                        <span className={`text-xs ${isActive ? 'font-semibold text-gray-900 dark:text-gray-100' : 'text-gray-600 dark:text-gray-300'}`}>
+                          {handLabel ?? KEY_COLORS[color].label}
+                        </span>
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             )}
