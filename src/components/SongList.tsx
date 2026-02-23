@@ -84,7 +84,9 @@ export default function SongList({ songs }: { songs: Song[] }) {
               <div className="flex gap-1 items-center">
                 {song.keySets.slice(0, 4).map((keySet) => (
                   <span key={keySet.id} className={`shrink-0 text-[11px] font-medium px-1.5 py-0.5 rounded-full ${keySet.type === 'flourish' ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 italic' : 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}`}>
-                    {keySet.type === 'flourish'
+                    {keySet.name
+                      ? keySet.name
+                      : keySet.type === 'flourish'
                       ? '♪'
                       : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.filter(kp => PRIMARY_COLORS.has(kp.color)).map(kp => kp.midiNote), song.songKey) : '—'}
                   </span>

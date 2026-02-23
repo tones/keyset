@@ -385,6 +385,40 @@ test.describe('Song Page', () => {
     await clickSave(page)
   })
 
+  test('rename keyset shows custom name, clearing reverts to derived chord', async ({ page }) => {
+    await page.goto('/song/4')
+    const firstCard = page.getByTestId('keyset-card').first()
+    const label = firstCard.getByTestId('chord-label')
+
+    // Should show derived chord initially
+    await expect(label).toHaveText('CM')
+
+    // Click to edit, type a custom name
+    await label.click()
+    const input = firstCard.getByTestId('chord-label-input')
+    await expect(input).toBeVisible()
+    await input.fill('Intro')
+    await input.press('Enter')
+
+    // Should now show custom name
+    await expect(firstCard.getByTestId('chord-label')).toHaveText('Intro')
+
+    // Save and reload to verify persistence
+    await clickSave(page)
+    await page.reload()
+    await expect(page.getByTestId('keyset-card').first().getByTestId('chord-label')).toHaveText('Intro')
+
+    // Clear the name to revert to derived chord
+    await page.getByTestId('keyset-card').first().getByTestId('chord-label').click()
+    const input2 = page.getByTestId('keyset-card').first().getByTestId('chord-label-input')
+    await input2.fill('')
+    await input2.press('Enter')
+    await expect(page.getByTestId('keyset-card').first().getByTestId('chord-label')).toHaveText('CM')
+
+    // Save to clean up
+    await clickSave(page)
+  })
+
   test('cached analysis displays on page load with timestamp', async ({ page }) => {
     // Song 4 (Tim's Beautiful Song) has a seeded analysis
     await page.goto('/song/4')

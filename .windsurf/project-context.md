@@ -43,7 +43,7 @@ npm run dev
 
 ```
 Song (id, title, imageUrl?, youtubeUrl?, analysis?, analysisUpdatedAt?, compactView, showStaff, songKey?, createdAt, updatedAt)
-  └─ KeySet (id, position, type, scaleDegree?, songId, createdAt, updatedAt)
+  └─ KeySet (id, position, type, name?, scaleDegree?, songId, createdAt, updatedAt)
        └─ KeyPress (id, midiNote, color, keySetId, createdAt)
 ```
 

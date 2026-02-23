@@ -53,6 +53,7 @@ interface SortableKeySetListProps {
   onShiftNotes: (keySetId: number, delta: number) => void
   onToggleType: (keySetId: number) => void
   onSetScaleDegree: (keySetId: number, degree: number | null) => void
+  onRename: (keySetId: number, name: string | null) => void
   onReorder: (keySets: KeySet[]) => void
 }
 
@@ -68,6 +69,7 @@ interface KeySetCardProps {
   onShiftNotes: (keySetId: number, delta: number) => void
   onToggleType: (keySetId: number) => void
   onSetScaleDegree?: (keySetId: number, degree: number | null) => void
+  onRename: (keySetId: number, name: string | null) => void
 }
 
 
@@ -117,7 +119,9 @@ function CompactKeySetCard({ keySet, songKey, commonBelow = [], showGuides = tru
     <div className={`flex items-center gap-2 px-3 py-3 ${keySet.type === 'flourish' ? 'bg-amber-50/50 dark:bg-amber-900/20' : ''}`} data-testid="keyset-card">
       <div className="w-16 shrink-0 flex flex-col items-start">
         <h2 className="text-xs font-semibold text-gray-900 dark:text-gray-100 truncate max-w-full" data-testid="chord-label">
-          {keySet.type === 'flourish'
+          {keySet.name
+            ? (() => { if (!keySet.scaleDegree) return keySet.name; const parsed = parseSongKey(songKey ?? null); const triadName = parsed ? getTriadName(parsed.root, parsed.mode, keySet.scaleDegree) : null; return <><span className="block">{keySet.name}</span><span className="text-blue-500 font-normal block">{formatNumeral(keySet.scaleDegree, songKey)}{triadName ? ` (${triadName})` : ''}</span></> })()
+            : keySet.type === 'flourish'
             ? <span className="text-amber-600 italic">Flourish</span>
             : primaryPresses.length > 0 ? (() => { const name = identifyChord(primaryNotes, songKey); if (!keySet.scaleDegree) return name; const parsed = parseSongKey(songKey ?? null); const triadName = parsed ? getTriadName(parsed.root, parsed.mode, keySet.scaleDegree) : null; return <><span className="block">{name}</span><span className="text-blue-500 font-normal block">{formatNumeral(keySet.scaleDegree, songKey)}{triadName ? ` (${triadName})` : ''}</span></> })() : '\u00A0'}
         </h2>
@@ -161,12 +165,17 @@ function CompactKeySetCard({ keySet, songKey, commonBelow = [], showGuides = tru
   )
 }
 
-function SortableKeySetCard({ keySet, songKey, showStaff = true, inKeyPitchClasses, triadPitchClasses, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType, onSetScaleDegree }: KeySetCardProps) {
+function SortableKeySetCard({ keySet, songKey, showStaff = true, inKeyPitchClasses, triadPitchClasses, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType, onSetScaleDegree, onRename }: KeySetCardProps) {
   const [activeColor, setActiveColor] = useState(DEFAULT_COLOR)
   const [lastDegree, setLastDegree] = useState<number | null>(keySet.scaleDegree)
+  const [editingName, setEditingName] = useState(false)
+  const [nameDraft, setNameDraft] = useState('')
   const colorPicker = usePopover()
   const transposePicker = usePopover()
   const degreePicker = usePopover()
+
+  const primaryNotes = keySet.keyPresses.filter(kp => PRIMARY_COLORS.has(kp.color)).map(kp => kp.midiNote)
+  const derivedChord = keySet.type === 'flourish' ? 'Flourish' : (primaryNotes.length > 0 ? identifyChord(primaryNotes, songKey) : '')
 
   const {
     attributes,
@@ -202,11 +211,30 @@ function SortableKeySetCard({ keySet, songKey, showStaff = true, inKeyPitchClass
               <circle cx="13" cy="16" r="1.5" />
             </svg>
           </button>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100" data-testid="chord-label">
-            {keySet.type === 'flourish'
-              ? <span className="text-amber-600 italic">Flourish</span>
-              : keySet.keyPresses.length > 0 ? identifyChord(keySet.keyPresses.filter(kp => PRIMARY_COLORS.has(kp.color)).map(kp => kp.midiNote), songKey) : '\u00A0'}
-          </h2>
+          {editingName ? (
+            <input
+              autoFocus
+              className="text-xl font-semibold text-gray-900 dark:text-gray-100 bg-transparent border-b border-gray-300 dark:border-gray-600 outline-none min-w-[60px] max-w-[200px]"
+              value={nameDraft}
+              placeholder={derivedChord || '\u00A0'}
+              onChange={e => setNameDraft(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') { onRename(keySet.id, nameDraft.trim() || null); setEditingName(false) }
+                if (e.key === 'Escape') setEditingName(false)
+              }}
+              onBlur={() => { onRename(keySet.id, nameDraft.trim() || null); setEditingName(false) }}
+              data-testid="chord-label-input"
+            />
+          ) : (
+            <h2
+              className={`text-xl font-semibold cursor-text ${keySet.name ? 'text-gray-900 dark:text-gray-100' : keySet.type === 'flourish' ? 'text-amber-600 italic' : 'text-gray-900 dark:text-gray-100'}`}
+              data-testid="chord-label"
+              onClick={() => { setNameDraft(keySet.name ?? ''); setEditingName(true) }}
+              title="Click to rename"
+            >
+              {keySet.name || (keySet.type === 'flourish' ? <span className="text-amber-600 italic">Flourish</span> : derivedChord || '\u00A0')}
+            </h2>
+          )}
           {keySet.keyPresses.length > 0 && keySet.type !== 'flourish' && (
             <button
               onClick={() => playChord(keySet.keyPresses.filter(kp => PRIMARY_COLORS.has(kp.color)).map(kp => kp.midiNote))}
@@ -394,7 +422,7 @@ function SortableKeySetCard({ keySet, songKey, showStaff = true, inKeyPitchClass
   )
 }
 
-export default function SortableKeySetList({ keySets, compact, showStaff = true, showCommonTones = true, songKey, onAdd, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType, onSetScaleDegree, onReorder }: SortableKeySetListProps) {
+export default function SortableKeySetList({ keySets, compact, showStaff = true, showCommonTones = true, songKey, onAdd, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType, onSetScaleDegree, onRename, onReorder }: SortableKeySetListProps) {
   const parsed = parseSongKey(songKey ?? null)
   const inKeyPitchClasses = parsed ? getScalePitchClasses(parsed.root, parsed.mode) : undefined
 
@@ -442,7 +470,7 @@ export default function SortableKeySetList({ keySets, compact, showStaff = true,
           {keySets.map((keySet, i) => (
             <div key={keySet.id}>
               {i > 0 && <div className="py-3"><CommonToneLines above={keySets[i - 1]} below={keySet} visible={showCommonTones} padRight={songKey && showStaff ? 24 + 8 + staffWidth(songKey, 110) : undefined} /></div>}
-              <SortableKeySetCard keySet={keySet} songKey={songKey} showStaff={showStaff} inKeyPitchClasses={inKeyPitchClasses} triadPitchClasses={parsed && keySet.scaleDegree ? getTriadPitchClasses(parsed.root, parsed.mode, keySet.scaleDegree) : undefined} onDelete={onDelete} onDuplicate={onDuplicate} onToggleNote={onToggleNote} onShiftNotes={onShiftNotes} onToggleType={onToggleType} onSetScaleDegree={inKeyPitchClasses ? onSetScaleDegree : undefined} />
+              <SortableKeySetCard keySet={keySet} songKey={songKey} showStaff={showStaff} inKeyPitchClasses={inKeyPitchClasses} triadPitchClasses={parsed && keySet.scaleDegree ? getTriadPitchClasses(parsed.root, parsed.mode, keySet.scaleDegree) : undefined} onDelete={onDelete} onDuplicate={onDuplicate} onToggleNote={onToggleNote} onShiftNotes={onShiftNotes} onToggleType={onToggleType} onSetScaleDegree={inKeyPitchClasses ? onSetScaleDegree : undefined} onRename={onRename} />
             </div>
           ))}
         </div>
