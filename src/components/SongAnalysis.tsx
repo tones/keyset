@@ -1,6 +1,7 @@
 'use client'
 
 import ReactMarkdown from 'react-markdown'
+import { buildChatPrompt } from '@/lib/analysisPrompt'
 
 interface SongAnalysisProps {
   songTitle: string
@@ -75,7 +76,7 @@ export default function SongAnalysis({ songTitle, chordDetail, llmProvider, anal
             )}
             <button
               onClick={() => {
-                const prompt = `I'm studying the song "${songTitle}". Here is the chord progression with individual notes:\n\n${chordDetail}\n\nHere is a music theory analysis that was previously generated:\n\n${analysis}\n\nI'd like to discuss the music theory of this song with you. Please help me understand the chord progressions, harmonic relationships, inversions, and any interesting patterns.`
+                const prompt = buildChatPrompt(songTitle, chordDetail)
                 window.open(`https://claude.ai/new?q=${encodeURIComponent(prompt)}`, '_blank')
               }}
               className="transition-colors cursor-pointer" style={{ color: '#9a9893' }}
