@@ -9,6 +9,8 @@ RUN npm ci
 
 # --- Build the Next.js app ---
 FROM base AS builder
+ARG GIT_SHA=dev
+ENV GIT_SHA=${GIT_SHA}
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
