@@ -10,7 +10,7 @@ test.describe('Home Page', () => {
 
   test('displays "Keysets" heading and lists songs', async ({ page }) => {
     await page.goto('/')
-    await expect(page.locator('h1')).toHaveText('Keysets')
+    await expect(page.locator('h1')).toContainText('Keysets')
     const songLinks = page.locator('a[href^="/song/"]')
     await expect(songLinks.first()).toBeVisible()
   })

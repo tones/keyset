@@ -8,4 +8,18 @@ export default defineConfig({
     baseURL: 'http://localhost:3001',
     trace: 'on-first-retry',
   },
+  projects: [
+    { name: 'setup', testMatch: /auth\.setup\.ts/ },
+    {
+      name: 'authenticated',
+      testMatch: /\.(spec|test)\.ts$/,
+      testIgnore: /auth\.spec\.ts/,
+      dependencies: ['setup'],
+      use: { storageState: 'e2e/.auth/session.json' },
+    },
+    {
+      name: 'public',
+      testMatch: /auth\.spec\.ts$/,
+    },
+  ],
 })

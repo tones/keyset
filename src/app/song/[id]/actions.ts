@@ -2,8 +2,10 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { requireAuth } from '@/lib/auth'
 
 export async function saveKeySets(songId: number, keySets: { type: string; name?: string | null; scaleDegree?: number | null; keyPresses: { midiNote: number; color: string }[] }[], analysis?: { text: string | null; updatedAt: string | null }, songKey?: string | null) {
+  await requireAuth()
   await prisma.$transaction(async (tx) => {
     // Delete all existing key sets (cascade deletes key presses)
     await tx.keySet.deleteMany({ where: { songId } })
@@ -48,6 +50,7 @@ export async function saveKeySets(songId: number, keySets: { type: string; name?
 }
 
 export async function updateYoutubeUrl(songId: number, url: string | null) {
+  await requireAuth()
   await prisma.song.update({
     where: { id: songId },
     data: { youtubeUrl: url || null },
@@ -56,6 +59,7 @@ export async function updateYoutubeUrl(songId: number, url: string | null) {
 }
 
 export async function updateSongTitle(songId: number, title: string) {
+  await requireAuth()
   if (!title.trim()) {
     throw new Error('Title cannot be empty')
   }
@@ -70,6 +74,7 @@ export async function updateSongTitle(songId: number, title: string) {
 }
 
 export async function updateCompactView(songId: number, compact: boolean) {
+  await requireAuth()
   await prisma.song.update({
     where: { id: songId },
     data: { compactView: compact },
@@ -77,6 +82,7 @@ export async function updateCompactView(songId: number, compact: boolean) {
 }
 
 export async function updateShowStaff(songId: number, showStaff: boolean) {
+  await requireAuth()
   await prisma.song.update({
     where: { id: songId },
     data: { showStaff },
@@ -84,6 +90,7 @@ export async function updateShowStaff(songId: number, showStaff: boolean) {
 }
 
 export async function refreshAlbumArt(songId: number, title: string): Promise<string | null> {
+  await requireAuth()
   const { fetchAlbumArt } = await import('@/lib/albumArt')
   const url = await fetchAlbumArt(title)
   if (url) {

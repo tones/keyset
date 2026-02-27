@@ -55,6 +55,7 @@ interface SortableKeySetListProps {
   onSetScaleDegree: (keySetId: number, degree: number | null) => void
   onRename: (keySetId: number, name: string | null) => void
   onReorder: (keySets: KeySet[]) => void
+  canEdit?: boolean
 }
 
 interface KeySetCardProps {
@@ -70,6 +71,7 @@ interface KeySetCardProps {
   onToggleType: (keySetId: number) => void
   onSetScaleDegree?: (keySetId: number, degree: number | null) => void
   onRename: (keySetId: number, name: string | null) => void
+  canEdit?: boolean
 }
 
 
@@ -165,7 +167,7 @@ function CompactKeySetCard({ keySet, songKey, commonBelow = [], showGuides = tru
   )
 }
 
-function SortableKeySetCard({ keySet, songKey, showStaff = true, inKeyPitchClasses, triadPitchClasses, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType, onSetScaleDegree, onRename }: KeySetCardProps) {
+function SortableKeySetCard({ keySet, songKey, showStaff = true, inKeyPitchClasses, triadPitchClasses, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType, onSetScaleDegree, onRename, canEdit = true }: KeySetCardProps) {
   const [activeColor, setActiveColor] = useState(DEFAULT_COLOR)
   const [lastDegree, setLastDegree] = useState<number | null>(keySet.scaleDegree)
   const [editingName, setEditingName] = useState(false)
@@ -196,22 +198,24 @@ function SortableKeySetCard({ keySet, songKey, showStaff = true, inKeyPitchClass
     <div ref={setNodeRef} style={style} className={`rounded-lg shadow p-6 border ${keySet.type === 'flourish' ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800' : 'bg-white dark:bg-gray-900 border-transparent'}`} data-testid="keyset-card">
       <div className="flex items-center mb-4">
         <div className="flex items-center gap-3">
-          <button
-            {...attributes}
-            {...listeners}
-            className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 touch-none"
-            title="Drag to reorder"
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-              <circle cx="7" cy="4" r="1.5" />
-              <circle cx="13" cy="4" r="1.5" />
-              <circle cx="7" cy="10" r="1.5" />
-              <circle cx="13" cy="10" r="1.5" />
-              <circle cx="7" cy="16" r="1.5" />
-              <circle cx="13" cy="16" r="1.5" />
-            </svg>
-          </button>
-          {editingName ? (
+          {canEdit && (
+            <button
+              {...attributes}
+              {...listeners}
+              className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 touch-none"
+              title="Drag to reorder"
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                <circle cx="7" cy="4" r="1.5" />
+                <circle cx="13" cy="4" r="1.5" />
+                <circle cx="7" cy="10" r="1.5" />
+                <circle cx="13" cy="10" r="1.5" />
+                <circle cx="7" cy="16" r="1.5" />
+                <circle cx="13" cy="16" r="1.5" />
+              </svg>
+            </button>
+          )}
+          {canEdit && editingName ? (
             <input
               autoFocus
               className="text-xl font-semibold text-gray-900 dark:text-gray-100 bg-transparent border-b border-gray-300 dark:border-gray-600 outline-none min-w-[60px] max-w-[200px]"
@@ -227,10 +231,10 @@ function SortableKeySetCard({ keySet, songKey, showStaff = true, inKeyPitchClass
             />
           ) : (
             <h2
-              className={`text-xl font-semibold cursor-text ${keySet.name ? 'text-gray-900 dark:text-gray-100' : keySet.type === 'flourish' ? 'text-amber-600 italic' : 'text-gray-900 dark:text-gray-100'}`}
+              className={`text-xl font-semibold ${canEdit ? 'cursor-text' : ''} ${keySet.name ? 'text-gray-900 dark:text-gray-100' : keySet.type === 'flourish' ? 'text-amber-600 italic' : 'text-gray-900 dark:text-gray-100'}`}
               data-testid="chord-label"
-              onClick={() => { setNameDraft(keySet.name ?? ''); setEditingName(true) }}
-              title="Click to rename"
+              onClick={canEdit ? () => { setNameDraft(keySet.name ?? ''); setEditingName(true) } : undefined}
+              title={canEdit ? 'Click to rename' : undefined}
             >
               {keySet.name || (keySet.type === 'flourish' ? <span className="text-amber-600 italic">Flourish</span> : derivedChord || '\u00A0')}
             </h2>
@@ -247,7 +251,7 @@ function SortableKeySetCard({ keySet, songKey, showStaff = true, inKeyPitchClass
             </button>
           )}
         </div>
-        <div className="flex items-center gap-1 ml-auto">
+        {canEdit && <div className="flex items-center gap-1 ml-auto">
           {inKeyPitchClasses && onSetScaleDegree && keySet.type !== 'flourish' && (
             <div ref={degreePicker.containerRef} className="relative" onMouseLeave={degreePicker.onMouseLeave} onMouseEnter={() => { degreePicker.onMouseEnter(); if (keySet.scaleDegree) degreePicker.show() }}>
               <button
@@ -401,7 +405,7 @@ function SortableKeySetCard({ keySet, songKey, showStaff = true, inKeyPitchClass
               <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
             </svg>
           </button>
-        </div>
+        </div>}
       </div>
 
       <div className="flex items-center gap-2">
@@ -411,7 +415,7 @@ function SortableKeySetCard({ keySet, songKey, showStaff = true, inKeyPitchClass
             noteColors={Object.fromEntries(keySet.keyPresses.map((kp) => [kp.midiNote, kp.color]))}
             inKeyPitchClasses={inKeyPitchClasses}
             triadPitchClasses={triadPitchClasses}
-            onToggle={(midiNote) => onToggleNote(keySet.id, midiNote, activeColor)}
+            onToggle={canEdit ? (midiNote) => onToggleNote(keySet.id, midiNote, activeColor) : undefined}
           />
         </div>
         {showStaff && songKey && keySet.keyPresses.length > 0 && (
@@ -422,7 +426,7 @@ function SortableKeySetCard({ keySet, songKey, showStaff = true, inKeyPitchClass
   )
 }
 
-export default function SortableKeySetList({ keySets, compact, showStaff = true, showCommonTones = true, songKey, onAdd, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType, onSetScaleDegree, onRename, onReorder }: SortableKeySetListProps) {
+export default function SortableKeySetList({ keySets, compact, showStaff = true, showCommonTones = true, songKey, onAdd, onDelete, onDuplicate, onToggleNote, onShiftNotes, onToggleType, onSetScaleDegree, onRename, onReorder, canEdit = true }: SortableKeySetListProps) {
   const parsed = parseSongKey(songKey ?? null)
   const inKeyPitchClasses = parsed ? getScalePitchClasses(parsed.root, parsed.mode) : undefined
 
@@ -470,23 +474,25 @@ export default function SortableKeySetList({ keySets, compact, showStaff = true,
           {keySets.map((keySet, i) => (
             <div key={keySet.id}>
               {i > 0 && <div className="py-3"><CommonToneLines above={keySets[i - 1]} below={keySet} visible={showCommonTones} padRight={songKey && showStaff ? 24 + 8 + staffWidth(songKey, 110) : undefined} /></div>}
-              <SortableKeySetCard keySet={keySet} songKey={songKey} showStaff={showStaff} inKeyPitchClasses={inKeyPitchClasses} triadPitchClasses={parsed && keySet.scaleDegree ? getTriadPitchClasses(parsed.root, parsed.mode, keySet.scaleDegree) : undefined} onDelete={onDelete} onDuplicate={onDuplicate} onToggleNote={onToggleNote} onShiftNotes={onShiftNotes} onToggleType={onToggleType} onSetScaleDegree={inKeyPitchClasses ? onSetScaleDegree : undefined} onRename={onRename} />
+              <SortableKeySetCard keySet={keySet} songKey={songKey} showStaff={showStaff} inKeyPitchClasses={inKeyPitchClasses} triadPitchClasses={parsed && keySet.scaleDegree ? getTriadPitchClasses(parsed.root, parsed.mode, keySet.scaleDegree) : undefined} onDelete={onDelete} onDuplicate={onDuplicate} onToggleNote={onToggleNote} onShiftNotes={onShiftNotes} onToggleType={onToggleType} onSetScaleDegree={inKeyPitchClasses ? onSetScaleDegree : undefined} onRename={onRename} canEdit={canEdit} />
             </div>
           ))}
         </div>
       </SortableContext>
     </DndContext>
 
-    <button
-      onClick={onAdd}
-      className="w-full mt-6 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-4 flex items-center justify-center text-gray-400 hover:text-blue-500 hover:border-blue-400 transition-colors cursor-pointer"
-      title="Add Key Set"
-    >
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 5v14" />
-        <path d="M5 12h14" />
-      </svg>
-    </button>
+    {canEdit && (
+      <button
+        onClick={onAdd}
+        className="w-full mt-6 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-4 flex items-center justify-center text-gray-400 hover:text-blue-500 hover:border-blue-400 transition-colors cursor-pointer"
+        title="Add Key Set"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 5v14" />
+          <path d="M5 12h14" />
+        </svg>
+      </button>
+    )}
     </>
   )
 }

@@ -16,6 +16,7 @@ interface SongAnalysisProps {
   confidence?: number | null
   loading: boolean
   error: string | null
+  canEdit?: boolean
 }
 
 function formatTimestamp(iso: string): string {
@@ -30,22 +31,24 @@ function formatTimestamp(iso: string): string {
   })
 }
 
-export default function SongAnalysis({ songTitle, chordDetail, llmProvider, analysis, analysisUpdatedAt, onAnalyze, onClear, onApplyKeyAndDegrees, suggestedKey, confidence, loading, error }: SongAnalysisProps) {
+export default function SongAnalysis({ songTitle, chordDetail, llmProvider, analysis, analysisUpdatedAt, onAnalyze, onClear, onApplyKeyAndDegrees, suggestedKey, confidence, loading, error, canEdit = true }: SongAnalysisProps) {
 
   return (
     <div className="mt-8">
-      <button
-        onClick={onAnalyze}
-        disabled={loading}
-        className="px-5 py-2.5 rounded-xl font-sans text-base disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 bg-[#1a1a18] dark:bg-gray-200 text-[#F5F5F0] dark:text-gray-900 hover:bg-[#393937] dark:hover:bg-gray-300"
-      >
-        {loading ? (
-          <span className="flex items-center gap-2">
-            <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
-            Analyzing…
-          </span>
-        ) : `${analysis ? 'Re-analyze' : 'Analyze'} with ${llmProvider === 'anthropic' ? 'Claude' : 'ChatGPT'}`}
-      </button>
+      {canEdit && (
+        <button
+          onClick={onAnalyze}
+          disabled={loading}
+          className="px-5 py-2.5 rounded-xl font-sans text-base disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 bg-[#1a1a18] dark:bg-gray-200 text-[#F5F5F0] dark:text-gray-900 hover:bg-[#393937] dark:hover:bg-gray-300"
+        >
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+              Analyzing…
+            </span>
+          ) : `${analysis ? 'Re-analyze' : 'Analyze'} with ${llmProvider === 'anthropic' ? 'Claude' : 'ChatGPT'}`}
+        </button>
+      )}
 
       {error && (
         <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400">
@@ -56,7 +59,7 @@ export default function SongAnalysis({ songTitle, chordDetail, llmProvider, anal
       {analysis && (
         <div className={`mt-4 p-6 rounded-lg shadow border font-serif ${loading ? 'invisible' : 'visible'}`} style={{ backgroundColor: 'var(--analysis-bg)', borderColor: 'var(--analysis-border)' }}>
           <div className="float-right flex items-center gap-2 ml-4 relative z-10">
-            {onApplyKeyAndDegrees && (
+            {canEdit && onApplyKeyAndDegrees && (
               <button
                 onClick={() => {
                   if (!confirm(`Apply suggested key${suggestedKey ? ` (${suggestedKey})` : ''} and scale degrees to your key sets?${confidence != null ? ` (${confidence}% confidence)` : ''}`)) return
@@ -88,20 +91,22 @@ export default function SongAnalysis({ songTitle, chordDetail, llmProvider, anal
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
             </button>
-            <button
-              onClick={() => {
-                if (!confirm('Delete this analysis?')) return
-                onClear()
-              }}
-              className="text-gray-400 dark:text-gray-500 hover:text-red-500 transition-colors cursor-pointer"
-              title="Delete Analysis"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 6h18" />
-                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-              </svg>
-            </button>
+            {canEdit && (
+              <button
+                onClick={() => {
+                  if (!confirm('Delete this analysis?')) return
+                  onClear()
+                }}
+                className="text-gray-400 dark:text-gray-500 hover:text-red-500 transition-colors cursor-pointer"
+                title="Delete Analysis"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 6h18" />
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                </svg>
+              </button>
+            )}
           </div>
           <div className="prose prose-sm max-w-none" style={{ '--tw-prose-headings': 'var(--analysis-heading)', '--tw-prose-body': 'var(--analysis-body)', '--tw-prose-bold': 'var(--analysis-bold)', '--tw-prose-bullets': 'var(--analysis-bullets)' } as React.CSSProperties}>
             <ReactMarkdown>{analysis}</ReactMarkdown>

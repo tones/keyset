@@ -27,3 +27,8 @@ export async function login(formData: FormData): Promise<{ error?: string } | un
 
   return undefined
 }
+
+export async function logout(): Promise<void> {
+  const cookieStore = await cookies()
+  cookieStore.delete('auth_session')
+}

@@ -6,6 +6,9 @@ TEST_PORT=3001
 # Use a separate test database so dev data is never touched
 export DATABASE_URL="file:./test.db"
 
+# Enable auth so tests exercise the real login/read-only flow
+export AUTH_PASSWORD="test-password"
+
 # Remove stale test database
 rm -f prisma/test.db prisma/test.db-journal prisma/test.db-wal
 

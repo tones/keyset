@@ -3,8 +3,10 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { requireAuth } from '@/lib/auth'
 
 export async function deleteSong(songId: number) {
+  await requireAuth()
   await prisma.song.delete({
     where: { id: songId },
   })
@@ -13,6 +15,7 @@ export async function deleteSong(songId: number) {
 }
 
 export async function duplicateSong(songId: number) {
+  await requireAuth()
   const song = await prisma.song.findUnique({
     where: { id: songId },
     include: {
@@ -49,6 +52,7 @@ export async function duplicateSong(songId: number) {
 }
 
 export async function createSong() {
+  await requireAuth()
   const song = await prisma.song.create({
     data: {
       title: 'Untitled Song',

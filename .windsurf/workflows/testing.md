@@ -13,8 +13,9 @@ npm run test:e2e -- --headed  # same but watch the browser run tests
 
 This uses `scripts/test-e2e.sh` which:
 1. Sets `DATABASE_URL` to `file:./test.db` (your `dev.db` is never touched)
-2. Runs `prisma migrate deploy` and seeds the test database
-3. Runs `npx playwright test`, which starts a Next.js dev server on port 3001
+2. Sets `AUTH_PASSWORD` to `test-password` (auth is enabled during tests)
+3. Runs `prisma migrate deploy` and seeds the test database
+4. Runs `npx playwright test`, which starts a Next.js dev server on port 3001
 
 You can pass any Playwright CLI flags after `--`, e.g. `npm run test:e2e -- --grep "rename"`.
 
@@ -32,6 +33,14 @@ Whenever a new behavior or feature is added to the app, **always** add a corresp
 
 ## Test Structure
 
+Playwright is configured with three projects in `playwright.config.ts`:
+- **setup** (`e2e/auth.setup.ts`) — Logs in via `/login` and saves the session cookie to `e2e/.auth/session.json`
+- **authenticated** — Runs `home.spec.ts` and `song.spec.ts` with the stored auth session (full edit access)
+- **public** — Runs `auth.spec.ts` without any session (read-only access)
+
+Test files:
+- `e2e/auth.setup.ts` — Login setup, saves auth state for authenticated tests
+- `e2e/auth.spec.ts` — Public read-only access tests (no login wall, hidden edit controls, login/logout flow, wrong password)
 - `e2e/home.spec.ts` — Home page tests (listing songs, creating new songs, deleting songs)
 - `e2e/song.spec.ts` — Song page tests (rename song, rename keyset, reorder key sets, add/delete key sets, color palette, LLM analysis display/delete, navigation, staff toggle, guide line alignment, scale degrees, compact mode)
 
@@ -40,4 +49,4 @@ Whenever a new behavior or feature is added to the app, **always** add a corresp
 - Use `page.getByTestId()`, `page.getByRole()`, and `page.getByText()` for selectors — avoid fragile CSS selectors
 - Piano key colors must be checked via `getComputedStyle()` since the browser normalizes inline hex styles to `rgb()`
 - Tests that mutate shared database state should clean up after themselves (e.g., restore renamed titles, delete added items)
-- Both test files run serially (`test.describe.configure({ mode: 'serial' })`) because they share database state
+- All three test files run serially (`test.describe.configure({ mode: 'serial' })`) because they share database state

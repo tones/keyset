@@ -35,6 +35,8 @@ export interface AnalysisResult {
 }
 
 export async function analyzeSong(songId: number, songTitle: string, chordDetail: string, numKeySets: number): Promise<AnalysisResult> {
+  const { requireAuth } = await import('@/lib/auth')
+  await requireAuth()
   if (!chordDetail.trim()) {
     return { analysis: 'No chord key sets to analyze.', analysisUpdatedAt: new Date().toISOString(), suggestedKey: null, suggestedDegrees: [], confidence: null }
   }

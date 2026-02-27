@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import SongView from '@/components/SongView'
+import { isAuthenticated } from '@/lib/auth'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -12,6 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function SongPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  const canEdit = await isAuthenticated()
   const song = await prisma.song.findUnique({
     where: { id: parseInt(id) },
     include: {
@@ -47,6 +49,7 @@ export default async function SongPage({ params }: { params: Promise<{ id: strin
           initialSongKey={song.songKey ?? null}
           onSaveTitle={async (title) => { 'use server'; const { updateSongTitle } = await import('./actions'); await updateSongTitle(song.id, title); }}
           onSaveYoutubeUrl={async (url) => { 'use server'; const { updateYoutubeUrl } = await import('./actions'); await updateYoutubeUrl(song.id, url); }}
+          canEdit={canEdit}
         />
       </div>
     </div>

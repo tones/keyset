@@ -44,11 +44,12 @@ interface SongViewProps {
   initialSongKey: string | null
   onSaveTitle: (title: string) => Promise<void>
   onSaveYoutubeUrl: (url: string | null) => Promise<void>
+  canEdit?: boolean
 }
 
 let nextTempId = -1
 
-export default function SongView({ songId, keySets: serverKeySets, initialTitle, imageUrl: initialImageUrl, initialYoutubeUrl, llmProvider, cachedAnalysis, cachedAnalysisUpdatedAt, initialCompact, initialShowStaff, initialSongKey, onSaveTitle, onSaveYoutubeUrl }: SongViewProps) {
+export default function SongView({ songId, keySets: serverKeySets, initialTitle, imageUrl: initialImageUrl, initialYoutubeUrl, llmProvider, cachedAnalysis, cachedAnalysisUpdatedAt, initialCompact, initialShowStaff, initialSongKey, onSaveTitle, onSaveYoutubeUrl, canEdit = true }: SongViewProps) {
   const router = useRouter()
   const [mode, setMode] = useState<'full' | 'compact'>(initialCompact ? 'compact' : 'full')
   const [showStaff, setShowStaff] = useState(initialShowStaff)
@@ -316,6 +317,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
           ‹ Keysets
         </a>
         <div className="flex items-center gap-2">
+        {canEdit && (
         <div className={`flex items-center gap-2 ${isDirty ? '' : 'invisible'}`} data-testid="save-bar">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
           <span className="text-xs text-gray-400 dark:text-gray-500">Edited</span>
@@ -336,6 +338,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
             {saving ? 'Saving…' : 'Save'}
           </button>
         </div>
+        )}
         <ThemeToggle />
         </div>
       </div>
@@ -354,23 +357,34 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
         )}
         <div className="flex-1 min-w-0 flex justify-between gap-3 pt-1">
           <div className="min-w-0">
-            <EditableTitle initialTitle={initialTitle} onSave={async (title) => {
-              await onSaveTitle(title)
-              setCurrentImageUrl(null)
-              refreshAlbumArt(songId, title).then((url) => {
-                if (url) setCurrentImageUrl(url)
-              }).catch(() => {})
-            }} />
+            {canEdit ? (
+              <EditableTitle initialTitle={initialTitle} onSave={async (title) => {
+                await onSaveTitle(title)
+                setCurrentImageUrl(null)
+                refreshAlbumArt(songId, title).then((url) => {
+                  if (url) setCurrentImageUrl(url)
+                }).catch(() => {})
+              }} />
+            ) : (
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{initialTitle}</h1>
+            )}
             <div className="mt-1">
-              <YouTubeLink initialUrl={initialYoutubeUrl} onSave={onSaveYoutubeUrl} />
+              {canEdit ? (
+                <YouTubeLink initialUrl={initialYoutubeUrl} onSave={onSaveYoutubeUrl} />
+              ) : initialYoutubeUrl ? (
+                <a href={initialYoutubeUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-700 transition-colors">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19.13C5.12 19.55 12 19.55 12 19.55s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.42z" /><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" /></svg>
+                  YouTube
+                </a>
+              ) : null}
             </div>
           </div>
           <div className="flex flex-col items-end gap-2 shrink-0">
-            <ToggleSwitch label="Compact" enabled={mode === 'compact'} onToggle={() => {
+            {canEdit && <ToggleSwitch label="Compact" enabled={mode === 'compact'} onToggle={() => {
               const newMode = mode === 'compact' ? 'full' : 'compact'
               setMode(newMode)
               updateCompactView(songId, newMode === 'compact').catch(() => {})
-            }} />
+            }} />}
             <div ref={keyPicker.containerRef} className="relative" onMouseLeave={keyPicker.onMouseLeave} onMouseEnter={() => { keyPicker.onMouseEnter(); if (songKey) keyPicker.show() }}>
               <ToggleSwitch label={songKey ? (() => { const p = parseSongKey(songKey); return p ? `${p.root} ${p.mode.charAt(0).toUpperCase() + p.mode.slice(1)}` : 'Key' })() : 'Key'} enabled={songKey !== null} onToggle={() => {
                 if (songKey !== null) {
@@ -409,7 +423,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
                 )
               })()}
             </div>
-            {songKey !== null && (
+            {canEdit && songKey !== null && (
               <ToggleSwitch label="Staff" enabled={showStaff} onToggle={() => {
                 const next = !showStaff
                 setShowStaff(next)
@@ -436,6 +450,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
         onSetScaleDegree={handleSetScaleDegree}
         onRename={handleRenameKeySet}
         onReorder={handleReorder}
+        canEdit={canEdit}
       />
 
       {mode !== 'compact' && (
@@ -452,6 +467,7 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
           confidence={confidence}
           loading={analysisLoading}
           error={analysisError}
+          canEdit={canEdit}
         />
       )}
     </>
