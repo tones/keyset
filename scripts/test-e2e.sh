@@ -51,5 +51,11 @@ for i in $(seq 1 30); do
   sleep 1
 done
 
+# Warm up Turbopack compilation so first test doesn't hit cold-compile timeouts
+echo "Warming up routes..."
+curl -s -o /dev/null "http://localhost:$TEST_PORT/"
+curl -s -o /dev/null "http://localhost:$TEST_PORT/song/1"
+curl -s -o /dev/null "http://localhost:$TEST_PORT/login"
+
 # Run Playwright tests
 npx playwright test "$@"
