@@ -74,6 +74,24 @@ test.describe('Public read-only access', () => {
     expect(after).toBe(before)
   })
 
+  test('song page compact toggle works without login', async ({ page }) => {
+    await page.goto('/song/4')
+    const compactToggle = page.locator('label', { hasText: 'Compact' })
+    await expect(compactToggle).toBeVisible()
+
+    // Start in full mode — keyset cards should have edit-style layout
+    const keyboards = page.getByTestId('piano-keyboard')
+    const initialCount = await keyboards.count()
+    expect(initialCount).toBeGreaterThan(0)
+
+    // Toggle compact on
+    await compactToggle.locator('button').click()
+    // Toggle compact off
+    await compactToggle.locator('button').click()
+    // Should still show keyboards (toggle works without error)
+    await expect(keyboards.first()).toBeVisible()
+  })
+
   test('song page shows analysis but hides analyze/delete buttons', async ({ page }) => {
     // Song 4 may or may not have cached analysis — navigate to check
     await page.goto('/song/4')

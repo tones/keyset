@@ -380,11 +380,13 @@ export default function SongView({ songId, keySets: serverKeySets, initialTitle,
             </div>
           </div>
           <div className="flex flex-col items-end gap-2 shrink-0">
-            {canEdit && <ToggleSwitch label="Compact" enabled={mode === 'compact'} onToggle={() => {
+            <ToggleSwitch label="Compact" enabled={mode === 'compact'} onToggle={() => {
               const newMode = mode === 'compact' ? 'full' : 'compact'
               setMode(newMode)
-              updateCompactView(songId, newMode === 'compact').catch(() => {})
-            }} />}
+              if (canEdit) {
+                updateCompactView(songId, newMode === 'compact').catch(() => {})
+              }
+            }} />
             <div ref={keyPicker.containerRef} className="relative" onMouseLeave={keyPicker.onMouseLeave} onMouseEnter={() => { keyPicker.onMouseEnter(); if (songKey) keyPicker.show() }}>
               <ToggleSwitch label={songKey ? (() => { const p = parseSongKey(songKey); return p ? `${p.root} ${p.mode.charAt(0).toUpperCase() + p.mode.slice(1)}` : 'Key' })() : 'Key'} enabled={songKey !== null} onToggle={() => {
                 if (songKey !== null) {
